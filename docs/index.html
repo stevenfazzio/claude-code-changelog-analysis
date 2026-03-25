@@ -35,6 +35,76 @@ tailwind.config = {
 }
 </script>
 
+<style>
+.site-nav,
+.site-nav *,
+.site-nav *::before,
+.site-nav *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+.site-nav {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 32px 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.625;
+  color: #2c2c2c;
+}
+@media (max-width: 768px) {
+  .site-nav { padding: 24px 16px 0; }
+}
+.site-nav-title {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: #2c2c2c;
+  line-height: 1.2;
+}
+@media (max-width: 640px) {
+  .site-nav-title { font-size: 1.3rem; }
+}
+.site-nav-subtitle {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 2px;
+  line-height: 1.625;
+}
+.site-nav-links {
+  margin-top: 12px;
+  padding-bottom: 2px;
+  font-size: 0.82rem;
+  line-height: 1.625;
+}
+.site-nav-links a {
+  color: #888;
+  text-decoration: underline;
+  text-decoration-color: rgba(136, 136, 136, 0.5);
+  text-underline-offset: 4px;
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+.site-nav-links a:hover {
+  color: #2c2c2c;
+  text-decoration-color: #2c2c2c;
+}
+.site-nav-links a.active {
+  color: #2c2c2c;
+  font-weight: 600;
+  text-decoration: none;
+}
+.site-nav-sep {
+  color: #d5d0c8;
+  margin: 0 8px;
+}
+.site-nav-hr {
+  border: none;
+  border-top: 1px solid #d5d0c8;
+  margin: 16px 0 24px;
+}
+</style>
 
 <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
 <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
@@ -76,12 +146,13 @@ tailwind.config = {
 
 </head>
 <body class="font-mono bg-cream text-text-primary leading-relaxed text-[11px]">
+<div class="site-nav">
+  <h1 class="site-nav-title">Claude Code Changelog</h1>
+  <p class="site-nav-subtitle">Track every change to Claude Code</p>
+  <nav class="site-nav-links"><a href="index.html" class="active">Explorer</a><span class="site-nav-sep">&middot;</span><a href="analysis.html">Analysis</a><span class="site-nav-sep">&middot;</span><a href="map.html">Map</a></nav>
+  <hr class="site-nav-hr">
+</div>
 <div class="max-w-site mx-auto px-8 max-md:px-4">
-
-<h1 class="font-serif text-[1.6rem] font-normal text-text-primary pt-10 max-sm:text-[1.3rem] max-sm:pt-6">Claude Code Changelog</h1>
-<p class="text-[0.8rem] text-text-secondary mt-0.5">Track every change to Claude Code</p>
-<nav class="text-[0.82rem] pt-3 pb-0.5"><a href="index.html" class="text-text-primary font-semibold no-underline">Explorer</a><span class="text-border mx-2">&middot;</span><a href="analysis.html" class="text-text-secondary hover:text-text-primary underline decoration-text-secondary/50 underline-offset-4 hover:decoration-text-primary">Analysis</a><span class="text-border mx-2">&middot;</span><a href="map.html" class="text-text-secondary hover:text-text-primary underline decoration-text-secondary/50 underline-offset-4 hover:decoration-text-primary">Map</a></nav>
-<hr class="border-t border-divider my-4 mb-6">
 
 <div id="kpi-row" class="text-[0.82rem] leading-8 pb-2 flex flex-wrap gap-x-2 max-sm:text-[0.75rem]"></div>
 

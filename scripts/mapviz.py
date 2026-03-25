@@ -5,6 +5,8 @@ from html import escape
 from pathlib import Path
 
 import datamapplot
+
+from nav import NAV_CSS, nav_html
 import glasbey
 import numpy as np
 import pandas as pd
@@ -241,8 +243,8 @@ def main():
         extra_point_data=extra_data,
         colormap_rawdata=all_rawdata,
         colormap_metadata=all_metadata,
-        title="Claude Code Changelog",
-        sub_title="Changelog entries mapped by semantic similarity",
+        title="",
+        sub_title="",
         enable_search=True,
         search_field="hover_text",
         custom_js=custom_js,
@@ -263,67 +265,66 @@ def main():
 
 
 def _inject_nav(html_path):
-    """Add site navigation bar to DataMapPlot-generated HTML."""
+    """Add shared site navigation bar to DataMapPlot-generated HTML."""
     html = Path(html_path).read_text()
 
-    nav_css = """<style>
-.site-nav{position:fixed;top:0;left:0;right:0;z-index:200;
-  background:rgba(250,249,246,0.88);backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);border-bottom:1px solid #d5d0c8;
-  padding:0 24px;height:44px;display:flex;align-items:center;gap:16px;
-  font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:400;pointer-events:auto;}
-.site-nav .nav-title{font-family:'Newsreader',Georgia,serif;font-size:1.1rem;font-weight:400;
-  color:#2c2c2c;margin-right:8px;}
-.site-nav a{color:#888;text-decoration:underline;text-decoration-color:rgba(136,136,136,0.5);
-  text-underline-offset:4px;transition:color 0.15s,text-decoration-color 0.15s;}
-.site-nav a:hover{color:#2c2c2c;text-decoration-color:#2c2c2c;}
-.site-nav a.active{color:#2c2c2c;font-weight:600;text-decoration:none;}
-.site-nav .sep{color:#d5d0c8;}
+    # Fixed-position wrapper CSS for the map page (nav content comes from shared module)
+    # Hides the <hr> and replaces it with border-bottom + padding for identical spacing.
+    fixed_wrapper_css = """<style>
+.site-nav-fixed {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  background: rgba(250, 249, 246, 0.92);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid #d5d0c8;
+  pointer-events: auto;
+}
+.site-nav-fixed .site-nav { padding-bottom: 16px; }
+.site-nav-fixed .site-nav-hr { display: none; }
 </style>"""
 
-    nav_html = """<nav class="site-nav">
-  <span class="nav-title">Claude Code Changelog</span>
-  <a href="index.html">Explorer</a>
-  <span class="sep">&middot;</span>
-  <a href="analysis.html">Analysis</a>
-  <span class="sep">&middot;</span>
-  <a href="map.html" class="active">Map</a>
-</nav>"""
+    # JS to measure actual nav height and offset the map content accordingly
+    nav_resize_js = """<script>
+(function() {
+  var nav = document.querySelector('.site-nav-fixed');
+  function adjust() {
+    var h = nav.offsetHeight;
+    document.body.style.paddingTop = h + 'px';
+    var deck = document.querySelector('[style*="z-index: -1"]');
+    if (deck) { deck.style.top = h + 'px'; deck.style.height = 'calc(100% - ' + h + 'px)'; }
+    var vh = document.querySelector('[style*="100vh"]');
+    if (vh) { vh.style.height = 'calc(100vh - ' + h + 'px)'; }
+  }
+  adjust();
+  window.addEventListener('resize', adjust);
+})();
+</script>"""
 
-    # Inject viewport meta tag
-    html = html.replace(
-        "</head>",
-        '<meta name="viewport" content="width=device-width, initial-scale=1">\n</head>',
-        1,
+    nav_block = f'<div class="site-nav-fixed">{nav_html("map")}</div>'
+
+    # Fix empty <title> tag left by clearing DataMapPlot's title param
+    html = html.replace("<title></title>", "<title>Claude Code Changelog — Map</title>", 1)
+
+    # Remove DataMapPlot's @font-face blocks that conflict with our font weights
+    html = re.sub(
+        r'@font-face\s*\{[^}]*font-family:\s*[\'"]IBM Plex Mono[\'"][^}]*\}\s*',
+        '',
+        html,
     )
 
-    # Inject after <body> tag
-    html = html.replace("<body>", f"<body>{nav_css}{nav_html}", 1)
+    # Inject correct fonts, viewport meta, and nav CSS into <head>
+    head_inject = (
+        '<link href="https://fonts.googleapis.com/css2?'
+        'family=IBM+Plex+Mono:wght@400;600&'
+        'family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">\n'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        f'{NAV_CSS}\n'
+        f'{fixed_wrapper_css}\n'
+    )
+    html = html.replace("</head>", f'{head_inject}</head>', 1)
 
-    # Offset the fixed deck-container below the nav bar
-    html = html.replace(
-        "position: fixed; z-index: -1; top: 0; left: 0; width: 100%; height: 100%;",
-        "position: fixed; z-index: -1; top: 44px; left: 0; width: 100%; height: calc(100% - 44px);",
-        1,
-    )
-
-    # Shrink body and content to account for nav bar height
-    html = html.replace(
-        "overflow: hidden;",
-        "overflow: hidden; padding-top: 44px; height: calc(100vh - 44px);",
-        1,
-    )
-    html = html.replace(
-        "height: 100vh;",
-        "height: calc(100vh - 44px);",
-        1,
-    )
-    # Adjust content-wrapper min-height
-    html = html.replace(
-        "min-height:calc(100vh - 16px)",
-        "min-height:calc(100vh - 60px)",
-        1,
-    )
+    # Inject nav after <body> tag, plus JS to dynamically offset map content
+    html = html.replace("<body>", f"<body>{nav_block}", 1)
+    html = html.replace("</body>", f"{nav_resize_js}</body>", 1)
 
     Path(html_path).write_text(html)
 
