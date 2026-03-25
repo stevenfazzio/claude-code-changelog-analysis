@@ -4,3 +4,4 @@ CHANGELOG.md
 __pycache__/
 *.egg-info/
 .python-version
+.DS_Store
