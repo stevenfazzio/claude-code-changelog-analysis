@@ -1,0 +1,6 @@
+data/
+CHANGELOG.md
+.venv/
+__pycache__/
+*.egg-info/
+.python-version
