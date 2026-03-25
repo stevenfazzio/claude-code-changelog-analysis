@@ -508,22 +508,37 @@ fetch('data/analysis.json')
       return '<span class="whitespace-nowrap"><span class="text-text-secondary">' + s[0] + '</span> <span class="font-semibold text-text-primary">' + s[1] + '</span></span>';
     }).join(' ' + sep + ' ');
 
-    // 1. Category Trends (stacked area)
-    var trendSeries = Object.keys(data.category_trends.series).reverse().map(function(cat) {
-      return {
-        name: cat,
-        type: 'line',
-        stack: 'total',
-        areaStyle: {opacity: 0.7},
-        symbol: 'none',
-        lineStyle: {width: 1},
-        itemStyle: {color: cc[cat]},
-        data: data.category_trends.months.map(function(m, i) {
-          return [m, data.category_trends.series[cat][i]];
-        }),
-      };
+    // 1. Category Trends (stacked area) with count/% toggle
+    var trendCats = Object.keys(data.category_trends.series);
+    var trendMonths = data.category_trends.months;
+
+    // Pre-compute monthly totals for percentage mode
+    var monthlyTotals = trendMonths.map(function(m, i) {
+      var total = 0;
+      trendCats.forEach(function(cat) { total += data.category_trends.series[cat][i]; });
+      return total;
     });
-    charts.push(initChart('chart-category-trends', {
+
+    function makeTrendSeries(mode) {
+      return trendCats.map(function(cat) {
+        return {
+          name: cat,
+          type: 'line',
+          stack: 'total',
+          areaStyle: {opacity: 0.7},
+          symbol: 'none',
+          lineStyle: {width: 1},
+          itemStyle: {color: cc[cat]},
+          data: trendMonths.map(function(m, i) {
+            var val = data.category_trends.series[cat][i];
+            if (mode === 'pct') val = monthlyTotals[i] > 0 ? Math.round(val / monthlyTotals[i] * 1000) / 10 : 0;
+            return [m, val];
+          }),
+        };
+      });
+    }
+
+    var trendChart = initChart('chart-category-trends', {
       title: {text: 'Category Trends (monthly)', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
       tooltip: {trigger: 'axis', confine: true},
@@ -531,8 +546,23 @@ fetch('data/analysis.json')
       grid: {left: 40, right: 20, top: 45, bottom: 50},
       xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, axisLabel: {fontSize: 10}, splitLine: {lineStyle: {color: '#e8e5de'}}},
       yAxis: {type: 'value', name: 'Entries', axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
-      series: trendSeries,
-    }));
+      series: makeTrendSeries('count'),
+    });
+    charts.push(trendChart);
+
+    // Wire up toggle
+    var trendMode = 'count';
+    var toggleBtn = document.getElementById('trend-toggle');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', function() {
+        trendMode = trendMode === 'count' ? 'pct' : 'count';
+        toggleBtn.textContent = trendMode === 'count' ? 'Show %' : 'Show #';
+        trendChart.setOption({
+          yAxis: {name: trendMode === 'count' ? 'Entries' : '% of Entries', max: trendMode === 'pct' ? 100 : null},
+          series: makeTrendSeries(trendMode),
+        });
+      });
+    }
 
     // 2. Release Cadence
     charts.push(initChart('chart-release-cadence', {
@@ -709,7 +739,10 @@ def render_analysis_page() -> str:
 <div class="pt-6 pb-2">
   <h2 class="font-serif text-[1.1rem] font-normal text-text-secondary tracking-wide mb-3">Timeline Trends</h2>
   <div class="grid grid-cols-1 gap-4">
-    <div class="border border-border p-2 bg-cream"><div id="chart-category-trends" class="h-[400px]"></div></div>
+    <div class="border border-border p-2 bg-cream relative">
+      <button id="trend-toggle" class="absolute top-2 right-3 text-[0.7rem] font-mono px-2 py-0.5 border border-border rounded text-text-secondary hover:text-text-primary hover:border-divider cursor-pointer bg-cream z-10">Show %</button>
+      <div id="chart-category-trends" class="h-[400px]"></div>
+    </div>
     <div class="border border-border p-2 bg-cream"><div id="chart-release-cadence" class="h-[350px]"></div></div>
   </div>
 </div>
