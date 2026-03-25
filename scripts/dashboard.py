@@ -245,8 +245,11 @@ def nav_html(active: str) -> str:
     pages = [("Explorer", "index.html"), ("Analysis", "analysis.html"), ("Map", "map.html")]
     links = []
     for label, href in pages:
-        cls = "text-text-primary font-semibold" if label.lower() == active else "text-text-secondary hover:text-text-primary"
-        links.append(f'<a href="{href}" class="{cls} no-underline">{label}</a>')
+        if label.lower() == active:
+            cls = "text-text-primary font-semibold no-underline"
+        else:
+            cls = "text-text-secondary hover:text-text-primary underline decoration-text-secondary/50 underline-offset-4 hover:decoration-text-primary"
+        links.append(f'<a href="{href}" class="{cls}">{label}</a>')
     sep = '<span class="text-border mx-2">&middot;</span>'
     return f'<nav class="text-[0.82rem] pt-3 pb-0.5">{sep.join(links)}</nav>'
 
