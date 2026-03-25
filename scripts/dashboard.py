@@ -22,8 +22,8 @@ CATEGORY_COLORS = dict(zip(
     CATEGORIES,
     glasbey.create_palette(
         palette_size=len(CATEGORIES),
-        lightness_bounds=(35, 65),
-        chroma_bounds=(40, 75),
+        lightness_bounds=(40, 60),
+        chroma_bounds=(25, 50),
     ),
 ))
 
