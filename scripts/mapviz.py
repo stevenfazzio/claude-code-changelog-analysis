@@ -283,6 +283,15 @@ def _inject_nav(html_path):
 /* Override DataMapPlot default that hides colormap selector on mobile */
 @media screen and (max-width: 768px) {
   .bottom-left { display: flex !important; }
+  /* Fix mobile 100vh bug: dvh excludes browser chrome (URL bar, nav) */
+  #deck-container { height: 100dvh !important; }
+  .content-wrapper {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+  }
+  .stack.bottom-left { padding-bottom: 4px !important; }
+  #colormap-selector-container { max-width: calc(100vw - 24px); }
+  .color-map-options { max-height: 50dvh !important; }
 }
 </style>"""
 
@@ -296,7 +305,8 @@ def _inject_nav(html_path):
     var deck = document.querySelector('[style*="z-index: -1"]');
     if (deck) { deck.style.top = h + 'px'; deck.style.height = 'calc(100% - ' + h + 'px)'; }
     var cw = document.querySelector('.content-wrapper');
-    if (cw) { cw.style.minHeight = 'calc(100vh - ' + h + 'px)'; }
+    var vh = CSS.supports('height', '100dvh') ? 'dvh' : 'vh';
+    if (cw) { cw.style.minHeight = 'calc(100' + vh + ' - ' + h + 'px)'; }
   }
   adjust();
   window.addEventListener('resize', adjust);
