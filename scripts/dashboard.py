@@ -685,8 +685,8 @@ fetch('data/analysis.json')
       title: {text: 'Category \\u00d7 Change Type (row %)', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
       tooltip: {confine: true, formatter: function(p) { return p.data[2].toFixed(0) + '%'; }},
-      grid: {left: 100, right: 60, top: 45, bottom: 35},
-      xAxis: {type: 'category', data: data.heatmap.change_types, axisLabel: {fontSize: 10}, splitArea: {show: true}},
+      grid: {left: 100, right: 60, top: 45, bottom: 60},
+      xAxis: {type: 'category', data: data.heatmap.change_types, axisLabel: {fontSize: 10, interval: 0, rotate: 45}, splitArea: {show: true}},
       yAxis: {type: 'category', data: data.heatmap.categories, axisLabel: {fontSize: 10}, splitArea: {show: true}},
       visualMap: {
         min: 0, max: 100,
