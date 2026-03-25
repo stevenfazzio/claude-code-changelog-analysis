@@ -285,10 +285,6 @@ def _inject_nav(html_path):
   .bottom-left { display: flex !important; }
   /* Fix mobile 100vh bug: dvh excludes browser chrome (URL bar, nav) */
   #deck-container { height: 100dvh !important; }
-  .content-wrapper {
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-  }
   .stack.bottom-left { padding-bottom: 4px !important; }
   #colormap-selector-container { max-width: calc(100vw - 24px); }
   .color-map-options { max-height: 50dvh !important; }
