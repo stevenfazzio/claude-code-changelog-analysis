@@ -535,9 +535,8 @@ def render_analysis_page(df: pd.DataFrame) -> str:
         js = "cdn" if first else False
         return f'<div class="{cls}">{_chart_html(fig, js)}</div>'
 
-    cadence = make_release_cadence(df)
-    histogram = make_entries_histogram(df)
     trends = make_category_trends(df)
+    cadence = make_release_cadence(df)
     cat_dist = make_category_dist(df)
     type_donut = make_change_type_donut(df)
     complexity_donut = make_complexity_donut(df)
@@ -550,9 +549,8 @@ def render_analysis_page(df: pd.DataFrame) -> str:
 <div class="section">
   <h2>Timeline Trends</h2>
   <div class="chart-grid">
-    {card(cadence, full=True, first=True)}
-    {card(histogram)}
-    {card(trends)}
+    {card(trends, full=True, first=True)}
+    {card(cadence, full=True)}
   </div>
 </div>
 
