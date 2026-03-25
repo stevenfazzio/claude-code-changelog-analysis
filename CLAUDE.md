@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Toolkit for analyzing trends in the Claude Code changelog. Fetches CHANGELOG.md from `anthropics/claude-code`, parses entries, enriches them with LLM-derived classifications, generates embeddings, and produces visualizations.
+A site for staying up-to-date on the latest changes to Claude Code. Fetches CHANGELOG.md from `anthropics/claude-code`, parses entries, enriches them with LLM-derived classifications, generates embeddings, and produces a browsable site. Secondary goals include identifying trends, discovering notable changes, finding groups of similar changes, and exploring the space of changes.
 
 ## Pipeline
 

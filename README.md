@@ -1,6 +1,6 @@
 # Claude Code Changelog Analysis
 
-Toolkit for analyzing trends in the [Claude Code](https://github.com/anthropics/claude-code) changelog. Fetches `CHANGELOG.md` from the upstream repo, parses entries, enriches them with LLM-derived classifications, generates embeddings, and produces an interactive dashboard.
+A site for staying up-to-date on the latest changes to [Claude Code](https://github.com/anthropics/claude-code). Fetches `CHANGELOG.md` from the upstream repo, parses entries, enriches them with LLM-derived classifications, generates embeddings, and produces a browsable site.
 
 **[View the dashboard](https://stevenfazzio.github.io/claude-code-changelog-analysis/)**
 
@@ -11,7 +11,7 @@ Each stage reads the previous stage's output from `data/` and supports increment
 ```
 CHANGELOG.md + versions.json -> raw_entries.parquet -> enriched.parquet -> embeddings.parquet
                                                           |
-                                                   docs/index.html
+                                                   docs/ (index.html, analysis.html, map.html)
 ```
 
 | Stage | Command | Description |
@@ -20,7 +20,7 @@ CHANGELOG.md + versions.json -> raw_entries.parquet -> enriched.parquet -> embed
 | Parse | `uv run python scripts/parse.py` | Parses changelog with version dates into structured entries |
 | Enrich | `uv run python scripts/enrich.py` | Classifies entries using Claude Haiku |
 | Embed | `uv run python scripts/embed.py` | Generates 512-dim Cohere embeddings |
-| Dashboard | `uv run python scripts/dashboard.py` | Builds interactive HTML dashboard |
+| Dashboard | `uv run python scripts/dashboard.py` | Builds 3-page site in `docs/` |
 
 Run all stages at once:
 
@@ -45,10 +45,10 @@ CO_API_KEY=...          # for embed stage
 
 The fetch stage requires the [GitHub CLI](https://cli.github.com/) (`gh`) to be authenticated.
 
-## Dashboard
+## Site
 
-The dashboard is an interactive Plotly page generated at `docs/index.html` and served via GitHub Pages. It includes:
+The site is generated in `docs/` and served via GitHub Pages. It includes three pages:
 
-- Release cadence and category trends over time
-- Distribution breakdowns by category, change type, and complexity
-- Bugfix ratio analysis, category/change-type heatmap, and major changes timeline
+- **Explorer** — Filterable table of all changelog entries with multiselect and date range filters
+- **Analysis** — Release cadence charts, category trends, distribution breakdowns, and heatmaps
+- **Map** — Semantic map of changes using Cohere embeddings (stub)
