@@ -1,6 +1,7 @@
 """Generate Cohere embeddings for changelog entries."""
 
 import os
+import time
 from pathlib import Path
 
 import cohere
@@ -51,14 +52,23 @@ def main():
         total_batches = (len(texts) + BATCH_SIZE - 1) // BATCH_SIZE
         print(f"  Batch {batch_num}/{total_batches} ({len(batch)} texts)...")
 
-        response = co.embed(
-            model=MODEL,
-            texts=batch,
-            input_type=INPUT_TYPE,
-            embedding_types=["float"],
-            output_dimension=DIMENSIONS,
-        )
-        all_embeddings.extend(response.embeddings.float_)
+        for attempt in range(3):
+            try:
+                response = co.embed(
+                    model=MODEL,
+                    texts=batch,
+                    input_type=INPUT_TYPE,
+                    embedding_types=["float"],
+                    output_dimension=DIMENSIONS,
+                )
+                all_embeddings.extend(response.embeddings.float_)
+                break
+            except Exception as e:
+                if attempt == 2:
+                    raise
+                wait = 2 ** attempt
+                print(f"    Retry {attempt + 1}/3 after {wait}s: {e}")
+                time.sleep(wait)
 
     # Build output dataframe
     embedding_cols = [f"emb_{i}" for i in range(DIMENSIONS)]
