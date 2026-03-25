@@ -479,7 +479,7 @@ def make_bugfix_ratio(df: pd.DataFrame) -> go.Figure:
         xaxis=dict(gridcolor="#e8e5de", gridwidth=1),
         yaxis=dict(title="Bugfix %", side="left", gridcolor="#e8e5de"),
         yaxis2=dict(title="Total entries", side="right", overlaying="y", gridcolor="#e8e5de"),
-        legend=dict(orientation="h", y=1.12),
+        legend=dict(orientation="h", y=1.02, x=0.5, xanchor="center"),
         **layout_no_axes,
     )
     return fig
