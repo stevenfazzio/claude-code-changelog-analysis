@@ -794,17 +794,6 @@ def render_analysis_page() -> str:
     return page_shell("Claude Code Changelog \u2014 Analysis", "analysis", body, extra_head=extra_head)
 
 
-# ── Map Page (Stub) ──────────────────────────────────────────────────────────
-
-
-def render_map_page() -> str:
-    body = """<div class="text-center py-24">
-  <h2 class="font-serif text-[1.1rem] font-normal text-text-secondary">Map</h2>
-  <p class="text-text-secondary text-[0.85rem] mt-2">Semantic map visualization coming soon.</p>
-</div>"""
-    return page_shell("Claude Code Changelog \u2014 Map", "map", body)
-
-
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 
@@ -840,12 +829,7 @@ def main():
     (OUTPUT_DIR / "analysis.html").write_text(analysis)
     print(f"  \u2192 analysis.html ({len(analysis):,} bytes)")
 
-    print("Building map page...")
-    map_page = render_map_page()
-    (OUTPUT_DIR / "map.html").write_text(map_page)
-    print(f"  \u2192 map.html ({len(map_page):,} bytes)")
-
-    print("Done \u2014 3 pages + 2 data files written to docs/")
+    print("Done \u2014 2 pages + 3 data files written to docs/")
 
 
 if __name__ == "__main__":

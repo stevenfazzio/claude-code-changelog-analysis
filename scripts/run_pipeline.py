@@ -13,6 +13,8 @@ STEPS = [
     ("Parse", "parse.py"),
     ("Enrich", "enrich.py"),
     ("Embed", "embed.py"),
+    ("Reduce", "reduce.py"),
+    ("Map Viz", "mapviz.py"),
     ("Dashboard", "dashboard.py"),
 ]
 
