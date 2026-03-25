@@ -1,8 +1,10 @@
 """Generate multi-page HTML site from enriched changelog data."""
 
+import json
 from datetime import datetime
 from pathlib import Path
 
+import glasbey
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -11,8 +13,33 @@ ROOT = Path(__file__).resolve().parent.parent
 INPUT_PATH = ROOT / "data" / "enriched.parquet"
 OUTPUT_DIR = ROOT / "docs"
 
-# Shared styling — muted, Tufte-inspired palette
-COLORS = ["#5b7b6f", "#8b7355", "#7a6f8a", "#9b7c6b", "#6b8f8a", "#a89b7b", "#7b8fa0"]
+# ── Unified color palette ────────────────────────────────────────────────────
+CATEGORIES = [
+    "cli", "config", "mcp", "agents", "other", "performance",
+    "ide", "permissions", "voice", "auth", "hooks", "plugins", "api",
+]
+CATEGORY_COLORS = dict(zip(
+    CATEGORIES,
+    glasbey.create_palette(
+        palette_size=len(CATEGORIES),
+        lightness_bounds=(35, 65),
+        chroma_bounds=(40, 75),
+    ),
+))
+
+TYPE_COLORS = {
+    "feature": "#2d7d46",
+    "bugfix": "#c4382a",
+    "improvement": "#2e6eb8",
+    "breaking": "#d4710e",
+    "internal": "#777777",
+}
+
+COMPLEXITY_COLORS = {
+    "minor": "#888888",
+    "moderate": "#d4910e",
+    "major": "#c4382a",
+}
 FONT = '"IBM Plex Mono", monospace'
 LAYOUT = dict(
     template="plotly_white",
@@ -116,6 +143,21 @@ footer {
 .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="date"] { display: block; }
 .tabulator .tabulator-tableholder .tabulator-table .tabulator-row { border-color: #eae7e0; }
 .tabulator .tabulator-tableholder .tabulator-table .tabulator-row:hover { background: #f4f2ec; }
+/* Table pills & indicators */
+.pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.72rem;
+    color: #fff;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+.complexity-indicator {
+    font-weight: 600;
+    white-space: nowrap;
+}
 /* Stub page */
 .stub {
     text-align: center; padding: 6rem 0;
@@ -211,9 +253,21 @@ def render_explorer_page(df: pd.DataFrame) -> str:
 <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
 """
 
+    cat_colors_js = json.dumps(CATEGORY_COLORS)
+    type_colors_js = json.dumps(TYPE_COLORS)
+    complexity_colors_js = json.dumps(COMPLEXITY_COLORS)
+
     body = f"""<div id="kpi-row" class="kpi-row"></div>
 
 <div id="table"></div>
+
+<script>
+var CAT_COLORS = {cat_colors_js};
+var TYPE_COLORS = {type_colors_js};
+var TYPE_ICONS = {{feature:"\u2726", bugfix:"\u2715", improvement:"\u2191", breaking:"\u26a0", internal:"\u2699"}};
+var COMPLEXITY_COLORS = {complexity_colors_js};
+var COMPLEXITY_DOTS = {{minor:"\u25cf\u25cb\u25cb", moderate:"\u25cf\u25cf\u25cb", major:"\u25cf\u25cf\u25cf"}};
+</script>
 
 <script>
 function minMaxFilterEditor(cell, onRendered, success, cancel) {{
@@ -314,16 +368,36 @@ var table = new Tabulator("#table", {{
     {{title: "Date", field: "date", width: 120, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false}},
     {{title: "Entry", field: "text", widthGrow: 5, headerFilter: "input",
       formatter: "textarea"}},
-    {{title: "Category", field: "category", width: 110, headerFilter: "list",
+    {{title: "Category", field: "category", width: 130, headerFilter: "list",
       headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "asc"}},
-      headerFilterFunc: "in"}},
-    {{title: "Type", field: "change_type", width: 110, headerFilter: "list",
+      headerFilterFunc: "in",
+      formatter: function(cell) {{
+        var v = cell.getValue();
+        var bg = CAT_COLORS[v] || "#888";
+        return '<span class="pill" style="background:' + bg + ';">' + v + '</span>';
+      }}
+    }},
+    {{title: "Type", field: "change_type", width: 140, headerFilter: "list",
       headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "asc"}},
-      headerFilterFunc: "in"}},
-    {{title: "Complexity", field: "complexity", width: 110, headerFilter: "list",
+      headerFilterFunc: "in",
+      formatter: function(cell) {{
+        var v = cell.getValue();
+        var bg = TYPE_COLORS[v] || "#888";
+        var icon = TYPE_ICONS[v] || "";
+        return '<span class="pill" style="background:' + bg + ';">' + icon + ' ' + v + '</span>';
+      }}
+    }},
+    {{title: "Complexity", field: "complexity", width: 130, headerFilter: "list",
       headerFilterParams: {{multiselect: true,
         values: ["minor", "moderate", "major"]}},
-      headerFilterFunc: "in"}},
+      headerFilterFunc: "in",
+      formatter: function(cell) {{
+        var v = cell.getValue();
+        var dots = COMPLEXITY_DOTS[v] || "";
+        var color = COMPLEXITY_COLORS[v] || "#888";
+        return '<span class="complexity-indicator" style="color:' + color + ';">' + dots + ' ' + v + '</span>';
+      }}
+    }},
     {{title: "User-facing", field: "user_facing", width: 115, headerFilter: "list",
       headerFilterParams: {{values: ["Yes", "No"]}}}},
   ],
@@ -348,7 +422,7 @@ table.on("tableBuilt", function() {{
 def make_release_cadence(df: pd.DataFrame) -> go.Figure:
     weekly = df.groupby("week")["version"].nunique().reset_index()
     weekly.columns = ["week", "versions"]
-    fig = px.bar(weekly, x="week", y="versions", color_discrete_sequence=COLORS)
+    fig = px.bar(weekly, x="week", y="versions", color_discrete_sequence=[CATEGORY_COLORS["cli"]])
     fig.update_layout(
         title="Release Cadence (versions per week)",
         xaxis_title="",
@@ -365,7 +439,7 @@ def make_entries_histogram(df: pd.DataFrame) -> go.Figure:
         x="entries",
         marginal="box",
         nbins=40,
-        color_discrete_sequence=COLORS,
+        color_discrete_sequence=[CATEGORY_COLORS["config"]],
     )
     fig.update_layout(
         title="Entries Per Version",
@@ -388,7 +462,7 @@ def make_category_trends(df: pd.DataFrame) -> go.Figure:
         x="month",
         y="count",
         color="category",
-        color_discrete_sequence=COLORS,
+        color_discrete_map=CATEGORY_COLORS,
     )
     fig.update_layout(
         title="Category Trends (monthly)",
@@ -401,13 +475,15 @@ def make_category_trends(df: pd.DataFrame) -> go.Figure:
 
 def make_category_dist(df: pd.DataFrame) -> go.Figure:
     counts = df["category"].value_counts().sort_values()
+    colors = [CATEGORY_COLORS.get(cat, "#888") for cat in counts.index]
     fig = px.bar(
         x=counts.values,
         y=counts.index,
         orientation="h",
-        color_discrete_sequence=COLORS,
+        color_discrete_sequence=colors,
         text=counts.values,
     )
+    fig.update_traces(marker_color=colors)
     fig.update_layout(
         title="Category Distribution",
         xaxis_title="Entries",
@@ -420,12 +496,13 @@ def make_category_dist(df: pd.DataFrame) -> go.Figure:
 
 def make_change_type_donut(df: pd.DataFrame) -> go.Figure:
     counts = df["change_type"].value_counts()
+    colors = [TYPE_COLORS.get(t, "#888") for t in counts.index]
     fig = go.Figure(
         go.Pie(
             labels=counts.index,
             values=counts.values,
             hole=0.4,
-            marker_colors=COLORS[: len(counts)],
+            marker_colors=colors,
         )
     )
     fig.update_layout(title="Change Type", **LAYOUT)
@@ -435,12 +512,13 @@ def make_change_type_donut(df: pd.DataFrame) -> go.Figure:
 def make_complexity_donut(df: pd.DataFrame) -> go.Figure:
     order = ["minor", "moderate", "major"]
     counts = df["complexity"].value_counts().reindex(order).dropna()
+    colors = [COMPLEXITY_COLORS.get(c, "#888") for c in counts.index]
     fig = go.Figure(
         go.Pie(
             labels=counts.index,
             values=counts.values,
             hole=0.4,
-            marker_colors=COLORS[: len(counts)],
+            marker_colors=colors,
         )
     )
     fig.update_layout(title="Complexity", **LAYOUT)
@@ -460,7 +538,7 @@ def make_bugfix_ratio(df: pd.DataFrame) -> go.Figure:
             y=monthly["pct"],
             name="Bugfix %",
             mode="lines+markers",
-            marker_color=COLORS[0],
+            marker_color=TYPE_COLORS["bugfix"],
         )
     )
     fig.add_trace(
@@ -468,7 +546,7 @@ def make_bugfix_ratio(df: pd.DataFrame) -> go.Figure:
             x=monthly.index,
             y=monthly["total"],
             name="Total entries",
-            marker_color=COLORS[1],
+            marker_color="#a89b7b",
             opacity=0.35,
             yaxis="y2",
         )
@@ -491,7 +569,7 @@ def make_heatmap(df: pd.DataFrame) -> go.Figure:
     fig = px.imshow(
         ct,
         text_auto=".0f",
-        color_continuous_scale=[[0, "#faf9f6"], [1, "#5b7b6f"]],
+        color_continuous_scale=[[0, "#faf9f6"], [1, CATEGORY_COLORS["cli"]]],
         aspect="auto",
     )
     fig.update_layout(
@@ -512,7 +590,7 @@ def make_major_changes(df: pd.DataFrame) -> go.Figure:
         y="category",
         color="category",
         hover_data={"short_text": True, "version": True, "date": False, "category": False},
-        color_discrete_sequence=COLORS,
+        color_discrete_map=CATEGORY_COLORS,
     )
     fig.update_traces(marker_size=10)
     fig.update_layout(

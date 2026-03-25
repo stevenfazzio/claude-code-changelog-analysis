@@ -170,6 +170,7 @@ dependencies = [
     { name = "anthropic" },
     { name = "cohere" },
     { name = "datamapplot" },
+    { name = "glasbey" },
     { name = "marimo" },
     { name = "numpy" },
     { name = "pandas" },
@@ -184,6 +185,7 @@ requires-dist = [
     { name = "anthropic", specifier = ">=0.40" },
     { name = "cohere", specifier = ">=5.0" },
     { name = "datamapplot", specifier = ">=0.5" },
+    { name = "glasbey", specifier = ">=0.2" },
     { name = "marimo", specifier = ">=0.10" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "pandas", specifier = ">=2.2" },
@@ -565,6 +567,22 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/51/7c/f60c259dcbf4f0c47cc4ddb8f7720d2dcdc8888c8e5ad84c73ea4531cc5b/fsspec-2026.2.0.tar.gz", hash = "sha256:6544e34b16869f5aacd5b90bdf1a71acb37792ea3ddf6125ee69a22a53fb8bff", size = 313441 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e6/ab/fb21f4c939bb440104cc2b396d3be1d9b7a9fd3c6c2a53d98c45b3d7c954/fsspec-2026.2.0-py3-none-any.whl", hash = "sha256:98de475b5cb3bd66bedd5c4679e87b4fdfe1a3bf4d707b151b3c07e58c9a2437", size = 202505 },
+]
+
+[[package]]
+name = "glasbey"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorspacious" },
+    { name = "matplotlib" },
+    { name = "numba" },
+    { name = "numpy" },
+    { name = "scikit-learn" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/76/f0/d7bf369524811c8bf8ac81f75ae2b2ef1c4666487d9448ca0c99513857a6/glasbey-0.3.0.tar.gz", hash = "sha256:8f2c26cc7bb5ae2b8cee7c9c93b28d0edabf5e617a0f152c7519fa981ec79cda", size = 18414 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/06/83/3bdfdf95ee8a3a55b93ebccea61814b800dc3b4f516bbf9e60620fc3d4af/glasbey-0.3.0-py3-none-any.whl", hash = "sha256:f098fc3b884f02a7f8d4d0ca95f36d719d5a566c2deb6e4ae2bb5ff1109a3c91", size = 18186 },
 ]
 
 [[package]]

@@ -82,6 +82,21 @@ footer {
 .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="date"] { display: block; }
 .tabulator .tabulator-tableholder .tabulator-table .tabulator-row { border-color: #eae7e0; }
 .tabulator .tabulator-tableholder .tabulator-table .tabulator-row:hover { background: #f4f2ec; }
+/* Table pills & indicators */
+.pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.72rem;
+    color: #fff;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+.complexity-indicator {
+    font-weight: 600;
+    white-space: nowrap;
+}
 /* Stub page */
 .stub {
     text-align: center; padding: 6rem 0;
@@ -111,6 +126,14 @@ footer {
 <div id="kpi-row" class="kpi-row"></div>
 
 <div id="table"></div>
+
+<script>
+var CAT_COLORS = {"cli": "#be3514", "config": "#5d65fb", "mcp": "#008a00", "agents": "#f382ff", "other": "#00cadf", "performance": "#dfa600", "ide": "#a228ce", "permissions": "#866514", "voice": "#a6aeff", "auth": "#ff8e7d", "hooks": "#82c686", "plugins": "#0c7992", "api": "#df3d8e"};
+var TYPE_COLORS = {"feature": "#2d7d46", "bugfix": "#c4382a", "improvement": "#2e6eb8", "breaking": "#d4710e", "internal": "#777777"};
+var TYPE_ICONS = {feature:"✦", bugfix:"✕", improvement:"↑", breaking:"⚠", internal:"⚙"};
+var COMPLEXITY_COLORS = {"minor": "#888888", "moderate": "#d4910e", "major": "#c4382a"};
+var COMPLEXITY_DOTS = {minor:"●○○", moderate:"●●○", major:"●●●"};
+</script>
 
 <script>
 function minMaxFilterEditor(cell, onRendered, success, cancel) {
@@ -211,16 +234,36 @@ var table = new Tabulator("#table", {
     {title: "Date", field: "date", width: 120, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false},
     {title: "Entry", field: "text", widthGrow: 5, headerFilter: "input",
       formatter: "textarea"},
-    {title: "Category", field: "category", width: 110, headerFilter: "list",
+    {title: "Category", field: "category", width: 130, headerFilter: "list",
       headerFilterParams: {valuesLookup: true, multiselect: true, sort: "asc"},
-      headerFilterFunc: "in"},
-    {title: "Type", field: "change_type", width: 110, headerFilter: "list",
+      headerFilterFunc: "in",
+      formatter: function(cell) {
+        var v = cell.getValue();
+        var bg = CAT_COLORS[v] || "#888";
+        return '<span class="pill" style="background:' + bg + ';">' + v + '</span>';
+      }
+    },
+    {title: "Type", field: "change_type", width: 140, headerFilter: "list",
       headerFilterParams: {valuesLookup: true, multiselect: true, sort: "asc"},
-      headerFilterFunc: "in"},
-    {title: "Complexity", field: "complexity", width: 110, headerFilter: "list",
+      headerFilterFunc: "in",
+      formatter: function(cell) {
+        var v = cell.getValue();
+        var bg = TYPE_COLORS[v] || "#888";
+        var icon = TYPE_ICONS[v] || "";
+        return '<span class="pill" style="background:' + bg + ';">' + icon + ' ' + v + '</span>';
+      }
+    },
+    {title: "Complexity", field: "complexity", width: 130, headerFilter: "list",
       headerFilterParams: {multiselect: true,
         values: ["minor", "moderate", "major"]},
-      headerFilterFunc: "in"},
+      headerFilterFunc: "in",
+      formatter: function(cell) {
+        var v = cell.getValue();
+        var dots = COMPLEXITY_DOTS[v] || "";
+        var color = COMPLEXITY_COLORS[v] || "#888";
+        return '<span class="complexity-indicator" style="color:' + color + ';">' + dots + ' ' + v + '</span>';
+      }
+    },
     {title: "User-facing", field: "user_facing", width: 115, headerFilter: "list",
       headerFilterParams: {values: ["Yes", "No"]}},
   ],
@@ -236,7 +279,7 @@ table.on("tableBuilt", function() {
 </script>
 
 
-<footer>Generated 2026-03-25 11:22 &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
+<footer>Generated 2026-03-25 11:38 &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
 </div>
 </body>
 </html>
