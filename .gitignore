@@ -1,4 +1,5 @@
 data/
+!docs/data/
 CHANGELOG.md
 .venv/
 __pycache__/

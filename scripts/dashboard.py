@@ -5,13 +5,13 @@ from datetime import datetime
 from pathlib import Path
 
 import glasbey
+import numpy as np
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 
 ROOT = Path(__file__).resolve().parent.parent
 INPUT_PATH = ROOT / "data" / "enriched.parquet"
 OUTPUT_DIR = ROOT / "docs"
+DATA_DIR = OUTPUT_DIR / "data"
 
 # ── Unified color palette ────────────────────────────────────────────────────
 CATEGORIES = [
@@ -40,21 +40,6 @@ COMPLEXITY_COLORS = {
     "moderate": "#d4910e",
     "major": "#c4382a",
 }
-FONT = '"IBM Plex Mono", monospace'
-LAYOUT = dict(
-    template="plotly_white",
-    font_family=FONT,
-    font_color="#2c2c2c",
-    font_size=11,
-    margin=dict(l=40, r=40, t=45, b=35),
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
-    title_font_size=13,
-    title_font_family='"Newsreader", Georgia, serif',
-    title_font_color="#2c2c2c",
-    xaxis=dict(gridcolor="#e8e5de", gridwidth=1),
-    yaxis=dict(gridcolor="#e8e5de", gridwidth=1),
-)
 
 
 def load_data() -> pd.DataFrame:
@@ -65,77 +50,132 @@ def load_data() -> pd.DataFrame:
     return df
 
 
+# ── Data File Generation ────────────────────────────────────────────────────
+
+
+def generate_entries_json(df: pd.DataFrame) -> list[dict]:
+    cols = ["date", "text", "category", "change_type", "complexity", "user_facing"]
+    export = df[cols].copy()
+    export["date"] = export["date"].dt.strftime("%Y-%m-%d").replace("NaT", "")
+    export["user_facing"] = export["user_facing"].map({True: "Yes", False: "No"})
+    records = export.to_dict(orient="records")
+    # Replace any remaining NaN/None values with empty strings for JSON safety
+    for rec in records:
+        for k, v in rec.items():
+            if v is None or (isinstance(v, float) and np.isnan(v)):
+                rec[k] = ""
+    return records
+
+
+def generate_analysis_json(df: pd.DataFrame) -> dict:
+    # Category trends (monthly)
+    order = df["category"].value_counts().index.tolist()
+    monthly = df.groupby(["month", "category"]).size().reset_index(name="count")
+    months_sorted = sorted(m for m in df["month"].unique() if pd.notna(m))
+    months_str = [m.strftime("%Y-%m-%d") for m in months_sorted]
+    series = {}
+    for cat in order:
+        cat_data = monthly[monthly["category"] == cat].set_index("month")["count"]
+        series[cat] = [int(cat_data.get(m, 0)) for m in months_sorted]
+
+    # Release cadence (weekly)
+    weekly = df.groupby("week")["version"].nunique().reset_index()
+    weekly.columns = ["week", "versions"]
+    weekly = weekly.sort_values("week")
+
+    # Category distribution
+    cat_counts = df["category"].value_counts().sort_values()
+
+    # Change type counts
+    type_counts = df["change_type"].value_counts()
+
+    # Complexity counts
+    complexity_order = ["minor", "moderate", "major"]
+    complexity_counts = df["complexity"].value_counts().reindex(complexity_order).dropna()
+
+    # Bugfix ratio
+    monthly_agg = df.groupby("month").agg(
+        total=("change_type", "size"),
+        bugfixes=("change_type", lambda s: (s == "bugfix").sum()),
+    )
+    monthly_agg["pct"] = (monthly_agg["bugfixes"] / monthly_agg["total"] * 100).round(1)
+    monthly_agg = monthly_agg.sort_index()
+
+    # Heatmap (category x change_type, row-normalized %)
+    ct = pd.crosstab(df["category"], df["change_type"], normalize="index") * 100
+    ct = ct.loc[ct.sum(axis=1).sort_values(ascending=True).index]
+    heatmap_data = []
+    for yi, cat in enumerate(ct.index):
+        for xi, ctype in enumerate(ct.columns):
+            heatmap_data.append([xi, yi, round(float(ct.loc[cat, ctype]), 1)])
+
+    # Major changes
+    major = df[df["complexity"] == "major"].copy()
+    major = major.sort_values("date")
+    major_list = [
+        {
+            "date": row["date"].strftime("%Y-%m-%d"),
+            "category": row["category"],
+            "text": row["text"][:200] + "..." if len(row["text"]) > 200 else row["text"],
+        }
+        for _, row in major.iterrows()
+    ]
+
+    # KPIs
+    kpi = {
+        "entries": int(len(df)),
+        "versions": int(df["version"].nunique()),
+        "date_min": df["date"].min().strftime("%b %Y"),
+        "date_max": df["date"].max().strftime("%b %Y"),
+        "top_category": df["category"].value_counts().index[0],
+        "bugfix_pct": int(round((df["change_type"] == "bugfix").mean() * 100)),
+        "user_facing_pct": int(round(df["user_facing"].mean() * 100)),
+    }
+
+    return {
+        "category_trends": {
+            "months": months_str,
+            "series": series,
+        },
+        "release_cadence": {
+            "weeks": [w.strftime("%Y-%m-%d") for w in weekly["week"]],
+            "versions": weekly["versions"].tolist(),
+        },
+        "category_dist": {
+            "categories": cat_counts.index.tolist(),
+            "counts": cat_counts.values.tolist(),
+        },
+        "change_type": {
+            "labels": type_counts.index.tolist(),
+            "values": [int(v) for v in type_counts.values],
+        },
+        "complexity": {
+            "labels": complexity_counts.index.tolist(),
+            "values": [int(v) for v in complexity_counts.values],
+        },
+        "bugfix_ratio": {
+            "months": [m.strftime("%Y-%m-%d") for m in monthly_agg.index],
+            "pct": monthly_agg["pct"].tolist(),
+            "total": [int(v) for v in monthly_agg["total"].values],
+        },
+        "heatmap": {
+            "categories": ct.index.tolist(),
+            "change_types": ct.columns.tolist(),
+            "data": heatmap_data,
+        },
+        "major_changes": major_list,
+        "kpi": kpi,
+        "colors": {
+            "category": CATEGORY_COLORS,
+            "type": TYPE_COLORS,
+            "complexity": COMPLEXITY_COLORS,
+        },
+    }
+
+
 # ── Shared HTML Components ───────────────────────────────────────────────────
 
-SHARED_CSS = """
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-    font-family: "IBM Plex Mono", monospace;
-    background: #faf9f6; color: #2c2c2c;
-    line-height: 1.5;
-}
-.wrapper {
-    max-width: 1100px; margin: 0 auto; padding: 0 2rem;
-}
-h1 {
-    font-family: "Newsreader", Georgia, serif;
-    font-size: 1.6rem; font-weight: 400; color: #2c2c2c;
-    padding-top: 2.5rem;
-}
-.subtitle {
-    font-size: 0.8rem; color: #888; margin-top: 0.2rem;
-}
-.nav {
-    font-size: 0.82rem;
-    padding: 0.8rem 0 0.2rem;
-}
-.nav a {
-    color: #888;
-    text-decoration: none;
-}
-.nav a:hover {
-    color: #2c2c2c;
-}
-.nav a.active {
-    color: #2c2c2c;
-    font-weight: 600;
-}
-.nav .sep {
-    color: #ccc;
-    margin: 0 0.6rem;
-}
-hr {
-    border: none; border-top: 1px solid #d5d0c8;
-    margin: 1rem 0 1.5rem;
-}
-.kpi-row {
-    font-size: 0.82rem; line-height: 2;
-    padding-bottom: 0.5rem;
-    display: flex; flex-wrap: wrap; gap: 0 0.5rem;
-}
-.kpi-sep { color: #ccc; }
-.kpi { white-space: nowrap; }
-.kpi-label { color: #888; }
-.kpi-value { font-weight: 600; color: #2c2c2c; }
-.section { padding: 1.5rem 0 0.5rem; }
-.section h2 {
-    font-family: "Newsreader", Georgia, serif;
-    font-size: 1.1rem; font-weight: 400; color: #555;
-    letter-spacing: 0.02em;
-    margin-bottom: 0.8rem;
-}
-.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.chart-card {
-    border: 1px solid #e0ddd5;
-    padding: 0.5rem;
-    min-height: 350px;
-    background: #faf9f6;
-}
-.chart-card.full { grid-column: span 2; }
-footer {
-    text-align: center; padding: 2.5rem 0 2rem;
-    color: #aaa; font-size: 0.75rem;
-}
+TABULATOR_CSS = """
 /* Tabulator overrides */
 .tabulator { font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; border: 1px solid #e0ddd5; }
 .tabulator .tabulator-header { font-family: "Newsreader", Georgia, serif; font-weight: 400; }
@@ -146,40 +186,18 @@ footer {
 .tabulator .tabulator-tableholder .tabulator-table .tabulator-row:hover { background: #f4f2ec; }
 /* Table pills & indicators */
 .pill {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-size: 0.72rem;
-    color: #fff;
-    font-weight: 600;
-    line-height: 1.4;
-    white-space: nowrap;
+    display: inline-block; padding: 2px 8px; border-radius: 3px;
+    font-size: 0.72rem; color: #fff; font-weight: 600;
+    line-height: 1.4; white-space: nowrap;
 }
-.complexity-indicator {
-    font-weight: 600;
-    white-space: nowrap;
-}
-/* Stub page */
-.stub {
-    text-align: center; padding: 6rem 0;
-}
-.stub p {
-    color: #888; font-size: 0.85rem; margin-top: 0.5rem;
-}
-/* Tabulator responsive collapse toggle */
+.complexity-indicator { font-weight: 600; white-space: nowrap; }
+/* Tabulator responsive collapse */
 .tabulator-responsive-collapse { padding: 8px 12px; }
 .tabulator-responsive-collapse table { font-size: 0.75rem; width: 100%; }
 .tabulator-responsive-collapse table td { padding: 2px 8px; vertical-align: top; }
 .tabulator-responsive-collapse table td:first-child { font-weight: 600; color: #888; white-space: nowrap; }
 .tabulator-responsive-collapse-toggle { display: inline-flex; align-items: center; justify-content: center; }
-@media (max-width: 900px) {
-    .chart-grid { grid-template-columns: 1fr; }
-    .chart-card.full { grid-column: span 1; }
-    .wrapper { padding: 0 1rem; }
-}
 @media (max-width: 600px) {
-    h1 { font-size: 1.3rem; padding-top: 1.5rem; }
-    .kpi-row { font-size: 0.75rem; }
     .tabulator { font-size: 0.72rem; }
     .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="date"] {
         font-size: 0.6rem; padding: 0 1px;
@@ -191,14 +209,44 @@ footer {
 }
 """
 
+TAILWIND_CONFIG = """
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        cream: '#faf9f6',
+        'cream-dark': '#f4f2ec',
+        border: '#e0ddd5',
+        'border-light': '#e8e5de',
+        'text-primary': '#2c2c2c',
+        'text-secondary': '#888',
+        'text-muted': '#aaa',
+        divider: '#d5d0c8',
+      },
+      fontFamily: {
+        mono: ['"IBM Plex Mono"', 'monospace'],
+        serif: ['"Newsreader"', 'Georgia', 'serif'],
+      },
+      maxWidth: {
+        site: '1100px',
+      },
+    },
+  },
+}
+</script>
+"""
+
 
 def nav_html(active: str) -> str:
     pages = [("Explorer", "index.html"), ("Analysis", "analysis.html"), ("Map", "map.html")]
     links = []
     for label, href in pages:
-        cls = ' class="active"' if label.lower() == active else ""
-        links.append(f'<a href="{href}"{cls}>{label}</a>')
-    return '<nav class="nav">' + '<span class="sep">&middot;</span>'.join(links) + "</nav>"
+        cls = "text-text-primary font-semibold" if label.lower() == active else "text-text-secondary hover:text-text-primary"
+        links.append(f'<a href="{href}" class="{cls} no-underline">{label}</a>')
+    sep = '<span class="text-border mx-2">&middot;</span>'
+    return f'<nav class="text-[0.82rem] pt-3 pb-0.5">{sep.join(links)}</nav>'
 
 
 def page_shell(title: str, nav_active: str, body_content: str, extra_head: str = "") -> str:
@@ -211,75 +259,40 @@ def page_shell(title: str, nav_active: str, body_content: str, extra_head: str =
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">
-<style>{SHARED_CSS}</style>
+{TAILWIND_CONFIG}
 {extra_head}
 </head>
-<body>
-<div class="wrapper">
+<body class="font-mono bg-cream text-text-primary leading-relaxed text-[11px]">
+<div class="max-w-site mx-auto px-8 max-md:px-4">
 
-<h1>Claude Code Changelog</h1>
-<p class="subtitle">Trends and patterns from the Claude Code changelog</p>
+<h1 class="font-serif text-[1.6rem] font-normal text-text-primary pt-10 max-sm:text-[1.3rem] max-sm:pt-6">Claude Code Changelog</h1>
+<p class="text-[0.8rem] text-text-secondary mt-0.5">Trends and patterns from the Claude Code changelog</p>
 {nav_html(nav_active)}
-<hr>
+<hr class="border-t border-divider my-4 mb-6">
 
 {body_content}
 
-<footer>Generated {datetime.now():%Y-%m-%d %H:%M} &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
+<footer class="text-center py-10 text-text-muted text-xs">Generated {datetime.now():%Y-%m-%d %H:%M} &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
 </div>
 </body>
 </html>"""
 
 
-# ── KPI Cards ────────────────────────────────────────────────────────────────
-
-
-def make_kpi_cards(df: pd.DataFrame) -> str:
-    stats = [
-        ("Entries", f"{len(df):,}"),
-        ("Versions", f"{df['version'].nunique():,}"),
-        (
-            "Range",
-            f"{df['date'].min():%b %Y} – {df['date'].max():%b %Y}",
-        ),
-        ("Top Category", df["category"].value_counts().index[0]),
-        ("Bugfix %", f"{(df['change_type'] == 'bugfix').mean():.0%}"),
-        ("User-Facing %", f"{df['user_facing'].mean():.0%}"),
-    ]
-    parts = []
-    for i, (label, val) in enumerate(stats):
-        if i > 0:
-            parts.append('<span class="kpi-sep">&middot;</span>')
-        parts.append(
-            f'<span class="kpi"><span class="kpi-label">{label}</span> '
-            f'<span class="kpi-value">{val}</span></span>'
-        )
-    return f'<div class="kpi-row">{"".join(parts)}</div>'
-
-
 # ── Explorer Page ────────────────────────────────────────────────────────────
 
 
-def _explorer_data_json(df: pd.DataFrame) -> str:
-    cols = ["date", "text", "category", "change_type", "complexity", "user_facing"]
-    export = df[cols].copy()
-    export["date"] = export["date"].dt.strftime("%Y-%m-%d")
-    export["user_facing"] = export["user_facing"].map({True: "Yes", False: "No"})
-    return export.to_json(orient="records")
-
-
 def render_explorer_page(df: pd.DataFrame) -> str:
-    data_json = _explorer_data_json(df)
-
-    extra_head = """
+    extra_head = f"""
 <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
 <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
+<style>{TABULATOR_CSS}</style>
 """
 
     cat_colors_js = json.dumps(CATEGORY_COLORS)
     type_colors_js = json.dumps(TYPE_COLORS)
     complexity_colors_js = json.dumps(COMPLEXITY_COLORS)
 
-    body = f"""<div id="kpi-row" class="kpi-row"></div>
+    body = f"""<div id="kpi-row" class="text-[0.82rem] leading-8 pb-2 flex flex-wrap gap-x-2 max-sm:text-[0.75rem]"></div>
 
 <div id="table"></div>
 
@@ -349,7 +362,7 @@ function minMaxFilterFunction(headerValue, rowValue) {{
 function updateKpis(rows) {{
   var n = rows.length;
   if (n === 0) {{
-    document.getElementById("kpi-row").innerHTML = '<span class="kpi"><span class="kpi-label">Entries</span> <span class="kpi-value">0</span></span>';
+    document.getElementById("kpi-row").innerHTML = '<span class="whitespace-nowrap"><span class="text-text-secondary">Entries</span> <span class="font-semibold text-text-primary">0</span></span>';
     return;
   }}
   var dates = rows.map(function(r) {{ return r.getData().date; }}).filter(Boolean).sort();
@@ -376,324 +389,363 @@ function updateKpis(rows) {{
     ["Bugfix %", bugPct],
     ["User-Facing %", ufPct],
   ];
+  var sep = '<span class="text-border">&middot;</span>';
   document.getElementById("kpi-row").innerHTML = stats.map(function(s) {{
-    return '<span class="kpi"><span class="kpi-label">' + s[0] + '</span> <span class="kpi-value">' + s[1] + '</span></span>';
-  }}).join(" &middot; ");
+    return '<span class="whitespace-nowrap"><span class="text-text-secondary">' + s[0] + '</span> <span class="font-semibold text-text-primary">' + s[1] + '</span></span>';
+  }}).join(" " + sep + " ");
 }}
 
-var table = new Tabulator("#table", {{
-  data: {data_json},
-  layout: "fitColumns",
-  responsiveLayout: "collapse",
-  responsiveLayoutCollapseStartOpen: false,
-  height: "75vh",
-  initialSort: [{{column: "date", dir: "desc"}}],
-  columns: [
-    {{formatter: "responsiveCollapse", width: 30, minWidth: 30, hozAlign: "center",
-      resizable: false, headerSort: false, responsive: 0}},
-    {{title: "Date", field: "date", minWidth: 90, width: 120, responsive: 0,
-      headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction,
-      headerFilterLiveFilter: false}},
-    {{title: "Entry", field: "text", widthGrow: 5, minWidth: 150, responsive: 0,
-      headerFilter: "input", formatter: "textarea"}},
-    {{title: "Category", field: "category", minWidth: 120, width: 130, responsive: 1,
-      headerFilter: "list",
-      headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "asc"}},
-      headerFilterFunc: "in",
-      formatter: function(cell) {{
-        var v = cell.getValue();
-        var bg = CAT_COLORS[v] || "#888";
-        return '<span class="pill" style="background:' + bg + ';">' + v + '</span>';
-      }}
-    }},
-    {{title: "Type", field: "change_type", width: 140, responsive: 2,
-      headerFilter: "list",
-      headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "asc"}},
-      headerFilterFunc: "in",
-      formatter: function(cell) {{
-        var v = cell.getValue();
-        var bg = TYPE_COLORS[v] || "#888";
-        var icon = TYPE_ICONS[v] || "";
-        return '<span class="pill" style="background:' + bg + ';">' + icon + ' ' + v + '</span>';
-      }}
-    }},
-    {{title: "Complexity", field: "complexity", width: 130, responsive: 3,
-      headerFilter: "list",
-      headerFilterParams: {{multiselect: true,
-        values: ["minor", "moderate", "major"]}},
-      headerFilterFunc: "in",
-      formatter: function(cell) {{
-        var v = cell.getValue();
-        var dots = COMPLEXITY_DOTS[v] || "";
-        var color = COMPLEXITY_COLORS[v] || "#888";
-        return '<span class="complexity-indicator" style="color:' + color + ';">' + dots + ' ' + v + '</span>';
-      }}
-    }},
-    {{title: "User-facing", field: "user_facing", width: 115, responsive: 3,
-      headerFilter: "list",
-      headerFilterParams: {{values: ["Yes", "No"]}}}},
-  ],
-}});
+fetch("data/entries.json")
+  .then(function(r) {{ return r.json(); }})
+  .then(function(data) {{
+    var table = new Tabulator("#table", {{
+      data: data,
+      layout: "fitColumns",
+      responsiveLayout: "collapse",
+      responsiveLayoutCollapseStartOpen: false,
+      height: "75vh",
+      initialSort: [{{column: "date", dir: "desc"}}],
+      columns: [
+        {{formatter: "responsiveCollapse", width: 30, minWidth: 30, hozAlign: "center",
+          resizable: false, headerSort: false, responsive: 0}},
+        {{title: "Date", field: "date", minWidth: 90, width: 120, responsive: 0,
+          headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction,
+          headerFilterLiveFilter: false}},
+        {{title: "Entry", field: "text", widthGrow: 5, minWidth: 150, responsive: 0,
+          headerFilter: "input", formatter: "textarea"}},
+        {{title: "Category", field: "category", minWidth: 120, width: 130, responsive: 1,
+          headerFilter: "list",
+          headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "asc"}},
+          headerFilterFunc: "in",
+          formatter: function(cell) {{
+            var v = cell.getValue();
+            var bg = CAT_COLORS[v] || "#888";
+            return '<span class="pill" style="background:' + bg + ';">' + v + '</span>';
+          }}
+        }},
+        {{title: "Type", field: "change_type", width: 140, responsive: 2,
+          headerFilter: "list",
+          headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "asc"}},
+          headerFilterFunc: "in",
+          formatter: function(cell) {{
+            var v = cell.getValue();
+            var bg = TYPE_COLORS[v] || "#888";
+            var icon = TYPE_ICONS[v] || "";
+            return '<span class="pill" style="background:' + bg + ';">' + icon + ' ' + v + '</span>';
+          }}
+        }},
+        {{title: "Complexity", field: "complexity", width: 130, responsive: 3,
+          headerFilter: "list",
+          headerFilterParams: {{multiselect: true,
+            values: ["minor", "moderate", "major"]}},
+          headerFilterFunc: "in",
+          formatter: function(cell) {{
+            var v = cell.getValue();
+            var dots = COMPLEXITY_DOTS[v] || "";
+            var color = COMPLEXITY_COLORS[v] || "#888";
+            return '<span class="complexity-indicator" style="color:' + color + ';">' + dots + ' ' + v + '</span>';
+          }}
+        }},
+        {{title: "User-facing", field: "user_facing", width: 115, responsive: 3,
+          headerFilter: "list",
+          headerFilterParams: {{values: ["Yes", "No"]}}}},
+      ],
+    }});
 
-table.on("dataFiltered", function(filters, rows) {{
-  updateKpis(rows);
-}});
+    table.on("dataFiltered", function(filters, rows) {{
+      updateKpis(rows);
+    }});
 
-table.on("tableBuilt", function() {{
-  updateKpis(table.getRows("active"));
-}});
+    table.on("tableBuilt", function() {{
+      updateKpis(table.getRows("active"));
+    }});
+  }});
 </script>
 """
 
-    return page_shell("Claude Code Changelog — Explorer", "explorer", body, extra_head=extra_head)
+    return page_shell("Claude Code Changelog \u2014 Explorer", "explorer", body, extra_head=extra_head)
 
 
-# ── Analysis Page (Charts) ───────────────────────────────────────────────────
+# ── Analysis Page (ECharts) ──────────────────────────────────────────────────
+
+ECHARTS_JS = """
+<script>
+var BASE_TEXT = {fontFamily: '"IBM Plex Mono", monospace', color: '#2c2c2c', fontSize: 11};
+var TITLE_TEXT = {fontFamily: '"Newsreader", Georgia, serif', fontSize: 13, color: '#2c2c2c', fontWeight: 'normal'};
+
+function initChart(id, option) {
+  var dom = document.getElementById(id);
+  if (!dom) return null;
+  var chart = echarts.init(dom);
+  chart.setOption(option);
+  return chart;
+}
+
+var charts = [];
+window.addEventListener('resize', function() {
+  charts.forEach(function(c) { if (c) c.resize(); });
+});
+
+fetch('data/analysis.json')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var cc = data.colors.category;
+    var tc = data.colors.type;
+    var xc = data.colors.complexity;
+
+    // KPIs
+    var k = data.kpi;
+    var kpis = [
+      ['Entries', k.entries.toLocaleString()],
+      ['Versions', k.versions.toLocaleString()],
+      ['Range', k.date_min + ' \\u2013 ' + k.date_max],
+      ['Top Category', k.top_category],
+      ['Bugfix %', k.bugfix_pct + '%'],
+      ['User-Facing %', k.user_facing_pct + '%'],
+    ];
+    var sep = '<span class="text-border">\\u00b7</span>';
+    document.getElementById('kpi-row').innerHTML = kpis.map(function(s) {
+      return '<span class="whitespace-nowrap"><span class="text-text-secondary">' + s[0] + '</span> <span class="font-semibold text-text-primary">' + s[1] + '</span></span>';
+    }).join(' ' + sep + ' ');
+
+    // 1. Category Trends (stacked area)
+    var trendSeries = Object.keys(data.category_trends.series).reverse().map(function(cat) {
+      return {
+        name: cat,
+        type: 'line',
+        stack: 'total',
+        areaStyle: {opacity: 0.7},
+        symbol: 'none',
+        lineStyle: {width: 1},
+        itemStyle: {color: cc[cat]},
+        data: data.category_trends.months.map(function(m, i) {
+          return [m, data.category_trends.series[cat][i]];
+        }),
+      };
+    });
+    charts.push(initChart('chart-category-trends', {
+      title: {text: 'Category Trends (monthly)', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {trigger: 'axis'},
+      legend: {type: 'scroll', bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
+      grid: {left: 40, right: 20, top: 45, bottom: 50},
+      xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, axisLabel: {fontSize: 10}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      yAxis: {type: 'value', name: 'Entries', axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      series: trendSeries,
+    }));
+
+    // 2. Release Cadence
+    charts.push(initChart('chart-release-cadence', {
+      title: {text: 'Release Cadence (versions per week)', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {trigger: 'axis'},
+      grid: {left: 40, right: 20, top: 45, bottom: 35},
+      xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, axisLabel: {fontSize: 10}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      yAxis: {type: 'value', name: 'Versions', axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      series: [{
+        type: 'bar',
+        itemStyle: {color: cc['cli'] || '#2c2c2c'},
+        data: data.release_cadence.weeks.map(function(w, i) {
+          return [w, data.release_cadence.versions[i]];
+        }),
+      }],
+    }));
+
+    // 3. Category Distribution (horizontal bar)
+    charts.push(initChart('chart-category-dist', {
+      title: {text: 'Category Distribution', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}},
+      grid: {left: 100, right: 60, top: 45, bottom: 20},
+      xAxis: {type: 'value', name: 'Entries', splitLine: {lineStyle: {color: '#e8e5de'}}},
+      yAxis: {type: 'category', data: data.category_dist.categories, axisLabel: {fontSize: 10}},
+      series: [{
+        type: 'bar',
+        data: data.category_dist.counts.map(function(v, i) {
+          return {value: v, itemStyle: {color: cc[data.category_dist.categories[i]] || '#888'}};
+        }),
+        label: {show: true, position: 'right', fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'},
+      }],
+    }));
+
+    // 4. Change Type Donut
+    charts.push(initChart('chart-change-type', {
+      title: {text: 'Change Type', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {trigger: 'item', formatter: '{b}: {c} ({d}%)'},
+      legend: {bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
+      series: [{
+        type: 'pie',
+        radius: ['40%', '70%'],
+        center: ['50%', '45%'],
+        avoidLabelOverlap: false,
+        label: {show: false},
+        data: data.change_type.labels.map(function(l, i) {
+          return {value: data.change_type.values[i], name: l, itemStyle: {color: tc[l] || '#888'}};
+        }),
+      }],
+    }));
+
+    // 5. Complexity Donut
+    charts.push(initChart('chart-complexity', {
+      title: {text: 'Complexity', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {trigger: 'item', formatter: '{b}: {c} ({d}%)'},
+      legend: {bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
+      series: [{
+        type: 'pie',
+        radius: ['40%', '70%'],
+        center: ['50%', '45%'],
+        avoidLabelOverlap: false,
+        label: {show: false},
+        data: data.complexity.labels.map(function(l, i) {
+          return {value: data.complexity.values[i], name: l, itemStyle: {color: xc[l] || '#888'}};
+        }),
+      }],
+    }));
+
+    // 6. Bugfix Ratio (dual axis)
+    charts.push(initChart('chart-bugfix-ratio', {
+      title: {text: 'Bugfix Ratio Over Time', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {trigger: 'axis'},
+      legend: {data: ['Bugfix %', 'Total entries'], top: 25, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
+      grid: {left: 50, right: 50, top: 60, bottom: 35},
+      xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      yAxis: [
+        {type: 'value', name: 'Bugfix %', splitLine: {lineStyle: {color: '#e8e5de'}}},
+        {type: 'value', name: 'Total entries', splitLine: {show: false}},
+      ],
+      series: [
+        {
+          name: 'Bugfix %',
+          type: 'line',
+          yAxisIndex: 0,
+          symbol: 'circle',
+          symbolSize: 6,
+          itemStyle: {color: tc['bugfix']},
+          data: data.bugfix_ratio.months.map(function(m, i) {
+            return [m, data.bugfix_ratio.pct[i]];
+          }),
+        },
+        {
+          name: 'Total entries',
+          type: 'bar',
+          yAxisIndex: 1,
+          itemStyle: {color: '#a89b7b', opacity: 0.35},
+          data: data.bugfix_ratio.months.map(function(m, i) {
+            return [m, data.bugfix_ratio.total[i]];
+          }),
+        },
+      ],
+    }));
+
+    // 7. Heatmap (Category x Change Type)
+    charts.push(initChart('chart-heatmap', {
+      title: {text: 'Category \\u00d7 Change Type (row %)', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {formatter: function(p) { return p.data[2].toFixed(0) + '%'; }},
+      grid: {left: 100, right: 60, top: 45, bottom: 35},
+      xAxis: {type: 'category', data: data.heatmap.change_types, axisLabel: {fontSize: 10}, splitArea: {show: true}},
+      yAxis: {type: 'category', data: data.heatmap.categories, axisLabel: {fontSize: 10}, splitArea: {show: true}},
+      visualMap: {
+        min: 0, max: 100,
+        calculable: false,
+        orient: 'horizontal',
+        left: 'center',
+        bottom: 0,
+        inRange: {color: ['#faf9f6', cc['cli'] || '#c4382a']},
+        textStyle: {fontSize: 10},
+        show: false,
+      },
+      series: [{
+        type: 'heatmap',
+        data: data.heatmap.data,
+        label: {show: true, fontSize: 10, formatter: function(p) { return p.data[2].toFixed(0) + '%'; }},
+        emphasis: {itemStyle: {shadowBlur: 5, shadowColor: 'rgba(0,0,0,0.2)'}},
+      }],
+    }));
+
+    // 8. Major Changes Timeline (scatter)
+    var majorCategories = [...new Set(data.major_changes.map(function(d) { return d.category; }))].sort();
+    charts.push(initChart('chart-major-changes', {
+      title: {text: 'Major Changes Timeline', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {
+        formatter: function(p) {
+          var d = data.major_changes[p.dataIndex];
+          return '<b>' + d.date + '</b><br><div style="max-width:300px;white-space:normal;word-wrap:break-word;">' + d.text + '</div>';
+        },
+      },
+      grid: {left: 100, right: 20, top: 45, bottom: 35},
+      xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      yAxis: {type: 'category', data: majorCategories, axisLabel: {fontSize: 10}},
+      series: [{
+        type: 'scatter',
+        symbolSize: 10,
+        data: data.major_changes.map(function(d) {
+          return {
+            value: [d.date, d.category],
+            itemStyle: {color: cc[d.category] || '#888'},
+          };
+        }),
+      }],
+    }));
+  });
+</script>
+"""
 
 
-def make_release_cadence(df: pd.DataFrame) -> go.Figure:
-    weekly = df.groupby("week")["version"].nunique().reset_index()
-    weekly.columns = ["week", "versions"]
-    fig = px.bar(weekly, x="week", y="versions", color_discrete_sequence=[CATEGORY_COLORS["cli"]])
-    fig.update_layout(
-        title="Release Cadence (versions per week)",
-        xaxis_title="",
-        yaxis_title="Versions",
-        **LAYOUT,
-    )
-    return fig
+def render_analysis_page() -> str:
+    extra_head = """
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+"""
 
+    body = f"""<div id="kpi-row" class="text-[0.82rem] leading-8 pb-2 flex flex-wrap gap-x-2 max-sm:text-[0.75rem]">
+  <span class="text-text-secondary">Loading...</span>
+</div>
 
-def make_entries_histogram(df: pd.DataFrame) -> go.Figure:
-    per_version = df.groupby("version").size().reset_index(name="entries")
-    fig = px.histogram(
-        per_version,
-        x="entries",
-        marginal="box",
-        nbins=40,
-        color_discrete_sequence=[CATEGORY_COLORS["config"]],
-    )
-    fig.update_layout(
-        title="Entries Per Version",
-        xaxis_title="Number of entries",
-        yaxis_title="Count of versions",
-        **LAYOUT,
-    )
-    return fig
-
-
-def make_category_trends(df: pd.DataFrame) -> go.Figure:
-    monthly = df.groupby(["month", "category"]).size().reset_index(name="count")
-    # Order by total count descending so smallest categories stack on top
-    order = df["category"].value_counts().index.tolist()
-    monthly["category"] = pd.Categorical(monthly["category"], categories=order, ordered=True)
-    monthly = monthly.sort_values(["month", "category"])
-    fig = px.area(
-        monthly,
-        x="month",
-        y="count",
-        color="category",
-        color_discrete_map=CATEGORY_COLORS,
-    )
-    fig.update_layout(
-        title="Category Trends (monthly)",
-        xaxis_title="",
-        yaxis_title="Entries",
-        legend_traceorder="reversed",
-        **LAYOUT,
-    )
-    return fig
-
-
-def make_category_dist(df: pd.DataFrame) -> go.Figure:
-    counts = df["category"].value_counts().sort_values()
-    colors = [CATEGORY_COLORS.get(cat, "#888") for cat in counts.index]
-    fig = px.bar(
-        x=counts.values,
-        y=counts.index,
-        orientation="h",
-        color_discrete_sequence=colors,
-        text=counts.values,
-    )
-    fig.update_traces(marker_color=colors)
-    fig.update_layout(
-        title="Category Distribution",
-        xaxis_title="Entries",
-        yaxis_title="",
-        **LAYOUT,
-    )
-    fig.update_traces(textposition="outside")
-    return fig
-
-
-def make_change_type_donut(df: pd.DataFrame) -> go.Figure:
-    counts = df["change_type"].value_counts()
-    colors = [TYPE_COLORS.get(t, "#888") for t in counts.index]
-    fig = go.Figure(
-        go.Pie(
-            labels=counts.index,
-            values=counts.values,
-            hole=0.4,
-            marker_colors=colors,
-        )
-    )
-    fig.update_layout(title="Change Type", **LAYOUT)
-    return fig
-
-
-def make_complexity_donut(df: pd.DataFrame) -> go.Figure:
-    order = ["minor", "moderate", "major"]
-    counts = df["complexity"].value_counts().reindex(order).dropna()
-    colors = [COMPLEXITY_COLORS.get(c, "#888") for c in counts.index]
-    fig = go.Figure(
-        go.Pie(
-            labels=counts.index,
-            values=counts.values,
-            hole=0.4,
-            marker_colors=colors,
-        )
-    )
-    fig.update_layout(title="Complexity", **LAYOUT)
-    return fig
-
-
-def make_bugfix_ratio(df: pd.DataFrame) -> go.Figure:
-    monthly = df.groupby("month").agg(
-        total=("change_type", "size"),
-        bugfixes=("change_type", lambda s: (s == "bugfix").sum()),
-    )
-    monthly["pct"] = monthly["bugfixes"] / monthly["total"] * 100
-    fig = go.Figure()
-    fig.add_trace(
-        go.Scatter(
-            x=monthly.index,
-            y=monthly["pct"],
-            name="Bugfix %",
-            mode="lines+markers",
-            marker_color=TYPE_COLORS["bugfix"],
-        )
-    )
-    fig.add_trace(
-        go.Bar(
-            x=monthly.index,
-            y=monthly["total"],
-            name="Total entries",
-            marker_color="#a89b7b",
-            opacity=0.35,
-            yaxis="y2",
-        )
-    )
-    layout_no_axes = {k: v for k, v in LAYOUT.items() if k not in ("xaxis", "yaxis")}
-    fig.update_layout(
-        title="Bugfix Ratio Over Time",
-        xaxis=dict(gridcolor="#e8e5de", gridwidth=1),
-        yaxis=dict(title="Bugfix %", side="left", gridcolor="#e8e5de"),
-        yaxis2=dict(title="Total entries", side="right", overlaying="y", gridcolor="#e8e5de"),
-        legend=dict(orientation="h", y=1.02, x=0.5, xanchor="center"),
-        **layout_no_axes,
-    )
-    return fig
-
-
-def make_heatmap(df: pd.DataFrame) -> go.Figure:
-    ct = pd.crosstab(df["category"], df["change_type"], normalize="index") * 100
-    ct = ct.loc[ct.sum(axis=1).sort_values(ascending=True).index]
-    fig = px.imshow(
-        ct,
-        text_auto=".0f",
-        color_continuous_scale=[[0, "#faf9f6"], [1, CATEGORY_COLORS["cli"]]],
-        aspect="auto",
-    )
-    fig.update_layout(
-        title="Category × Change Type (row %)",
-        xaxis_title="Change Type",
-        yaxis_title="",
-        **LAYOUT,
-    )
-    return fig
-
-
-def make_major_changes(df: pd.DataFrame) -> go.Figure:
-    major = df[df["complexity"] == "major"].copy()
-    major["short_text"] = major["text"].str[:80] + "…"
-    fig = px.scatter(
-        major,
-        x="date",
-        y="category",
-        color="category",
-        hover_data={"short_text": True, "version": True, "date": False, "category": False},
-        color_discrete_map=CATEGORY_COLORS,
-    )
-    fig.update_traces(marker_size=10)
-    fig.update_layout(
-        title="Major Changes Timeline",
-        xaxis_title="",
-        yaxis_title="",
-        showlegend=False,
-        **LAYOUT,
-    )
-    return fig
-
-
-def _chart_html(fig: go.Figure, include_js: str | bool = False) -> str:
-    return fig.to_html(full_html=False, include_plotlyjs=include_js)
-
-
-def render_analysis_page(df: pd.DataFrame) -> str:
-    def card(fig, full=False, first=False):
-        cls = "chart-card full" if full else "chart-card"
-        js = "cdn" if first else False
-        return f'<div class="{cls}">{_chart_html(fig, js)}</div>'
-
-    trends = make_category_trends(df)
-    cadence = make_release_cadence(df)
-    cat_dist = make_category_dist(df)
-    type_donut = make_change_type_donut(df)
-    complexity_donut = make_complexity_donut(df)
-    bugfix = make_bugfix_ratio(df)
-    heatmap = make_heatmap(df)
-    major = make_major_changes(df)
-
-    body = f"""{make_kpi_cards(df)}
-
-<div class="section">
-  <h2>Timeline Trends</h2>
-  <div class="chart-grid">
-    {card(trends, full=True, first=True)}
-    {card(cadence, full=True)}
+<div class="pt-6 pb-2">
+  <h2 class="font-serif text-[1.1rem] font-normal text-text-secondary tracking-wide mb-3">Timeline Trends</h2>
+  <div class="grid grid-cols-1 gap-4">
+    <div class="border border-border p-2 bg-cream"><div id="chart-category-trends" class="h-[400px]"></div></div>
+    <div class="border border-border p-2 bg-cream"><div id="chart-release-cadence" class="h-[350px]"></div></div>
   </div>
 </div>
 
-<div class="section">
-  <h2>Distributions</h2>
-  <div class="chart-grid">
-    {card(cat_dist, full=True)}
-    {card(type_donut)}
-    {card(complexity_donut)}
+<div class="pt-6 pb-2">
+  <h2 class="font-serif text-[1.1rem] font-normal text-text-secondary tracking-wide mb-3">Distributions</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="border border-border p-2 bg-cream md:col-span-2"><div id="chart-category-dist" class="h-[400px]"></div></div>
+    <div class="border border-border p-2 bg-cream"><div id="chart-change-type" class="h-[350px]"></div></div>
+    <div class="border border-border p-2 bg-cream"><div id="chart-complexity" class="h-[350px]"></div></div>
   </div>
 </div>
 
-<div class="section">
-  <h2>Deeper Analysis</h2>
-  <div class="chart-grid">
-    {card(bugfix, full=True)}
-    {card(heatmap)}
-    {card(major)}
+<div class="pt-6 pb-2">
+  <h2 class="font-serif text-[1.1rem] font-normal text-text-secondary tracking-wide mb-3">Deeper Analysis</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="border border-border p-2 bg-cream md:col-span-2"><div id="chart-bugfix-ratio" class="h-[350px]"></div></div>
+    <div class="border border-border p-2 bg-cream"><div id="chart-heatmap" class="h-[400px]"></div></div>
+    <div class="border border-border p-2 bg-cream"><div id="chart-major-changes" class="h-[400px]"></div></div>
   </div>
-</div>"""
+</div>
 
-    return page_shell("Claude Code Changelog — Analysis", "analysis", body)
+{ECHARTS_JS}
+"""
+
+    return page_shell("Claude Code Changelog \u2014 Analysis", "analysis", body, extra_head=extra_head)
 
 
 # ── Map Page (Stub) ──────────────────────────────────────────────────────────
 
 
 def render_map_page() -> str:
-    body = """<div class="stub">
-  <h2>Map</h2>
-  <p>Semantic map visualization coming soon.</p>
+    body = """<div class="text-center py-24">
+  <h2 class="font-serif text-[1.1rem] font-normal text-text-secondary">Map</h2>
+  <p class="text-text-secondary text-[0.85rem] mt-2">Semantic map visualization coming soon.</p>
 </div>"""
-    return page_shell("Claude Code Changelog — Map", "map", body)
+    return page_shell("Claude Code Changelog \u2014 Map", "map", body)
 
 
 # ── Main ─────────────────────────────────────────────────────────────────────
@@ -703,23 +755,35 @@ def main():
     print(f"Reading {INPUT_PATH}")
     df = load_data()
     OUTPUT_DIR.mkdir(exist_ok=True)
+    DATA_DIR.mkdir(exist_ok=True)
 
-    print("Building explorer page…")
+    print("Writing data files...")
+    entries_data = generate_entries_json(df)
+    entries_json = json.dumps(entries_data, separators=(",", ":"))
+    (DATA_DIR / "entries.json").write_text(entries_json)
+    print(f"  \u2192 data/entries.json ({len(entries_json):,} bytes)")
+
+    analysis_data = generate_analysis_json(df)
+    analysis_json = json.dumps(analysis_data, separators=(",", ":"))
+    (DATA_DIR / "analysis.json").write_text(analysis_json)
+    print(f"  \u2192 data/analysis.json ({len(analysis_json):,} bytes)")
+
+    print("Building explorer page...")
     explorer = render_explorer_page(df)
     (OUTPUT_DIR / "index.html").write_text(explorer)
-    print(f"  → index.html ({len(explorer):,} bytes)")
+    print(f"  \u2192 index.html ({len(explorer):,} bytes)")
 
-    print("Building analysis page…")
-    analysis = render_analysis_page(df)
+    print("Building analysis page...")
+    analysis = render_analysis_page()
     (OUTPUT_DIR / "analysis.html").write_text(analysis)
-    print(f"  → analysis.html ({len(analysis):,} bytes)")
+    print(f"  \u2192 analysis.html ({len(analysis):,} bytes)")
 
-    print("Building map page…")
+    print("Building map page...")
     map_page = render_map_page()
     (OUTPUT_DIR / "map.html").write_text(map_page)
-    print(f"  → map.html ({len(map_page):,} bytes)")
+    print(f"  \u2192 map.html ({len(map_page):,} bytes)")
 
-    print("Done — 3 pages written to docs/")
+    print("Done \u2014 3 pages + 2 data files written to docs/")
 
 
 if __name__ == "__main__":

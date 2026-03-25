@@ -7,145 +7,50 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-    font-family: "IBM Plex Mono", monospace;
-    background: #faf9f6; color: #2c2c2c;
-    line-height: 1.5;
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        cream: '#faf9f6',
+        'cream-dark': '#f4f2ec',
+        border: '#e0ddd5',
+        'border-light': '#e8e5de',
+        'text-primary': '#2c2c2c',
+        'text-secondary': '#888',
+        'text-muted': '#aaa',
+        divider: '#d5d0c8',
+      },
+      fontFamily: {
+        mono: ['"IBM Plex Mono"', 'monospace'],
+        serif: ['"Newsreader"', 'Georgia', 'serif'],
+      },
+      maxWidth: {
+        site: '1100px',
+      },
+    },
+  },
 }
-.wrapper {
-    max-width: 1100px; margin: 0 auto; padding: 0 2rem;
-}
-h1 {
-    font-family: "Newsreader", Georgia, serif;
-    font-size: 1.6rem; font-weight: 400; color: #2c2c2c;
-    padding-top: 2.5rem;
-}
-.subtitle {
-    font-size: 0.8rem; color: #888; margin-top: 0.2rem;
-}
-.nav {
-    font-size: 0.82rem;
-    padding: 0.8rem 0 0.2rem;
-}
-.nav a {
-    color: #888;
-    text-decoration: none;
-}
-.nav a:hover {
-    color: #2c2c2c;
-}
-.nav a.active {
-    color: #2c2c2c;
-    font-weight: 600;
-}
-.nav .sep {
-    color: #ccc;
-    margin: 0 0.6rem;
-}
-hr {
-    border: none; border-top: 1px solid #d5d0c8;
-    margin: 1rem 0 1.5rem;
-}
-.kpi-row {
-    font-size: 0.82rem; line-height: 2;
-    padding-bottom: 0.5rem;
-    display: flex; flex-wrap: wrap; gap: 0 0.5rem;
-}
-.kpi-sep { color: #ccc; }
-.kpi { white-space: nowrap; }
-.kpi-label { color: #888; }
-.kpi-value { font-weight: 600; color: #2c2c2c; }
-.section { padding: 1.5rem 0 0.5rem; }
-.section h2 {
-    font-family: "Newsreader", Georgia, serif;
-    font-size: 1.1rem; font-weight: 400; color: #555;
-    letter-spacing: 0.02em;
-    margin-bottom: 0.8rem;
-}
-.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.chart-card {
-    border: 1px solid #e0ddd5;
-    padding: 0.5rem;
-    min-height: 350px;
-    background: #faf9f6;
-}
-.chart-card.full { grid-column: span 2; }
-footer {
-    text-align: center; padding: 2.5rem 0 2rem;
-    color: #aaa; font-size: 0.75rem;
-}
-/* Tabulator overrides */
-.tabulator { font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; border: 1px solid #e0ddd5; }
-.tabulator .tabulator-header { font-family: "Newsreader", Georgia, serif; font-weight: 400; }
-.tabulator .tabulator-header .tabulator-col { background: #faf9f6; border-color: #e0ddd5; overflow: visible; }
-.tabulator .tabulator-header .tabulator-col .tabulator-header-filter { overflow: visible; }
-.tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="date"] { display: block; }
-.tabulator .tabulator-tableholder .tabulator-table .tabulator-row { border-color: #eae7e0; }
-.tabulator .tabulator-tableholder .tabulator-table .tabulator-row:hover { background: #f4f2ec; }
-/* Table pills & indicators */
-.pill {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-size: 0.72rem;
-    color: #fff;
-    font-weight: 600;
-    line-height: 1.4;
-    white-space: nowrap;
-}
-.complexity-indicator {
-    font-weight: 600;
-    white-space: nowrap;
-}
-/* Stub page */
-.stub {
-    text-align: center; padding: 6rem 0;
-}
-.stub p {
-    color: #888; font-size: 0.85rem; margin-top: 0.5rem;
-}
-/* Tabulator responsive collapse toggle */
-.tabulator-responsive-collapse { padding: 8px 12px; }
-.tabulator-responsive-collapse table { font-size: 0.75rem; width: 100%; }
-.tabulator-responsive-collapse table td { padding: 2px 8px; vertical-align: top; }
-.tabulator-responsive-collapse table td:first-child { font-weight: 600; color: #888; white-space: nowrap; }
-.tabulator-responsive-collapse-toggle { display: inline-flex; align-items: center; justify-content: center; }
-@media (max-width: 900px) {
-    .chart-grid { grid-template-columns: 1fr; }
-    .chart-card.full { grid-column: span 1; }
-    .wrapper { padding: 0 1rem; }
-}
-@media (max-width: 600px) {
-    h1 { font-size: 1.3rem; padding-top: 1.5rem; }
-    .kpi-row { font-size: 0.75rem; }
-    .tabulator { font-size: 0.72rem; }
-    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="date"] {
-        font-size: 0.6rem; padding: 0 1px;
-    }
-    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="search"],
-    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="text"] {
-        font-size: 0.65rem; padding: 1px 2px;
-    }
-}
-</style>
+</script>
+
 
 </head>
-<body>
-<div class="wrapper">
+<body class="font-mono bg-cream text-text-primary leading-relaxed text-[11px]">
+<div class="max-w-site mx-auto px-8 max-md:px-4">
 
-<h1>Claude Code Changelog</h1>
-<p class="subtitle">Trends and patterns from the Claude Code changelog</p>
-<nav class="nav"><a href="index.html">Explorer</a><span class="sep">&middot;</span><a href="analysis.html">Analysis</a><span class="sep">&middot;</span><a href="map.html" class="active">Map</a></nav>
-<hr>
+<h1 class="font-serif text-[1.6rem] font-normal text-text-primary pt-10 max-sm:text-[1.3rem] max-sm:pt-6">Claude Code Changelog</h1>
+<p class="text-[0.8rem] text-text-secondary mt-0.5">Trends and patterns from the Claude Code changelog</p>
+<nav class="text-[0.82rem] pt-3 pb-0.5"><a href="index.html" class="text-text-secondary hover:text-text-primary no-underline">Explorer</a><span class="text-border mx-2">&middot;</span><a href="analysis.html" class="text-text-secondary hover:text-text-primary no-underline">Analysis</a><span class="text-border mx-2">&middot;</span><a href="map.html" class="text-text-primary font-semibold no-underline">Map</a></nav>
+<hr class="border-t border-divider my-4 mb-6">
 
-<div class="stub">
-  <h2>Map</h2>
-  <p>Semantic map visualization coming soon.</p>
+<div class="text-center py-24">
+  <h2 class="font-serif text-[1.1rem] font-normal text-text-secondary">Map</h2>
+  <p class="text-text-secondary text-[0.85rem] mt-2">Semantic map visualization coming soon.</p>
 </div>
 
-<footer>Generated 2026-03-25 12:23 &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
+<footer class="text-center py-10 text-text-muted text-xs">Generated 2026-03-25 12:55 &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
 </div>
 </body>
 </html>
