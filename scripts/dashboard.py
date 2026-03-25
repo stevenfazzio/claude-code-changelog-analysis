@@ -196,12 +196,10 @@ def make_kpi_cards(df: pd.DataFrame) -> str:
 
 
 def _explorer_data_json(df: pd.DataFrame) -> str:
-    cols = ["version", "date", "text", "category", "change_type", "complexity", "user_facing", "is_vscode", "is_breaking"]
+    cols = ["date", "text", "category", "change_type", "complexity", "user_facing"]
     export = df[cols].copy()
     export["date"] = export["date"].dt.strftime("%Y-%m-%d")
     export["user_facing"] = export["user_facing"].map({True: "Yes", False: "No"})
-    export["is_vscode"] = export["is_vscode"].map({True: "Yes", False: "No"})
-    export["is_breaking"] = export["is_breaking"].map({True: "Yes", False: "No"})
     return export.to_json(orient="records")
 
 
@@ -213,7 +211,7 @@ def render_explorer_page(df: pd.DataFrame) -> str:
 <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
 """
 
-    body = f"""{make_kpi_cards(df)}
+    body = f"""<div id="kpi-row" class="kpi-row"></div>
 
 <div id="table"></div>
 
@@ -272,35 +270,71 @@ function minMaxFilterFunction(headerValue, rowValue) {{
   return true;
 }}
 
+function updateKpis(rows) {{
+  var n = rows.length;
+  if (n === 0) {{
+    document.getElementById("kpi-row").innerHTML = '<span class="kpi"><span class="kpi-label">Entries</span> <span class="kpi-value">0</span></span>';
+    return;
+  }}
+  var dates = rows.map(function(r) {{ return r.getData().date; }}).filter(Boolean).sort();
+  var cats = {{}};
+  var bugfixes = 0;
+  var userFacing = 0;
+  rows.forEach(function(r) {{
+    var d = r.getData();
+    cats[d.category] = (cats[d.category] || 0) + 1;
+    if (d.change_type === "bugfix") bugfixes++;
+    if (d.user_facing === "Yes") userFacing++;
+  }});
+  var topCat = Object.keys(cats).sort(function(a, b) {{ return cats[b] - cats[a]; }})[0];
+  var minDate = new Date(dates[0]);
+  var maxDate = new Date(dates[dates.length - 1]);
+  var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var range = months[minDate.getMonth()] + " " + minDate.getDate() + ", " + minDate.getFullYear() + " \u2013 " + months[maxDate.getMonth()] + " " + maxDate.getDate() + ", " + maxDate.getFullYear();
+  var bugPct = Math.round(bugfixes / n * 100) + "%";
+  var ufPct = Math.round(userFacing / n * 100) + "%";
+  var stats = [
+    ["Entries", n.toLocaleString()],
+    ["Range", range],
+    ["Top Category", topCat],
+    ["Bugfix %", bugPct],
+    ["User-Facing %", ufPct],
+  ];
+  document.getElementById("kpi-row").innerHTML = stats.map(function(s) {{
+    return '<span class="kpi"><span class="kpi-label">' + s[0] + '</span> <span class="kpi-value">' + s[1] + '</span></span>';
+  }}).join(" &middot; ");
+}}
+
 var table = new Tabulator("#table", {{
   data: {data_json},
   layout: "fitColumns",
   height: "75vh",
   initialSort: [{{column: "date", dir: "desc"}}],
   columns: [
-    {{title: "Version", field: "version", headerFilter: "list",
-      headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "desc"}},
-      headerFilterFunc: "in"}},
-    {{title: "Date", field: "date", width: 150, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false}},
-    {{title: "Entry", field: "text", minWidth: 200, widthGrow: 3, headerFilter: "input",
+    {{title: "Date", field: "date", width: 120, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false}},
+    {{title: "Entry", field: "text", widthGrow: 5, headerFilter: "input",
       formatter: "textarea"}},
-    {{title: "Category", field: "category", headerFilter: "list",
+    {{title: "Category", field: "category", width: 110, headerFilter: "list",
       headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "asc"}},
       headerFilterFunc: "in"}},
-    {{title: "Type", field: "change_type", headerFilter: "list",
+    {{title: "Type", field: "change_type", width: 110, headerFilter: "list",
       headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "asc"}},
       headerFilterFunc: "in"}},
-    {{title: "Complexity", field: "complexity", headerFilter: "list",
+    {{title: "Complexity", field: "complexity", width: 110, headerFilter: "list",
       headerFilterParams: {{multiselect: true,
         values: ["minor", "moderate", "major"]}},
       headerFilterFunc: "in"}},
-    {{title: "User-facing", field: "user_facing", headerFilter: "list",
-      headerFilterParams: {{values: ["Yes", "No"]}}}},
-    {{title: "VS Code", field: "is_vscode", headerFilter: "list",
-      headerFilterParams: {{values: ["Yes", "No"]}}}},
-    {{title: "Breaking", field: "is_breaking", headerFilter: "list",
+    {{title: "User-facing", field: "user_facing", width: 115, headerFilter: "list",
       headerFilterParams: {{values: ["Yes", "No"]}}}},
   ],
+}});
+
+table.on("dataFiltered", function(filters, rows) {{
+  updateKpis(rows);
+}});
+
+table.on("tableBuilt", function() {{
+  updateKpis(table.getRows("active"));
 }});
 </script>
 """
