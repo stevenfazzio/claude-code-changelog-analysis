@@ -1,30 +1,27 @@
-"""Fetch CHANGELOG.md and git blame data from the Claude Code GitHub repo."""
+"""Fetch CHANGELOG.md and version dates from the Claude Code GitHub repo."""
 
 import base64
 import json
 import subprocess
-import sys
+import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
 CHANGELOG_PATH = ROOT / "CHANGELOG.md"
-BLAME_PATH = DATA_DIR / "blame.json"
+VERSIONS_PATH = DATA_DIR / "versions.json"
 
 OWNER = "anthropics"
 REPO = "claude-code"
 FILE_PATH = "CHANGELOG.md"
-BRANCH = "main"
+NPM_REGISTRY_URL = "https://registry.npmjs.org/@anthropic-ai/claude-code"
 
 
-def gh_api(endpoint: str, *, graphql: str | None = None) -> dict:
-    """Call the GitHub CLI API."""
-    cmd = ["gh", "api"]
-    if graphql:
-        cmd += ["graphql", "-f", f"query={graphql}"]
-    else:
-        cmd.append(endpoint)
-    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+def gh_api(endpoint: str) -> dict:
+    """Call the GitHub CLI REST API."""
+    result = subprocess.run(
+        ["gh", "api", endpoint], capture_output=True, text=True, check=True
+    )
     return json.loads(result.stdout)
 
 
@@ -38,53 +35,24 @@ def fetch_changelog() -> str:
     return content
 
 
-def fetch_blame() -> list[dict]:
-    """Fetch blame data via GitHub GraphQL API."""
-    print("Fetching blame data...")
-    query = """
-    {
-      repository(owner: "%s", name: "%s") {
-        object(expression: "%s") {
-          ... on Commit {
-            blame(path: "%s") {
-              ranges {
-                startingLine
-                endingLine
-                commit {
-                  committedDate
-                  message
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    """ % (OWNER, REPO, BRANCH, FILE_PATH)
+def fetch_version_dates() -> dict[str, str]:
+    """Fetch publish dates for each version from the npm registry."""
+    print("Fetching version dates from npm registry...")
+    with urllib.request.urlopen(NPM_REGISTRY_URL) as resp:
+        data = json.loads(resp.read().decode())
 
-    data = gh_api("graphql", graphql=query)
-    ranges = data["data"]["repository"]["object"]["blame"]["ranges"]
-
-    # Simplify: keep only the fields we need
-    blame = [
-        {
-            "start_line": r["startingLine"],
-            "end_line": r["endingLine"],
-            "date": r["commit"]["committedDate"],
-            "message": r["commit"]["message"].split("\n")[0],
-        }
-        for r in ranges
-    ]
+    time_map = data["time"]
+    versions = {k: v for k, v in time_map.items() if k not in ("created", "modified")}
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    BLAME_PATH.write_text(json.dumps(blame, indent=2))
-    print(f"  Saved {len(blame)} blame ranges to {BLAME_PATH}")
-    return blame
+    VERSIONS_PATH.write_text(json.dumps(versions, indent=2))
+    print(f"  Saved {len(versions)} version dates to {VERSIONS_PATH}")
+    return versions
 
 
 def main():
     fetch_changelog()
-    fetch_blame()
+    fetch_version_dates()
     print("Done.")
 
 

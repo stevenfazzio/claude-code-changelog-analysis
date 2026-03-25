@@ -11,8 +11,8 @@ Toolkit for analyzing trends in the Claude Code changelog. Fetches CHANGELOG.md 
 Run the full pipeline: `uv run python scripts/run_pipeline.py`
 
 Run individual stages:
-- `uv run python scripts/fetch.py` — fetches CHANGELOG.md and git blame data via `gh` CLI (requires GitHub auth)
-- `uv run python scripts/parse.py` — parses changelog + blame into `data/raw_entries.parquet`
+- `uv run python scripts/fetch.py` — fetches CHANGELOG.md via `gh` CLI (requires GitHub auth) and version dates from npm registry
+- `uv run python scripts/parse.py` — parses changelog with version dates into `data/raw_entries.parquet`
 - `uv run python scripts/enrich.py` — classifies entries using Claude Haiku (`ANTHROPIC_API_KEY` required)
 - `uv run python scripts/embed.py` — generates Cohere embeddings (`CO_API_KEY` required)
 - `uv run python scripts/dashboard.py` — generates interactive HTML dashboard at `docs/index.html`
@@ -22,13 +22,13 @@ Each stage reads the previous stage's output from `data/`. The enrich and embed 
 ## Data Flow
 
 ```
-CHANGELOG.md + blame.json → raw_entries.parquet → enriched.parquet → embeddings.parquet
+CHANGELOG.md + versions.json → raw_entries.parquet → enriched.parquet → embeddings.parquet
                                                          ↓
                                                   docs/index.html
 ```
 
 Key columns added at each stage:
-- **parse**: version, text, date, prefix, is_vscode, is_breaking, line_number
+- **parse**: version, text, date, prefix, is_vscode, is_breaking
 - **enrich**: category, change_type, complexity, user_facing
 - **embed**: emb_0 through emb_511 (512-dimensional Cohere embed-v4.0 vectors)
 

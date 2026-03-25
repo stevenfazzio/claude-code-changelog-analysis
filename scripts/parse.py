@@ -1,4 +1,4 @@
-"""Parse CHANGELOG.md + blame data into structured parquet."""
+"""Parse CHANGELOG.md into structured parquet using npm version dates."""
 
 import json
 import re
@@ -8,7 +8,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 CHANGELOG_PATH = ROOT / "CHANGELOG.md"
-BLAME_PATH = ROOT / "data" / "blame.json"
+VERSIONS_PATH = ROOT / "data" / "versions.json"
 OUTPUT_PATH = ROOT / "data" / "raw_entries.parquet"
 
 VERSION_RE = re.compile(r"^## (\d+\.\d+\.\d+)")
@@ -21,26 +21,14 @@ PREFIX_RE = re.compile(
 VSCODE_RE = re.compile(r"^\[VSCode\]\s*")
 
 
-def load_blame_dates(blame_path: Path) -> dict[int, str]:
-    """Build a line_number -> date mapping from blame ranges."""
-    blame = json.loads(blame_path.read_text())
-    line_to_date = {}
-    for r in blame:
-        for line in range(r["start_line"], r["end_line"] + 1):
-            line_to_date[line] = r["date"]
-    return line_to_date
-
-
-def parse_changelog(changelog_path: Path, line_to_date: dict[int, str]) -> list[dict]:
+def parse_changelog(changelog_path: Path, version_dates: dict[str, str]) -> list[dict]:
     """Parse changelog into structured entries."""
     lines = changelog_path.read_text().splitlines()
     entries = []
     current_version = None
     entry_index = 0
 
-    for line_num_0, line in enumerate(lines):
-        line_num = line_num_0 + 1  # 1-indexed to match blame
-
+    for line in lines:
         version_match = VERSION_RE.match(line)
         if version_match:
             current_version = version_match.group(1)
@@ -75,8 +63,8 @@ def parse_changelog(changelog_path: Path, line_to_date: dict[int, str]) -> list[
         # Detect breaking change
         is_breaking = "breaking change" in text.lower() or prefix == "Breaking"
 
-        # Get date from blame
-        date = line_to_date.get(line_num)
+        # Get date from npm version publish time
+        date = version_dates.get(current_version)
 
         entries.append(
             {
@@ -87,7 +75,6 @@ def parse_changelog(changelog_path: Path, line_to_date: dict[int, str]) -> list[
                 "prefix": prefix,
                 "is_vscode": is_vscode,
                 "is_breaking": is_breaking,
-                "line_number": line_num,
             }
         )
         entry_index += 1
@@ -96,11 +83,19 @@ def parse_changelog(changelog_path: Path, line_to_date: dict[int, str]) -> list[
 
 
 def main():
-    print("Loading blame data...")
-    line_to_date = load_blame_dates(BLAME_PATH)
+    print("Loading version dates...")
+    version_dates = json.loads(VERSIONS_PATH.read_text())
 
     print("Parsing changelog...")
-    entries = parse_changelog(CHANGELOG_PATH, line_to_date)
+    entries = parse_changelog(CHANGELOG_PATH, version_dates)
+
+    # Warn about versions missing from npm
+    versions_without_dates = {e["version"] for e in entries if e["date"] is None}
+    if versions_without_dates:
+        print(
+            f"  Warning: {len(versions_without_dates)} versions have no npm publish date: "
+            f"{sorted(versions_without_dates)}"
+        )
 
     df = pd.DataFrame(entries)
     df["date"] = pd.to_datetime(df["date"])

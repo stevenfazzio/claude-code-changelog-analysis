@@ -9,15 +9,15 @@ Toolkit for analyzing trends in the [Claude Code](https://github.com/anthropics/
 Each stage reads the previous stage's output from `data/` and supports incremental updates where applicable.
 
 ```
-CHANGELOG.md + blame.json -> raw_entries.parquet -> enriched.parquet -> embeddings.parquet
+CHANGELOG.md + versions.json -> raw_entries.parquet -> enriched.parquet -> embeddings.parquet
                                                           |
                                                    docs/index.html
 ```
 
 | Stage | Command | Description |
 |-------|---------|-------------|
-| Fetch | `uv run python scripts/fetch.py` | Fetches CHANGELOG.md and git blame data via `gh` CLI |
-| Parse | `uv run python scripts/parse.py` | Parses changelog + blame into structured entries |
+| Fetch | `uv run python scripts/fetch.py` | Fetches CHANGELOG.md via `gh` CLI and version dates from npm |
+| Parse | `uv run python scripts/parse.py` | Parses changelog with version dates into structured entries |
 | Enrich | `uv run python scripts/enrich.py` | Classifies entries using Claude Haiku |
 | Embed | `uv run python scripts/embed.py` | Generates 512-dim Cohere embeddings |
 | Dashboard | `uv run python scripts/dashboard.py` | Builds interactive HTML dashboard |
