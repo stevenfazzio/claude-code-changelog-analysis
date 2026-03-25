@@ -189,6 +189,7 @@ function updateKpis(rows) {
 fetch("data/entries.json")
   .then(function(r) { return r.json(); })
   .then(function(data) {
+    data.sort(function(a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
     var table = new Tabulator("#table", {
       data: data,
       layout: "fitColumns",
@@ -270,7 +271,7 @@ fetch("data/entries.json")
 </script>
 
 
-<footer class="text-center py-10 text-text-muted text-xs">Generated 2026-03-25 13:55 &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
+<footer class="text-center py-10 text-text-muted text-xs">Generated 2026-03-25 14:03 &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
 </div>
 </body>
 </html>

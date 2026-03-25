@@ -400,6 +400,7 @@ function updateKpis(rows) {{
 fetch("data/entries.json")
   .then(function(r) {{ return r.json(); }})
   .then(function(data) {{
+    data.sort(function(a, b) {{ return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; }});
     var table = new Tabulator("#table", {{
       data: data,
       layout: "fitColumns",
