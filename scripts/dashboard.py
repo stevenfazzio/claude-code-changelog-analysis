@@ -182,8 +182,10 @@ TABULATOR_CSS = """
 .tabulator .tabulator-header .tabulator-col { background: #faf9f6; border-color: #e0ddd5; overflow: visible; }
 .tabulator .tabulator-header .tabulator-col .tabulator-header-filter { overflow: visible; }
 .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="date"] { display: block; }
-.tabulator .tabulator-tableholder .tabulator-table .tabulator-row { border-color: #eae7e0; }
-.tabulator .tabulator-tableholder .tabulator-table .tabulator-row:hover { background: #f4f2ec; }
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row { border-color: #eae7e0; background: transparent; }
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.tabulator-row-even { background: transparent; }
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row.date-band { background: #f5f3ed; }
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row:hover { background: #ece9e0; }
 /* Table pills & indicators */
 .pill {
     display: inline-block; padding: 2px 8px; border-radius: 3px;
@@ -452,9 +454,25 @@ fetch("data/entries.json")
       ],
     }});
 
+    function applyDateBanding() {{
+      var rows = table.getRows("active");
+      var band = false;
+      var prevDate = null;
+      rows.forEach(function(row) {{
+        var d = row.getData().date;
+        if (d !== prevDate) {{ band = !band; prevDate = d; }}
+        var el = row.getElement();
+        if (band) {{ el.classList.add("date-band"); }}
+        else {{ el.classList.remove("date-band"); }}
+      }});
+    }}
+
     table.on("dataFiltered", function(filters, rows) {{
       updateKpis(rows);
     }});
+
+    table.on("dataSorted", applyDateBanding);
+    table.on("renderComplete", applyDateBanding);
 
     table.on("tableBuilt", function() {{
       updateKpis(table.getRows("active"));
