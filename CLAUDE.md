@@ -32,6 +32,10 @@ Key columns added at each stage:
 - **enrich**: category, change_type, complexity, user_facing
 - **embed**: emb_0 through emb_511 (512-dimensional Cohere embed-v4.0 vectors)
 
+## Deployment
+
+The site is served via GitHub Pages from the `docs/` directory on the `master` branch.
+
 ## Environment
 
 - Python 3.12+, managed with `uv`
