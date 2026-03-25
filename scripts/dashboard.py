@@ -526,7 +526,7 @@ fetch('data/analysis.json')
     charts.push(initChart('chart-category-trends', {
       title: {text: 'Category Trends (monthly)', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
-      tooltip: {trigger: 'axis'},
+      tooltip: {trigger: 'axis', confine: true},
       legend: {type: 'scroll', bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
       grid: {left: 40, right: 20, top: 45, bottom: 50},
       xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, axisLabel: {fontSize: 10}, splitLine: {lineStyle: {color: '#e8e5de'}}},
@@ -538,7 +538,7 @@ fetch('data/analysis.json')
     charts.push(initChart('chart-release-cadence', {
       title: {text: 'Release Cadence (versions per week)', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
-      tooltip: {trigger: 'axis'},
+      tooltip: {trigger: 'axis', confine: true},
       grid: {left: 40, right: 20, top: 45, bottom: 35},
       xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, axisLabel: {fontSize: 10}, splitLine: {lineStyle: {color: '#e8e5de'}}},
       yAxis: {type: 'value', name: 'Versions', axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
@@ -555,7 +555,7 @@ fetch('data/analysis.json')
     charts.push(initChart('chart-category-dist', {
       title: {text: 'Category Distribution', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
-      tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}},
+      tooltip: {trigger: 'axis', confine: true, axisPointer: {type: 'shadow'}},
       grid: {left: 100, right: 60, top: 45, bottom: 20},
       xAxis: {type: 'value', name: 'Entries', splitLine: {lineStyle: {color: '#e8e5de'}}},
       yAxis: {type: 'category', data: data.category_dist.categories, axisLabel: {fontSize: 10}},
@@ -572,7 +572,7 @@ fetch('data/analysis.json')
     charts.push(initChart('chart-change-type', {
       title: {text: 'Change Type', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
-      tooltip: {trigger: 'item', formatter: '{b}: {c} ({d}%)'},
+      tooltip: {trigger: 'item', confine: true, formatter: '{b}: {c} ({d}%)'},
       legend: {bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
       series: [{
         type: 'pie',
@@ -590,7 +590,7 @@ fetch('data/analysis.json')
     charts.push(initChart('chart-complexity', {
       title: {text: 'Complexity', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
-      tooltip: {trigger: 'item', formatter: '{b}: {c} ({d}%)'},
+      tooltip: {trigger: 'item', confine: true, formatter: '{b}: {c} ({d}%)'},
       legend: {bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
       series: [{
         type: 'pie',
@@ -608,7 +608,7 @@ fetch('data/analysis.json')
     charts.push(initChart('chart-bugfix-ratio', {
       title: {text: 'Bugfix Ratio Over Time', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
-      tooltip: {trigger: 'axis'},
+      tooltip: {trigger: 'axis', confine: true},
       legend: {data: ['Bugfix %', 'Total entries'], top: 25, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
       grid: {left: 50, right: 50, top: 60, bottom: 35},
       xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, splitLine: {lineStyle: {color: '#e8e5de'}}},
@@ -644,7 +644,7 @@ fetch('data/analysis.json')
     charts.push(initChart('chart-heatmap', {
       title: {text: 'Category \\u00d7 Change Type (row %)', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
-      tooltip: {formatter: function(p) { return p.data[2].toFixed(0) + '%'; }},
+      tooltip: {confine: true, formatter: function(p) { return p.data[2].toFixed(0) + '%'; }},
       grid: {left: 100, right: 60, top: 45, bottom: 35},
       xAxis: {type: 'category', data: data.heatmap.change_types, axisLabel: {fontSize: 10}, splitArea: {show: true}},
       yAxis: {type: 'category', data: data.heatmap.categories, axisLabel: {fontSize: 10}, splitArea: {show: true}},
@@ -672,6 +672,7 @@ fetch('data/analysis.json')
       title: {text: 'Major Changes Timeline', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
       tooltip: {
+        confine: true,
         formatter: function(p) {
           var d = data.major_changes[p.dataIndex];
           return '<b>' + d.date + '</b><br><div style="max-width:300px;white-space:normal;word-wrap:break-word;">' + d.text + '</div>';
