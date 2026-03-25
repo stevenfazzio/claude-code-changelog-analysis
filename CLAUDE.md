@@ -34,7 +34,7 @@ Key columns added at each stage:
 
 ## Deployment
 
-The site is served via GitHub Pages from the `docs/` directory on the `master` branch.
+The site is served via GitHub Pages from the `docs/` directory on the `main` branch.
 
 ## Environment
 
