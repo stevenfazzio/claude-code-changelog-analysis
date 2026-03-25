@@ -8,6 +8,8 @@ import glasbey
 import numpy as np
 import pandas as pd
 
+from nav import NAV_CSS, nav_html
+
 ROOT = Path(__file__).resolve().parent.parent
 INPUT_PATH = ROOT / "data" / "enriched.parquet"
 OUTPUT_DIR = ROOT / "docs"
@@ -241,18 +243,6 @@ tailwind.config = {
 """
 
 
-def nav_html(active: str) -> str:
-    pages = [("Explorer", "index.html"), ("Analysis", "analysis.html"), ("Map", "map.html")]
-    links = []
-    for label, href in pages:
-        if label.lower() == active:
-            cls = "text-text-primary font-semibold no-underline"
-        else:
-            cls = "text-text-secondary hover:text-text-primary underline decoration-text-secondary/50 underline-offset-4 hover:decoration-text-primary"
-        links.append(f'<a href="{href}" class="{cls}">{label}</a>')
-    sep = '<span class="text-border mx-2">&middot;</span>'
-    return f'<nav class="text-[0.82rem] pt-3 pb-0.5">{sep.join(links)}</nav>'
-
 
 def page_shell(title: str, nav_active: str, body_content: str, extra_head: str = "") -> str:
     return f"""<!DOCTYPE html>
@@ -265,15 +255,12 @@ def page_shell(title: str, nav_active: str, body_content: str, extra_head: str =
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">
 {TAILWIND_CONFIG}
+{NAV_CSS}
 {extra_head}
 </head>
 <body class="font-mono bg-cream text-text-primary leading-relaxed text-[11px]">
-<div class="max-w-site mx-auto px-8 max-md:px-4">
-
-<h1 class="font-serif text-[1.6rem] font-normal text-text-primary pt-10 max-sm:text-[1.3rem] max-sm:pt-6">Claude Code Changelog</h1>
-<p class="text-[0.8rem] text-text-secondary mt-0.5">Track every change to Claude Code</p>
 {nav_html(nav_active)}
-<hr class="border-t border-divider my-4 mb-6">
+<div class="max-w-site mx-auto px-8 max-md:px-4">
 
 {body_content}
 
