@@ -277,7 +277,8 @@ def page_shell(title: str, nav_active: str, body_content: str, extra_head: str =
 
 {body_content}
 
-<footer class="text-center py-10 text-text-muted text-xs">Generated {datetime.now():%Y-%m-%d %H:%M} &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
+<footer class="text-center py-10 text-text-muted text-xs"><span id="generated-at"></span>Data from anthropics/claude-code CHANGELOG.md</footer>
+<script>fetch('data/meta.json').then(r=>r.json()).then(d=>{{document.getElementById('generated-at').textContent='Generated '+d.generated_at+' \u00b7 '}}).catch(()=>{{}})</script>
 </div>
 </body>
 </html>"""
@@ -814,6 +815,11 @@ def main():
     DATA_DIR.mkdir(exist_ok=True)
 
     print("Writing data files...")
+    meta = {"generated_at": f"{datetime.now():%Y-%m-%d %H:%M}"}
+    meta_json = json.dumps(meta, separators=(",", ":"))
+    (DATA_DIR / "meta.json").write_text(meta_json)
+    print(f"  \u2192 data/meta.json ({len(meta_json):,} bytes)")
+
     entries_data = generate_entries_json(df)
     entries_json = json.dumps(entries_data, separators=(",", ":"))
     (DATA_DIR / "entries.json").write_text(entries_json)
