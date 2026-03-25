@@ -15,7 +15,7 @@ Run individual stages:
 - `uv run python scripts/parse.py` — parses changelog with version dates into `data/raw_entries.parquet`
 - `uv run python scripts/enrich.py` — classifies entries using Claude Haiku (`ANTHROPIC_API_KEY` required)
 - `uv run python scripts/embed.py` — generates Cohere embeddings (`CO_API_KEY` required)
-- `uv run python scripts/dashboard.py` — generates interactive HTML dashboard at `docs/index.html`
+- `uv run python scripts/dashboard.py` — generates 3-page site in `docs/` (Explorer, Analysis, Map)
 
 Each stage reads the previous stage's output from `data/`. The enrich and embed stages support incremental updates — they skip entries that already exist in their output files.
 
@@ -24,7 +24,7 @@ Each stage reads the previous stage's output from `data/`. The enrich and embed 
 ```
 CHANGELOG.md + versions.json → raw_entries.parquet → enriched.parquet → embeddings.parquet
                                                          ↓
-                                                  docs/index.html
+                                                  docs/ (index.html, analysis.html, map.html)
 ```
 
 Key columns added at each stage:

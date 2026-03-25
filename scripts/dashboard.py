@@ -1,4 +1,4 @@
-"""Generate an interactive HTML dashboard from enriched changelog data."""
+"""Generate multi-page HTML site from enriched changelog data."""
 
 from datetime import datetime
 from pathlib import Path
@@ -10,7 +10,6 @@ import plotly.graph_objects as go
 ROOT = Path(__file__).resolve().parent.parent
 INPUT_PATH = ROOT / "data" / "enriched.parquet"
 OUTPUT_DIR = ROOT / "docs"
-OUTPUT_PATH = OUTPUT_DIR / "index.html"
 
 # Shared styling — muted, Tufte-inspired palette
 COLORS = ["#5b7b6f", "#8b7355", "#7a6f8a", "#9b7c6b", "#6b8f8a", "#a89b7b", "#7b8fa0"]
@@ -40,6 +39,134 @@ def load_data() -> pd.DataFrame:
     return df
 
 
+# ── Shared HTML Components ───────────────────────────────────────────────────
+
+SHARED_CSS = """
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: "IBM Plex Mono", monospace;
+    background: #faf9f6; color: #2c2c2c;
+    line-height: 1.5;
+}
+.wrapper {
+    max-width: 1100px; margin: 0 auto; padding: 0 2rem;
+}
+h1 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.6rem; font-weight: 400; color: #2c2c2c;
+    padding-top: 2.5rem;
+}
+.subtitle {
+    font-size: 0.8rem; color: #888; margin-top: 0.2rem;
+}
+.nav {
+    font-size: 0.82rem;
+    padding: 0.8rem 0 0.2rem;
+}
+.nav a {
+    color: #888;
+    text-decoration: none;
+}
+.nav a:hover {
+    color: #2c2c2c;
+}
+.nav a.active {
+    color: #2c2c2c;
+    font-weight: 600;
+}
+.nav .sep {
+    color: #ccc;
+    margin: 0 0.6rem;
+}
+hr {
+    border: none; border-top: 1px solid #d5d0c8;
+    margin: 1rem 0 1.5rem;
+}
+.kpi-row {
+    font-size: 0.82rem; line-height: 2;
+    padding-bottom: 0.5rem;
+}
+.kpi { white-space: nowrap; }
+.kpi-label { color: #888; }
+.kpi-value { font-weight: 600; color: #2c2c2c; }
+.section { padding: 1.5rem 0 0.5rem; }
+.section h2 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.1rem; font-weight: 400; color: #555;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.8rem;
+}
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.chart-card {
+    border: 1px solid #e0ddd5;
+    padding: 0.5rem;
+    min-height: 350px;
+    background: #faf9f6;
+}
+.chart-card.full { grid-column: span 2; }
+footer {
+    text-align: center; padding: 2.5rem 0 2rem;
+    color: #aaa; font-size: 0.75rem;
+}
+/* Tabulator overrides */
+.tabulator { font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; border: 1px solid #e0ddd5; }
+.tabulator .tabulator-header { font-family: "Newsreader", Georgia, serif; font-weight: 400; }
+.tabulator .tabulator-header .tabulator-col { background: #faf9f6; border-color: #e0ddd5; }
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row { border-color: #eae7e0; }
+.tabulator .tabulator-tableholder .tabulator-table .tabulator-row:hover { background: #f4f2ec; }
+/* Stub page */
+.stub {
+    text-align: center; padding: 6rem 0;
+}
+.stub p {
+    color: #888; font-size: 0.85rem; margin-top: 0.5rem;
+}
+@media (max-width: 900px) {
+    .chart-grid { grid-template-columns: 1fr; }
+    .chart-card.full { grid-column: span 1; }
+    .wrapper { padding: 0 1rem; }
+}
+"""
+
+
+def nav_html(active: str) -> str:
+    pages = [("Explorer", "index.html"), ("Analysis", "analysis.html"), ("Map", "map.html")]
+    links = []
+    for label, href in pages:
+        cls = ' class="active"' if label.lower() == active else ""
+        links.append(f'<a href="{href}"{cls}>{label}</a>')
+    return '<nav class="nav">' + '<span class="sep">&middot;</span>'.join(links) + "</nav>"
+
+
+def page_shell(title: str, nav_active: str, body_content: str, extra_head: str = "") -> str:
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">
+<style>{SHARED_CSS}</style>
+{extra_head}
+</head>
+<body>
+<div class="wrapper">
+
+<h1>Claude Code Changelog</h1>
+<p class="subtitle">Trends and patterns from the Claude Code changelog</p>
+{nav_html(nav_active)}
+<hr>
+
+{body_content}
+
+<footer>Generated {datetime.now():%Y-%m-%d %H:%M} &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
+</div>
+</body>
+</html>"""
+
+
 # ── KPI Cards ────────────────────────────────────────────────────────────────
 
 
@@ -63,7 +190,108 @@ def make_kpi_cards(df: pd.DataFrame) -> str:
     return f'<div class="kpi-row">{items}</div>'
 
 
-# ── Section 1: Timeline Trends ───────────────────────────────────────────────
+# ── Explorer Page ────────────────────────────────────────────────────────────
+
+
+def _explorer_data_json(df: pd.DataFrame) -> str:
+    cols = ["version", "date", "text", "category", "change_type", "complexity", "user_facing", "is_vscode", "is_breaking"]
+    export = df[cols].copy()
+    export["date"] = export["date"].dt.strftime("%Y-%m-%d")
+    export["user_facing"] = export["user_facing"].map({True: "Yes", False: "No"})
+    export["is_vscode"] = export["is_vscode"].map({True: "Yes", False: "No"})
+    export["is_breaking"] = export["is_breaking"].map({True: "Yes", False: "No"})
+    return export.to_json(orient="records")
+
+
+def render_explorer_page(df: pd.DataFrame) -> str:
+    data_json = _explorer_data_json(df)
+
+    extra_head = """
+<link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
+<script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
+"""
+
+    body = f"""{make_kpi_cards(df)}
+
+<div id="table"></div>
+
+<script>
+function minMaxFilterEditor(cell, onRendered, success, cancel) {{
+  var container = document.createElement("span");
+  container.style.display = "flex";
+  container.style.gap = "2px";
+
+  var from = document.createElement("input");
+  from.type = "date";
+  from.style.flex = "1";
+  from.style.minWidth = "0";
+  from.style.fontSize = "0.7rem";
+  from.style.padding = "2px";
+  from.style.fontFamily = "IBM Plex Mono, monospace";
+
+  var to = document.createElement("input");
+  to.type = "date";
+  to.style.flex = "1";
+  to.style.minWidth = "0";
+  to.style.fontSize = "0.7rem";
+  to.style.padding = "2px";
+  to.style.fontFamily = "IBM Plex Mono, monospace";
+
+  function update() {{
+    success({{from: from.value, to: to.value}});
+  }}
+  from.addEventListener("change", update);
+  to.addEventListener("change", update);
+
+  container.appendChild(from);
+  container.appendChild(to);
+
+  return container;
+}}
+
+function minMaxFilterFunction(headerValue, rowValue) {{
+  if (headerValue.from && rowValue < headerValue.from) return false;
+  if (headerValue.to && rowValue > headerValue.to) return false;
+  return true;
+}}
+
+var table = new Tabulator("#table", {{
+  data: {data_json},
+  layout: "fitColumns",
+  height: "75vh",
+  initialSort: [{{column: "date", dir: "desc"}}],
+  columns: [
+    {{title: "Version", field: "version", headerFilter: "list",
+      headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "desc"}},
+      headerFilterFunc: "in"}},
+    {{title: "Date", field: "date", width: 250, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false}},
+    {{title: "Entry", field: "text", minWidth: 200, widthGrow: 3, headerFilter: "input",
+      formatter: "textarea"}},
+    {{title: "Category", field: "category", headerFilter: "list",
+      headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "asc"}},
+      headerFilterFunc: "in"}},
+    {{title: "Type", field: "change_type", headerFilter: "list",
+      headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "asc"}},
+      headerFilterFunc: "in"}},
+    {{title: "Complexity", field: "complexity", headerFilter: "list",
+      headerFilterParams: {{multiselect: true,
+        values: ["minor", "moderate", "major"]}},
+      headerFilterFunc: "in"}},
+    {{title: "User-facing", field: "user_facing", headerFilter: "list",
+      headerFilterParams: {{values: ["Yes", "No"]}}}},
+    {{title: "VS Code", field: "is_vscode", headerFilter: "list",
+      headerFilterParams: {{values: ["Yes", "No"]}}}},
+    {{title: "Breaking", field: "is_breaking", headerFilter: "list",
+      headerFilterParams: {{values: ["Yes", "No"]}}}},
+  ],
+}});
+</script>
+"""
+
+    return page_shell("Claude Code Changelog — Explorer", "explorer", body, extra_head=extra_head)
+
+
+# ── Analysis Page (Charts) ───────────────────────────────────────────────────
 
 
 def make_release_cadence(df: pd.DataFrame) -> go.Figure:
@@ -120,9 +348,6 @@ def make_category_trends(df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-# ── Section 2: Distributions ─────────────────────────────────────────────────
-
-
 def make_category_dist(df: pd.DataFrame) -> go.Figure:
     counts = df["category"].value_counts().sort_values()
     fig = px.bar(
@@ -169,9 +394,6 @@ def make_complexity_donut(df: pd.DataFrame) -> go.Figure:
     )
     fig.update_layout(title="Complexity", **LAYOUT)
     return fig
-
-
-# ── Section 3: Deeper Analysis ───────────────────────────────────────────────
 
 
 def make_bugfix_ratio(df: pd.DataFrame) -> go.Figure:
@@ -252,105 +474,27 @@ def make_major_changes(df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-# ── HTML Assembly ─────────────────────────────────────────────────────────────
-
-CSS = """
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-    font-family: "IBM Plex Mono", monospace;
-    background: #faf9f6; color: #2c2c2c;
-    line-height: 1.5;
-}
-.wrapper {
-    max-width: 1100px; margin: 0 auto; padding: 0 2rem;
-}
-h1 {
-    font-family: "Newsreader", Georgia, serif;
-    font-size: 1.6rem; font-weight: 400; color: #2c2c2c;
-    padding-top: 2.5rem;
-}
-.subtitle {
-    font-size: 0.8rem; color: #888; margin-top: 0.2rem;
-}
-hr {
-    border: none; border-top: 1px solid #d5d0c8;
-    margin: 1rem 0 1.5rem;
-}
-.kpi-row {
-    font-size: 0.82rem; line-height: 2;
-    padding-bottom: 0.5rem;
-}
-.kpi { white-space: nowrap; }
-.kpi-label { color: #888; }
-.kpi-value { font-weight: 600; color: #2c2c2c; }
-.section { padding: 1.5rem 0 0.5rem; }
-.section h2 {
-    font-family: "Newsreader", Georgia, serif;
-    font-size: 1.1rem; font-weight: 400; color: #555;
-    letter-spacing: 0.02em;
-    margin-bottom: 0.8rem;
-}
-.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.chart-card {
-    border: 1px solid #e0ddd5;
-    padding: 0.5rem;
-    min-height: 350px;
-    background: #faf9f6;
-}
-.chart-card.full { grid-column: span 2; }
-footer {
-    text-align: center; padding: 2.5rem 0 2rem;
-    color: #aaa; font-size: 0.75rem;
-}
-@media (max-width: 900px) {
-    .chart-grid { grid-template-columns: 1fr; }
-    .chart-card.full { grid-column: span 1; }
-    .wrapper { padding: 0 1rem; }
-}
-"""
-
-
 def _chart_html(fig: go.Figure, include_js: str | bool = False) -> str:
     return fig.to_html(full_html=False, include_plotlyjs=include_js)
 
 
-def render_html(
-    kpi_html: str,
-    cadence: go.Figure,
-    histogram: go.Figure,
-    trends: go.Figure,
-    cat_dist: go.Figure,
-    type_donut: go.Figure,
-    complexity_donut: go.Figure,
-    bugfix: go.Figure,
-    heatmap: go.Figure,
-    major: go.Figure,
-) -> str:
-    # First chart includes plotly.js CDN, rest skip it
+def render_analysis_page(df: pd.DataFrame) -> str:
     def card(fig, full=False, first=False):
         cls = "chart-card full" if full else "chart-card"
         js = "cdn" if first else False
         return f'<div class="{cls}">{_chart_html(fig, js)}</div>'
 
-    return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Claude Code Changelog Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">
-<style>{CSS}</style>
-</head>
-<body>
-<div class="wrapper">
+    cadence = make_release_cadence(df)
+    histogram = make_entries_histogram(df)
+    trends = make_category_trends(df)
+    cat_dist = make_category_dist(df)
+    type_donut = make_change_type_donut(df)
+    complexity_donut = make_complexity_donut(df)
+    bugfix = make_bugfix_ratio(df)
+    heatmap = make_heatmap(df)
+    major = make_major_changes(df)
 
-<h1>Claude Code Changelog</h1>
-<p class="subtitle">Trends and patterns from the Claude Code changelog</p>
-<hr>
-
-{kpi_html}
+    body = f"""{make_kpi_cards(df)}
 
 <div class="section">
   <h2>Timeline Trends</h2>
@@ -377,35 +521,46 @@ def render_html(
     {card(heatmap)}
     {card(major)}
   </div>
-</div>
+</div>"""
 
-<footer>Generated {datetime.now():%Y-%m-%d %H:%M} &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
-</div>
-</body>
-</html>"""
+    return page_shell("Claude Code Changelog — Analysis", "analysis", body)
+
+
+# ── Map Page (Stub) ──────────────────────────────────────────────────────────
+
+
+def render_map_page() -> str:
+    body = """<div class="stub">
+  <h2>Map</h2>
+  <p>Semantic map visualization coming soon.</p>
+</div>"""
+    return page_shell("Claude Code Changelog — Map", "map", body)
+
+
+# ── Main ─────────────────────────────────────────────────────────────────────
 
 
 def main():
     print(f"Reading {INPUT_PATH}")
     df = load_data()
-
-    print("Building charts…")
-    html = render_html(
-        kpi_html=make_kpi_cards(df),
-        cadence=make_release_cadence(df),
-        histogram=make_entries_histogram(df),
-        trends=make_category_trends(df),
-        cat_dist=make_category_dist(df),
-        type_donut=make_change_type_donut(df),
-        complexity_donut=make_complexity_donut(df),
-        bugfix=make_bugfix_ratio(df),
-        heatmap=make_heatmap(df),
-        major=make_major_changes(df),
-    )
-
     OUTPUT_DIR.mkdir(exist_ok=True)
-    OUTPUT_PATH.write_text(html)
-    print(f"Dashboard written to {OUTPUT_PATH} ({len(html):,} bytes)")
+
+    print("Building explorer page…")
+    explorer = render_explorer_page(df)
+    (OUTPUT_DIR / "index.html").write_text(explorer)
+    print(f"  → index.html ({len(explorer):,} bytes)")
+
+    print("Building analysis page…")
+    analysis = render_analysis_page(df)
+    (OUTPUT_DIR / "analysis.html").write_text(analysis)
+    print(f"  → analysis.html ({len(analysis):,} bytes)")
+
+    print("Building map page…")
+    map_page = render_map_page()
+    (OUTPUT_DIR / "map.html").write_text(map_page)
+    print(f"  → map.html ({len(map_page):,} bytes)")
+
+    print("Done — 3 pages written to docs/")
 
 
 if __name__ == "__main__":
