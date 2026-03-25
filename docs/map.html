@@ -51,7 +51,9 @@ hr {
 .kpi-row {
     font-size: 0.82rem; line-height: 2;
     padding-bottom: 0.5rem;
+    display: flex; flex-wrap: wrap; gap: 0 0.5rem;
 }
+.kpi-sep { color: #ccc; }
 .kpi { white-space: nowrap; }
 .kpi-label { color: #888; }
 .kpi-value { font-weight: 600; color: #2c2c2c; }
@@ -104,10 +106,28 @@ footer {
 .stub p {
     color: #888; font-size: 0.85rem; margin-top: 0.5rem;
 }
+/* Tabulator responsive collapse toggle */
+.tabulator-responsive-collapse { padding: 8px 12px; }
+.tabulator-responsive-collapse table { font-size: 0.75rem; width: 100%; }
+.tabulator-responsive-collapse table td { padding: 2px 8px; vertical-align: top; }
+.tabulator-responsive-collapse table td:first-child { font-weight: 600; color: #888; white-space: nowrap; }
+.tabulator-responsive-collapse-toggle { display: inline-flex; align-items: center; justify-content: center; }
 @media (max-width: 900px) {
     .chart-grid { grid-template-columns: 1fr; }
     .chart-card.full { grid-column: span 1; }
     .wrapper { padding: 0 1rem; }
+}
+@media (max-width: 600px) {
+    h1 { font-size: 1.3rem; padding-top: 1.5rem; }
+    .kpi-row { font-size: 0.75rem; }
+    .tabulator { font-size: 0.72rem; }
+    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="date"] {
+        font-size: 0.6rem; padding: 0 1px;
+    }
+    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="search"],
+    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="text"] {
+        font-size: 0.65rem; padding: 1px 2px;
+    }
 }
 </style>
 
@@ -125,7 +145,7 @@ footer {
   <p>Semantic map visualization coming soon.</p>
 </div>
 
-<footer>Generated 2026-03-25 11:38 &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
+<footer>Generated 2026-03-25 12:03 &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
 </div>
 </body>
 </html>

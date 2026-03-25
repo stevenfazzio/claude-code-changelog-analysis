@@ -112,7 +112,9 @@ hr {
 .kpi-row {
     font-size: 0.82rem; line-height: 2;
     padding-bottom: 0.5rem;
+    display: flex; flex-wrap: wrap; gap: 0 0.5rem;
 }
+.kpi-sep { color: #ccc; }
 .kpi { white-space: nowrap; }
 .kpi-label { color: #888; }
 .kpi-value { font-weight: 600; color: #2c2c2c; }
@@ -165,10 +167,28 @@ footer {
 .stub p {
     color: #888; font-size: 0.85rem; margin-top: 0.5rem;
 }
+/* Tabulator responsive collapse toggle */
+.tabulator-responsive-collapse { padding: 8px 12px; }
+.tabulator-responsive-collapse table { font-size: 0.75rem; width: 100%; }
+.tabulator-responsive-collapse table td { padding: 2px 8px; vertical-align: top; }
+.tabulator-responsive-collapse table td:first-child { font-weight: 600; color: #888; white-space: nowrap; }
+.tabulator-responsive-collapse-toggle { display: inline-flex; align-items: center; justify-content: center; }
 @media (max-width: 900px) {
     .chart-grid { grid-template-columns: 1fr; }
     .chart-card.full { grid-column: span 1; }
     .wrapper { padding: 0 1rem; }
+}
+@media (max-width: 600px) {
+    h1 { font-size: 1.3rem; padding-top: 1.5rem; }
+    .kpi-row { font-size: 0.75rem; }
+    .tabulator { font-size: 0.72rem; }
+    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="date"] {
+        font-size: 0.6rem; padding: 0 1px;
+    }
+    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="search"],
+    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="text"] {
+        font-size: 0.65rem; padding: 1px 2px;
+    }
 }
 """
 
@@ -226,12 +246,15 @@ def make_kpi_cards(df: pd.DataFrame) -> str:
         ("Bugfix %", f"{(df['change_type'] == 'bugfix').mean():.0%}"),
         ("User-Facing %", f"{df['user_facing'].mean():.0%}"),
     ]
-    items = " &middot; ".join(
-        f'<span class="kpi"><span class="kpi-label">{label}</span> '
-        f'<span class="kpi-value">{val}</span></span>'
-        for label, val in stats
-    )
-    return f'<div class="kpi-row">{items}</div>'
+    parts = []
+    for i, (label, val) in enumerate(stats):
+        if i > 0:
+            parts.append('<span class="kpi-sep">&middot;</span>')
+        parts.append(
+            f'<span class="kpi"><span class="kpi-label">{label}</span> '
+            f'<span class="kpi-value">{val}</span></span>'
+        )
+    return f'<div class="kpi-row">{"".join(parts)}</div>'
 
 
 # ── Explorer Page ────────────────────────────────────────────────────────────
@@ -362,13 +385,20 @@ function updateKpis(rows) {{
 var table = new Tabulator("#table", {{
   data: {data_json},
   layout: "fitColumns",
+  responsiveLayout: "collapse",
+  responsiveLayoutCollapseStartOpen: false,
   height: "75vh",
   initialSort: [{{column: "date", dir: "desc"}}],
   columns: [
-    {{title: "Date", field: "date", width: 120, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false}},
-    {{title: "Entry", field: "text", widthGrow: 5, headerFilter: "input",
-      formatter: "textarea"}},
-    {{title: "Category", field: "category", width: 130, headerFilter: "list",
+    {{formatter: "responsiveCollapse", width: 30, minWidth: 30, hozAlign: "center",
+      resizable: false, headerSort: false, responsive: 0}},
+    {{title: "Date", field: "date", minWidth: 90, width: 120, responsive: 0,
+      headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction,
+      headerFilterLiveFilter: false}},
+    {{title: "Entry", field: "text", widthGrow: 5, minWidth: 150, responsive: 0,
+      headerFilter: "input", formatter: "textarea"}},
+    {{title: "Category", field: "category", minWidth: 120, width: 130, responsive: 1,
+      headerFilter: "list",
       headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "asc"}},
       headerFilterFunc: "in",
       formatter: function(cell) {{
@@ -377,7 +407,8 @@ var table = new Tabulator("#table", {{
         return '<span class="pill" style="background:' + bg + ';">' + v + '</span>';
       }}
     }},
-    {{title: "Type", field: "change_type", width: 140, headerFilter: "list",
+    {{title: "Type", field: "change_type", width: 140, responsive: 2,
+      headerFilter: "list",
       headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "asc"}},
       headerFilterFunc: "in",
       formatter: function(cell) {{
@@ -387,7 +418,8 @@ var table = new Tabulator("#table", {{
         return '<span class="pill" style="background:' + bg + ';">' + icon + ' ' + v + '</span>';
       }}
     }},
-    {{title: "Complexity", field: "complexity", width: 130, headerFilter: "list",
+    {{title: "Complexity", field: "complexity", width: 130, responsive: 3,
+      headerFilter: "list",
       headerFilterParams: {{multiselect: true,
         values: ["minor", "moderate", "major"]}},
       headerFilterFunc: "in",
@@ -398,7 +430,8 @@ var table = new Tabulator("#table", {{
         return '<span class="complexity-indicator" style="color:' + color + ';">' + dots + ' ' + v + '</span>';
       }}
     }},
-    {{title: "User-facing", field: "user_facing", width: 115, headerFilter: "list",
+    {{title: "User-facing", field: "user_facing", width: 115, responsive: 3,
+      headerFilter: "list",
       headerFilterParams: {{values: ["Yes", "No"]}}}},
   ],
 }});
