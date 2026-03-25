@@ -12,12 +12,22 @@ INPUT_PATH = ROOT / "data" / "enriched.parquet"
 OUTPUT_DIR = ROOT / "docs"
 OUTPUT_PATH = OUTPUT_DIR / "index.html"
 
-# Shared styling
-COLORS = px.colors.qualitative.Set2
+# Shared styling — muted, Tufte-inspired palette
+COLORS = ["#5b7b6f", "#8b7355", "#7a6f8a", "#9b7c6b", "#6b8f8a", "#a89b7b", "#7b8fa0"]
+FONT = '"IBM Plex Mono", monospace'
 LAYOUT = dict(
     template="plotly_white",
-    font_family='-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    margin=dict(l=40, r=40, t=50, b=40),
+    font_family=FONT,
+    font_color="#2c2c2c",
+    font_size=11,
+    margin=dict(l=40, r=40, t=45, b=35),
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    title_font_size=13,
+    title_font_family='"Newsreader", Georgia, serif',
+    title_font_color="#2c2c2c",
+    xaxis=dict(gridcolor="#e8e5de", gridwidth=1),
+    yaxis=dict(gridcolor="#e8e5de", gridwidth=1),
 )
 TOP_CATEGORIES = ["cli", "config", "performance", "mcp", "agents", "ide"]
 
@@ -35,22 +45,22 @@ def load_data() -> pd.DataFrame:
 
 def make_kpi_cards(df: pd.DataFrame) -> str:
     stats = [
-        ("Total Entries", f"{len(df):,}"),
+        ("Entries", f"{len(df):,}"),
         ("Versions", f"{df['version'].nunique():,}"),
         (
-            "Date Range",
+            "Range",
             f"{df['date'].min():%b %Y} – {df['date'].max():%b %Y}",
         ),
         ("Top Category", df["category"].value_counts().index[0]),
         ("Bugfix %", f"{(df['change_type'] == 'bugfix').mean():.0%}"),
         ("User-Facing %", f"{df['user_facing'].mean():.0%}"),
     ]
-    cards = "\n".join(
-        f'<div class="kpi"><div class="kpi-value">{val}</div>'
-        f'<div class="kpi-label">{label}</div></div>'
+    items = " &middot; ".join(
+        f'<span class="kpi"><span class="kpi-label">{label}</span> '
+        f'<span class="kpi-value">{val}</span></span>'
         for label, val in stats
     )
-    return f'<div class="kpi-row">{cards}</div>'
+    return f'<div class="kpi-row">{items}</div>'
 
 
 # ── Section 1: Timeline Trends ───────────────────────────────────────────────
@@ -186,16 +196,18 @@ def make_bugfix_ratio(df: pd.DataFrame) -> go.Figure:
             y=monthly["total"],
             name="Total entries",
             marker_color=COLORS[1],
-            opacity=0.4,
+            opacity=0.35,
             yaxis="y2",
         )
     )
+    layout_no_axes = {k: v for k, v in LAYOUT.items() if k not in ("xaxis", "yaxis")}
     fig.update_layout(
         title="Bugfix Ratio Over Time",
-        yaxis=dict(title="Bugfix %", side="left"),
-        yaxis2=dict(title="Total entries", side="right", overlaying="y"),
+        xaxis=dict(gridcolor="#e8e5de", gridwidth=1),
+        yaxis=dict(title="Bugfix %", side="left", gridcolor="#e8e5de"),
+        yaxis2=dict(title="Total entries", side="right", overlaying="y", gridcolor="#e8e5de"),
         legend=dict(orientation="h", y=1.12),
-        **LAYOUT,
+        **layout_no_axes,
     )
     return fig
 
@@ -206,7 +218,7 @@ def make_heatmap(df: pd.DataFrame) -> go.Figure:
     fig = px.imshow(
         ct,
         text_auto=".0f",
-        color_continuous_scale="Blues",
+        color_continuous_scale=[[0, "#faf9f6"], [1, "#5b7b6f"]],
         aspect="auto",
     )
     fig.update_layout(
@@ -245,40 +257,55 @@ def make_major_changes(df: pd.DataFrame) -> go.Figure:
 CSS = """
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #f5f5f7; color: #1d1d1f;
+    font-family: "IBM Plex Mono", monospace;
+    background: #faf9f6; color: #2c2c2c;
+    line-height: 1.5;
 }
-header {
-    background: #0d1117; color: #fff; padding: 2rem 2rem 1.5rem;
+.wrapper {
+    max-width: 1100px; margin: 0 auto; padding: 0 2rem;
 }
-header h1 { font-size: 1.8rem; font-weight: 700; }
-header p { opacity: 0.7; margin-top: 0.3rem; }
+h1 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.6rem; font-weight: 400; color: #2c2c2c;
+    padding-top: 2.5rem;
+}
+.subtitle {
+    font-size: 0.8rem; color: #888; margin-top: 0.2rem;
+}
+hr {
+    border: none; border-top: 1px solid #d5d0c8;
+    margin: 1rem 0 1.5rem;
+}
 .kpi-row {
-    display: flex; gap: 1rem; padding: 1.5rem 2rem; flex-wrap: wrap;
+    font-size: 0.82rem; line-height: 2;
+    padding-bottom: 0.5rem;
 }
-.kpi {
-    flex: 1; min-width: 140px; background: #fff; border-radius: 8px;
-    padding: 1.2rem; text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    border-top: 3px solid #66b2ff;
+.kpi { white-space: nowrap; }
+.kpi-label { color: #888; }
+.kpi-value { font-weight: 600; color: #2c2c2c; }
+.section { padding: 1.5rem 0 0.5rem; }
+.section h2 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.1rem; font-weight: 400; color: #555;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.8rem;
 }
-.kpi-value { font-size: 1.5rem; font-weight: 700; color: #0d1117; }
-.kpi-label { font-size: 0.85rem; color: #666; margin-top: 0.3rem; }
-.section { padding: 0.5rem 2rem 1rem; }
-.section h2 { font-size: 1.2rem; margin-bottom: 0.8rem; color: #333; }
 .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .chart-card {
-    background: #fff; border-radius: 8px; padding: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid #e0ddd5;
+    padding: 0.5rem;
     min-height: 350px;
+    background: #faf9f6;
 }
 .chart-card.full { grid-column: span 2; }
 footer {
-    text-align: center; padding: 1.5rem; color: #999; font-size: 0.8rem;
+    text-align: center; padding: 2.5rem 0 2rem;
+    color: #aaa; font-size: 0.75rem;
 }
 @media (max-width: 900px) {
     .chart-grid { grid-template-columns: 1fr; }
     .chart-card.full { grid-column: span 1; }
+    .wrapper { padding: 0 1rem; }
 }
 """
 
@@ -311,13 +338,17 @@ def render_html(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Claude Code Changelog Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">
 <style>{CSS}</style>
 </head>
 <body>
-<header>
-  <h1>Claude Code Changelog Dashboard</h1>
-  <p>Trends and patterns from the Claude Code changelog</p>
-</header>
+<div class="wrapper">
+
+<h1>Claude Code Changelog</h1>
+<p class="subtitle">Trends and patterns from the Claude Code changelog</p>
+<hr>
 
 {kpi_html}
 
@@ -348,7 +379,8 @@ def render_html(
   </div>
 </div>
 
-<footer>Generated {datetime.now():%Y-%m-%d %H:%M} · Data from anthropics/claude-code CHANGELOG.md</footer>
+<footer>Generated {datetime.now():%Y-%m-%d %H:%M} &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
+</div>
 </body>
 </html>"""
 
