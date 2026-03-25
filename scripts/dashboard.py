@@ -111,7 +111,9 @@ footer {
 /* Tabulator overrides */
 .tabulator { font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; border: 1px solid #e0ddd5; }
 .tabulator .tabulator-header { font-family: "Newsreader", Georgia, serif; font-weight: 400; }
-.tabulator .tabulator-header .tabulator-col { background: #faf9f6; border-color: #e0ddd5; }
+.tabulator .tabulator-header .tabulator-col { background: #faf9f6; border-color: #e0ddd5; overflow: visible; }
+.tabulator .tabulator-header .tabulator-col .tabulator-header-filter { overflow: visible; }
+.tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="date"] { display: block; }
 .tabulator .tabulator-tableholder .tabulator-table .tabulator-row { border-color: #eae7e0; }
 .tabulator .tabulator-tableholder .tabulator-table .tabulator-row:hover { background: #f4f2ec; }
 /* Stub page */
@@ -219,22 +221,21 @@ def render_explorer_page(df: pd.DataFrame) -> str:
 function minMaxFilterEditor(cell, onRendered, success, cancel) {{
   var container = document.createElement("span");
   container.style.display = "flex";
-  container.style.gap = "2px";
+  container.style.flexDirection = "column";
+  container.style.gap = "1px";
 
   var from = document.createElement("input");
   from.type = "date";
-  from.style.flex = "1";
-  from.style.minWidth = "0";
-  from.style.fontSize = "0.7rem";
-  from.style.padding = "2px";
+  from.style.width = "100%";
+  from.style.fontSize = "0.65rem";
+  from.style.padding = "1px 2px";
   from.style.fontFamily = "IBM Plex Mono, monospace";
 
   var to = document.createElement("input");
   to.type = "date";
-  to.style.flex = "1";
-  to.style.minWidth = "0";
-  to.style.fontSize = "0.7rem";
-  to.style.padding = "2px";
+  to.style.width = "100%";
+  to.style.fontSize = "0.65rem";
+  to.style.padding = "1px 2px";
   to.style.fontFamily = "IBM Plex Mono, monospace";
 
   function update() {{
@@ -243,8 +244,24 @@ function minMaxFilterEditor(cell, onRendered, success, cancel) {{
   from.addEventListener("change", update);
   to.addEventListener("change", update);
 
-  container.appendChild(from);
-  container.appendChild(to);
+  var row = function(label, input) {{
+    var r = document.createElement("span");
+    r.style.display = "flex";
+    r.style.alignItems = "center";
+    r.style.gap = "2px";
+    var s = document.createElement("span");
+    s.textContent = label;
+    s.style.fontSize = "0.6rem";
+    s.style.color = "#888";
+    s.style.flexShrink = "0";
+    r.appendChild(s);
+    input.style.flex = "1";
+    input.style.minWidth = "0";
+    r.appendChild(input);
+    return r;
+  }};
+  container.appendChild(row("\u2265", from));
+  container.appendChild(row("\u2264", to));
 
   return container;
 }}
@@ -264,7 +281,7 @@ var table = new Tabulator("#table", {{
     {{title: "Version", field: "version", headerFilter: "list",
       headerFilterParams: {{valuesLookup: true, multiselect: true, sort: "desc"}},
       headerFilterFunc: "in"}},
-    {{title: "Date", field: "date", width: 250, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false}},
+    {{title: "Date", field: "date", width: 150, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false}},
     {{title: "Entry", field: "text", minWidth: 200, widthGrow: 3, headerFilter: "input",
       formatter: "textarea"}},
     {{title: "Category", field: "category", headerFilter: "list",

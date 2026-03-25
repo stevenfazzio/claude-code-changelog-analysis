@@ -77,7 +77,9 @@ footer {
 /* Tabulator overrides */
 .tabulator { font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; border: 1px solid #e0ddd5; }
 .tabulator .tabulator-header { font-family: "Newsreader", Georgia, serif; font-weight: 400; }
-.tabulator .tabulator-header .tabulator-col { background: #faf9f6; border-color: #e0ddd5; }
+.tabulator .tabulator-header .tabulator-col { background: #faf9f6; border-color: #e0ddd5; overflow: visible; }
+.tabulator .tabulator-header .tabulator-col .tabulator-header-filter { overflow: visible; }
+.tabulator .tabulator-header .tabulator-col .tabulator-header-filter input[type="date"] { display: block; }
 .tabulator .tabulator-tableholder .tabulator-table .tabulator-row { border-color: #eae7e0; }
 .tabulator .tabulator-tableholder .tabulator-table .tabulator-row:hover { background: #f4f2ec; }
 /* Stub page */
@@ -108,7 +110,7 @@ footer {
   <p>Semantic map visualization coming soon.</p>
 </div>
 
-<footer>Generated 2026-03-25 02:22 &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
+<footer>Generated 2026-03-25 10:41 &middot; Data from anthropics/claude-code CHANGELOG.md</footer>
 </div>
 </body>
 </html>
