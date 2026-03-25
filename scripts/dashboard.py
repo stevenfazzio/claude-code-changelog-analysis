@@ -55,7 +55,6 @@ LAYOUT = dict(
     xaxis=dict(gridcolor="#e8e5de", gridwidth=1),
     yaxis=dict(gridcolor="#e8e5de", gridwidth=1),
 )
-TOP_CATEGORIES = ["cli", "config", "performance", "mcp", "agents", "ide"]
 
 
 def load_data() -> pd.DataFrame:
@@ -484,10 +483,9 @@ def make_entries_histogram(df: pd.DataFrame) -> go.Figure:
 
 
 def make_category_trends(df: pd.DataFrame) -> go.Figure:
-    df2 = df.copy()
-    df2.loc[~df2["category"].isin(TOP_CATEGORIES), "category"] = "other"
-    monthly = df2.groupby(["month", "category"]).size().reset_index(name="count")
-    order = TOP_CATEGORIES + ["other"]
+    monthly = df.groupby(["month", "category"]).size().reset_index(name="count")
+    # Order by total count descending so smallest categories stack on top
+    order = df["category"].value_counts().index.tolist()
     monthly["category"] = pd.Categorical(monthly["category"], categories=order, ordered=True)
     monthly = monthly.sort_values(["month", "category"])
     fig = px.area(
@@ -501,6 +499,7 @@ def make_category_trends(df: pd.DataFrame) -> go.Figure:
         title="Category Trends (monthly)",
         xaxis_title="",
         yaxis_title="Entries",
+        legend_traceorder="reversed",
         **LAYOUT,
     )
     return fig
