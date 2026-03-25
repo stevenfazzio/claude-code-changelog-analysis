@@ -280,6 +280,10 @@ def _inject_nav(html_path):
 }
 .site-nav-fixed .site-nav { padding-bottom: 16px; }
 .site-nav-fixed .site-nav-hr { display: none; }
+/* Override DataMapPlot default that hides colormap selector on mobile */
+@media screen and (max-width: 768px) {
+  .bottom-left { display: flex !important; }
+}
 </style>"""
 
     # JS to measure actual nav height and offset the map content accordingly
@@ -291,8 +295,8 @@ def _inject_nav(html_path):
     document.body.style.paddingTop = h + 'px';
     var deck = document.querySelector('[style*="z-index: -1"]');
     if (deck) { deck.style.top = h + 'px'; deck.style.height = 'calc(100% - ' + h + 'px)'; }
-    var vh = document.querySelector('[style*="100vh"]');
-    if (vh) { vh.style.height = 'calc(100vh - ' + h + 'px)'; }
+    var cw = document.querySelector('.content-wrapper');
+    if (cw) { cw.style.minHeight = 'calc(100vh - ' + h + 'px)'; }
   }
   adjust();
   window.addEventListener('resize', adjust);
