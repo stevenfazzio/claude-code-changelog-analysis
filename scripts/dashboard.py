@@ -266,7 +266,7 @@ def page_shell(title: str, nav_active: str, body_content: str, extra_head: str =
 <div class="max-w-site mx-auto px-8 max-md:px-4">
 
 <h1 class="font-serif text-[1.6rem] font-normal text-text-primary pt-10 max-sm:text-[1.3rem] max-sm:pt-6">Claude Code Changelog</h1>
-<p class="text-[0.8rem] text-text-secondary mt-0.5">Trends and patterns from the Claude Code changelog</p>
+<p class="text-[0.8rem] text-text-secondary mt-0.5">Track every change to Claude Code</p>
 {nav_html(nav_active)}
 <hr class="border-t border-divider my-4 mb-6">
 
@@ -541,7 +541,7 @@ fetch('data/analysis.json')
     var trendChart = initChart('chart-category-trends', {
       title: {text: 'Category Trends (monthly)', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
-      tooltip: {trigger: 'axis', confine: true},
+      tooltip: {trigger: 'axis', confine: true, order: 'seriesDesc'},
       legend: {type: 'scroll', bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
       grid: {left: 40, right: 20, top: 45, bottom: 50},
       xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, axisLabel: {fontSize: 10}, splitLine: {lineStyle: {color: '#e8e5de'}}},
