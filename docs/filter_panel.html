@@ -1,0 +1,871 @@
+<!-- SECTION: css -->
+<style>
+/* Prevent expanded filters from inflating the top-left grid row, which
+   pushes the colormap off-screen. Filter content overflows visually;
+   the colormap (z-index:100) renders on top when they overlap. */
+.stack.top-left {
+  min-height: 0;
+}
+#filter-container {
+  width: auto;
+  max-width: calc(100vw - 48px);
+}
+#filter-container.open {
+  width: 340px;
+}
+#filter-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  user-select: none;
+  line-height: 1.4;
+}
+#filter-header:hover { color: #0d9488; }
+#filter-toggle-icon {
+  font-size: 11px;
+  transition: transform 0.2s;
+}
+#filter-body {
+  display: none;
+  margin-top: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+#filter-body.open { display: block; }
+#filter-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+#filter-match-count {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+#filter-reset-inline {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: #0d9488;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+#filter-reset-inline:hover {
+  text-decoration: underline;
+}
+#filter-reset-inline.filter-reset-active {
+  background: rgba(13,148,136,0.08);
+}
+.filter-group {
+  margin-bottom: 8px;
+  padding-left: 3px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.15s;
+}
+.filter-group-active {
+  border-left-color: #0d9488;
+}
+.filter-group-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: #444;
+  margin-bottom: 0;
+  line-height: 1.4;
+}
+.filter-group-label.filter-group-label-collapsible {
+  cursor: pointer;
+  user-select: none;
+}
+.filter-group-label.filter-group-label-collapsible:hover {
+  color: #0d9488;
+}
+.filter-subsection-arrow {
+  font-size: 9px;
+  margin-right: 4px;
+  transition: transform 0.15s;
+  display: inline-block;
+}
+.filter-subsection-arrow.collapsed {
+  transform: rotate(-90deg);
+}
+.filter-range-value {
+  font-weight: 400;
+  font-size: 11px;
+  color: #666;
+}
+.filter-range-wrapper {
+  position: relative;
+  height: 24px;
+  margin: 2px 0;
+}
+.filter-range-track {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 2px;
+  background: #ddd;
+  pointer-events: none;
+}
+.filter-range-fill {
+  position: absolute;
+  top: 10px;
+  height: 4px;
+  border-radius: 2px;
+  background: #0d9488;
+  pointer-events: none;
+}
+.filter-range-wrapper input[type="range"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+}
+.filter-range-wrapper input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #0d9488;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  cursor: pointer;
+  pointer-events: auto;
+}
+.filter-range-wrapper input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #0d9488;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  cursor: pointer;
+  pointer-events: auto;
+}
+.filter-checkbox-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
+}
+.filter-checkbox-list.collapsed {
+  max-height: 0 !important;
+  overflow: hidden;
+  opacity: 0;
+}
+.filter-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: #444;
+  cursor: pointer;
+  line-height: 1.4;
+}
+.filter-checkbox-item input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border: 1.5px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  transition: background 0.15s, border-color 0.15s;
+  position: relative;
+}
+.filter-checkbox-item input[type="checkbox"]:checked {
+  background: #0d9488;
+  border-color: #0d9488;
+}
+.filter-checkbox-item input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 4.5px;
+  top: 1.5px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.filter-group-actions {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: #999;
+}
+.filter-group-actions a {
+  color: #0d9488;
+  cursor: pointer;
+  text-decoration: none;
+}
+.filter-group-actions a:hover {
+  text-decoration: underline;
+}
+.filter-section-divider {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 6px 0 4px;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 4px;
+}
+@media (max-width: 768px) {
+  #filter-container { display: none; }
+}
+</style>
+
+<!-- SECTION: html -->
+<div id="filter-container" class="container-box">
+  <div id="filter-header">
+    <span>Advanced Filters</span>
+    <span id="filter-toggle-icon">&#9656;</span>
+  </div>
+  <div id="filter-body">
+    <div id="filter-status-row">
+      <div id="filter-match-count"></div>
+      <button id="filter-reset-inline" type="button">Reset</button>
+    </div>
+    <div id="filter-controls"></div>
+  </div>
+</div>
+
+<!-- SECTION: js -->
+<script>
+(function() {
+  const FILTER_CONFIG = __FILTER_CONFIG_JSON__;
+
+  const PARAM_KEY_MAP = {
+    'cat': 'filter-category',
+    'type': 'filter-change-type',
+    'cplx': 'filter-complexity',
+    'uf': 'filter-user-facing',
+    'date': 'filter-date',
+  };
+
+  class FilterPanel {
+    constructor(datamap, hoverData, config) {
+      this.datamap = datamap;
+      this.hoverData = hoverData;
+      this.config = config;
+      this.filters = {};
+      this.totalCount = config.totalCount;
+      this.colormapFieldToFilterId = config.colormapFieldToFilterId || {};
+      this.filterIdToColormapField = config.filterIdToColormapField || {};
+      this.patchedLegends = {};
+
+      this.container = document.getElementById('filter-controls');
+      this.matchCountEl = document.getElementById('filter-match-count');
+
+      // Categories section
+      const categoriesDivider = document.createElement('div');
+      categoriesDivider.className = 'filter-section-divider';
+      categoriesDivider.textContent = 'Categories';
+      this.container.appendChild(categoriesDivider);
+      this._categoriesContainer = document.createElement('div');
+      this.container.appendChild(this._categoriesContainer);
+      this._currentSection = this._categoriesContainer;
+
+      this.initCheckboxFilter('category', 'filter-category', {
+        label: 'Category',
+        field: 'category',
+        values: config.categories,
+      });
+
+      this.initCheckboxFilter('change_type', 'filter-change-type', {
+        label: 'Change Type',
+        field: 'change_type',
+        values: config.changeTypes,
+      });
+
+      this.initCheckboxFilter('complexity', 'filter-complexity', {
+        label: 'Complexity',
+        field: 'complexity',
+        values: config.complexities,
+      });
+
+      this.initCheckboxFilter('user_facing', 'filter-user-facing', {
+        label: 'User-Facing',
+        field: 'user_facing',
+        values: config.userFacingValues,
+      });
+
+      // Ranges section
+      const rangesDivider = document.createElement('div');
+      rangesDivider.className = 'filter-section-divider';
+      rangesDivider.textContent = 'Ranges';
+      this.container.appendChild(rangesDivider);
+      this._rangesContainer = document.createElement('div');
+      this.container.appendChild(this._rangesContainer);
+      this._currentSection = this._rangesContainer;
+
+      // Pre-parse dates as days-since-epoch for range filtering
+      this._dateValues = hoverData.date.map(function(d) {
+        return Math.floor(new Date(d + 'T00:00:00Z').getTime() / 86400000);
+      });
+
+      this.initRangeFilter('date', 'filter-date', {
+        label: 'Date',
+        field: 'date',
+        min: config.ranges.date.min,
+        max: config.ranges.date.max,
+        sliderMax: config.ranges.date.max,
+        step: 1,
+        formatLabel: function(v) {
+          var d = new Date(v * 86400000);
+          return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+        },
+      });
+
+      this.setupLegendSync();
+
+      // Toggle panel
+      const header = document.getElementById('filter-header');
+      const body = document.getElementById('filter-body');
+      const icon = document.getElementById('filter-toggle-icon');
+      header.addEventListener('click', () => {
+        body.classList.toggle('open');
+        document.getElementById('filter-container').classList.toggle('open');
+        icon.innerHTML = body.classList.contains('open') ? '&#9662;' : '&#9656;';
+        if (body.classList.contains('open')) {
+          this.updateFilterBodyHeight();
+        }
+        this.serializeState();
+      });
+
+      // Recalculate on resize
+      window.addEventListener('resize', () => {
+        if (body.classList.contains('open')) this.updateFilterBodyHeight();
+      });
+
+      // Reset button
+      document.getElementById('filter-reset-inline').addEventListener('click', () => this.resetAll());
+
+      this.updateMatchCount();
+    }
+
+    initRangeFilter(name, filterId, opts) {
+      const { label, field, min, max, sliderMax, step, formatLabel } = opts;
+      const group = document.createElement('div');
+      group.className = 'filter-group';
+      const fmt = formatLabel || String;
+      group.innerHTML = `
+        <div class="filter-group-label">
+          <span>${label}</span>
+          <span class="filter-range-value" id="${filterId}-value">${fmt(min)} \u2013 ${fmt(sliderMax)}</span>
+        </div>
+        <div class="filter-range-wrapper">
+          <div class="filter-range-track"></div>
+          <div class="filter-range-fill" id="${filterId}-fill"></div>
+          <input type="range" id="${filterId}-min" min="${min}" max="${sliderMax}" value="${min}" step="${step}">
+          <input type="range" id="${filterId}-max" min="${min}" max="${sliderMax}" value="${sliderMax}" step="${step}">
+        </div>
+      `;
+      (this._currentSection || this.container).appendChild(group);
+
+      const minInput = document.getElementById(`${filterId}-min`);
+      const maxInput = document.getElementById(`${filterId}-max`);
+      const fill = document.getElementById(`${filterId}-fill`);
+      const valueLabel = document.getElementById(`${filterId}-value`);
+
+      // Use pre-parsed date values for the date filter
+      const values = field === 'date' ? this._dateValues : this.hoverData[field].map(Number);
+
+      const state = { minVal: min, maxVal: sliderMax };
+      this.filters[filterId] = { type: 'range', state, minInput, maxInput, min, sliderMax, max, field, values, group, formatLabel: fmt };
+
+      const updateFill = () => {
+        const range = sliderMax - min;
+        const leftPct = range === 0 ? 0 : ((state.minVal - min) / range) * 100;
+        const rightPct = range === 0 ? 100 : ((state.maxVal - min) / range) * 100;
+        fill.style.left = leftPct + '%';
+        fill.style.width = (rightPct - leftPct) + '%';
+      };
+
+      const onInput = () => {
+        let lo = parseInt(minInput.value);
+        let hi = parseInt(maxInput.value);
+        if (lo > hi) { [lo, hi] = [hi, lo]; }
+        state.minVal = lo;
+        state.maxVal = hi;
+
+        valueLabel.textContent = `${fmt(lo)} \u2013 ${fmt(hi)}`;
+
+        updateFill();
+        group.classList.toggle('filter-group-active', !(lo <= min && hi >= sliderMax));
+        this.applyRangeFilter(filterId);
+        this._updateResetButtonState();
+      };
+
+      minInput.addEventListener('input', onInput);
+      maxInput.addEventListener('input', onInput);
+      updateFill();
+    }
+
+    applyRangeFilter(filterId) {
+      const f = this.filters[filterId];
+      const { state, min, sliderMax, max, values } = f;
+      const isFullRange = state.minVal <= min && state.maxVal >= sliderMax;
+
+      if (isFullRange) {
+        this.datamap.removeSelection(filterId);
+      } else {
+        const effectiveMax = state.maxVal >= sliderMax ? max : state.maxVal;
+        const indices = [];
+        for (let i = 0; i < values.length; i++) {
+          if (values[i] >= state.minVal && values[i] <= effectiveMax) {
+            indices.push(i);
+          }
+        }
+        this.datamap.addSelection(indices, filterId);
+      }
+      this.updateMatchCount();
+      this.serializeState();
+    }
+
+    initCheckboxFilter(name, filterId, opts) {
+      const { label, field, values, collapsible } = opts;
+      const isCollapsible = collapsible !== false;
+      const group = document.createElement('div');
+      group.className = 'filter-group';
+
+      const allId = `${filterId}-select-all`;
+      const noneId = `${filterId}-select-none`;
+      const arrowClass = isCollapsible ? 'filter-subsection-arrow collapsed' : '';
+      const arrowHtml = isCollapsible ? `<span class="${arrowClass}">&#9660;</span>` : '';
+      const labelClass = isCollapsible ? 'filter-group-label filter-group-label-collapsible' : 'filter-group-label';
+      const listClass = isCollapsible ? 'filter-checkbox-list collapsed' : 'filter-checkbox-list';
+
+      let html = `<div class="${labelClass}"><span>${arrowHtml}${label}</span><span class="filter-group-actions"><a id="${allId}">All</a> / <a id="${noneId}">None</a></span></div><div class="${listClass}">`;
+      for (const val of values) {
+        const id = `${filterId}-${val.replace(/\s+/g, '-')}`;
+        html += `<label class="filter-checkbox-item"><input type="checkbox" id="${id}" value="${val}" checked> ${val}</label>`;
+      }
+      html += '</div>';
+      group.innerHTML = html;
+      (this._currentSection || this.container).appendChild(group);
+
+      // Collapsible subsection toggle
+      if (isCollapsible) {
+        const labelRow = group.querySelector('.filter-group-label');
+        const checkboxList = group.querySelector('.filter-checkbox-list');
+        const arrow = group.querySelector('.filter-subsection-arrow');
+        labelRow.addEventListener('click', (e) => {
+          if (e.target.closest('.filter-group-actions')) return;
+          const isCollapsed = checkboxList.classList.toggle('collapsed');
+          arrow.classList.toggle('collapsed', isCollapsed);
+          this.serializeState();
+        });
+      }
+
+      const checkboxes = group.querySelectorAll('input[type="checkbox"]');
+      const fieldValues = this.hoverData[field];
+
+      this.filters[filterId] = { type: 'checkbox', checkboxes, fieldValues, values, group, name };
+
+      const onChange = () => {
+        const checked = new Set();
+        checkboxes.forEach(cb => { if (cb.checked) checked.add(cb.value); });
+        const allChecked = checked.size === values.length;
+
+        if (allChecked) {
+          this.datamap.removeSelection(filterId);
+        } else {
+          const indices = [];
+          for (let i = 0; i < fieldValues.length; i++) {
+            if (checked.has(fieldValues[i])) {
+              indices.push(i);
+            }
+          }
+          this.datamap.addSelection(indices, filterId);
+        }
+        group.classList.toggle('filter-group-active', !allChecked);
+        this.syncLegendOpacity(filterId);
+        this.updateMatchCount();
+        this.serializeState();
+        this._updateResetButtonState();
+      };
+
+      checkboxes.forEach(cb => cb.addEventListener('change', onChange));
+
+      document.getElementById(allId).addEventListener('click', () => {
+        checkboxes.forEach(cb => { cb.checked = true; });
+        onChange();
+      });
+      document.getElementById(noneId).addEventListener('click', () => {
+        checkboxes.forEach(cb => { cb.checked = false; });
+        onChange();
+      });
+    }
+
+    setupLegendSync() {
+      const colorSelector = this.datamap.colorSelector;
+      if (!colorSelector || !colorSelector.legends) return;
+
+      for (const [field, filterId] of Object.entries(this.colormapFieldToFilterId)) {
+        this.patchLegendContainer(field, filterId, colorSelector);
+      }
+
+      // Monkey-patch handleColorMapSelection to sync legend on colormap switch
+      const origHandler = colorSelector.handleColorMapSelection.bind(colorSelector);
+      const self = this;
+      colorSelector.handleColorMapSelection = function(field) {
+        origHandler(field);
+        self.onColormapChanged(field);
+        self.serializeState();
+      };
+    }
+
+    patchLegendContainer(field, filterId, colorSelector) {
+      const origContainer = colorSelector.legends[field];
+      if (!origContainer) return;
+
+      const newContainer = origContainer.cloneNode(true);
+      origContainer.parentNode.replaceChild(newContainer, origContainer);
+      colorSelector.legends[field] = newContainer;
+
+      const items = newContainer.querySelectorAll('.legend-item');
+      this.patchedLegends[field] = { container: newContainer, items };
+
+      const self = this;
+      newContainer.addEventListener('click', function(e) {
+        const legendItem = e.target.closest('.legend-item');
+        if (!legendItem) return;
+        const labelEl = legendItem.querySelector('.legend-label');
+        if (!labelEl) return;
+        const category = labelEl.textContent.trim();
+
+        const filter = self.filters[filterId];
+        if (!filter || filter.type !== 'checkbox') return;
+
+        let matchingCb = null;
+        filter.checkboxes.forEach(cb => {
+          if (cb.value === category) matchingCb = cb;
+        });
+        if (!matchingCb) return;
+
+        const allChecked = Array.from(filter.checkboxes).every(cb => cb.checked);
+        if (allChecked) {
+          filter.checkboxes.forEach(cb => { cb.checked = (cb.value === category); });
+        } else {
+          const checkedCbs = Array.from(filter.checkboxes).filter(cb => cb.checked);
+          if (checkedCbs.length === 1 && checkedCbs[0].value === category) {
+            filter.checkboxes.forEach(cb => { cb.checked = true; });
+          } else {
+            matchingCb.checked = !matchingCb.checked;
+          }
+        }
+        matchingCb.dispatchEvent(new Event('change'));
+      });
+
+      this.syncLegendOpacity(filterId);
+    }
+
+    syncLegendOpacity(filterId) {
+      const field = this.filterIdToColormapField[filterId];
+      if (!field || !this.patchedLegends[field]) return;
+
+      const filter = this.filters[filterId];
+      if (!filter || filter.type !== 'checkbox') return;
+
+      const checked = new Set();
+      filter.checkboxes.forEach(cb => { if (cb.checked) checked.add(cb.value); });
+      const allChecked = checked.size === filter.values.length;
+
+      this.patchedLegends[field].items.forEach(item => {
+        const labelEl = item.querySelector('.legend-label');
+        if (!labelEl) return;
+        const label = labelEl.textContent.trim();
+        item.style.opacity = (allChecked || checked.has(label)) ? 1 : 0.25;
+      });
+    }
+
+    onColormapChanged(field) {
+      const filterId = this.colormapFieldToFilterId[field];
+      if (filterId) this.syncLegendOpacity(filterId);
+    }
+
+    updateFilterBodyHeight() {
+      const body = document.getElementById('filter-body');
+      const colormap = document.getElementById('colormap-selector-container');
+      if (!colormap) return;
+      const bodyTop = body.getBoundingClientRect().top;
+      const colormapTop = colormap.getBoundingClientRect().top;
+      const available = colormapTop - bodyTop - 20;
+      if (available > 0) body.style.maxHeight = available + 'px';
+    }
+
+    _updateResetButtonState() {
+      const resetBtn = document.getElementById('filter-reset-inline');
+      let anyActive = false;
+      for (const [filterId, f] of Object.entries(this.filters)) {
+        if (f.type === 'range') {
+          if (!(f.state.minVal <= f.min && f.state.maxVal >= f.sliderMax)) {
+            anyActive = true;
+            break;
+          }
+        } else if (f.type === 'checkbox') {
+          const allChecked = Array.from(f.checkboxes).every(cb => cb.checked);
+          if (!allChecked) {
+            anyActive = true;
+            break;
+          }
+        }
+      }
+      resetBtn.classList.toggle('filter-reset-active', anyActive);
+    }
+
+    updateMatchCount() {
+      const mgr = this.datamap.dataSelectionManager;
+      const hasSelections = Object.keys(mgr.selectedIndicesByItem).length > 0;
+      if (hasSelections) {
+        const selected = mgr.getSelectedIndices();
+        this.matchCountEl.textContent = `${selected.size.toLocaleString()} of ${this.totalCount.toLocaleString()} entries`;
+      } else {
+        this.matchCountEl.textContent = `${this.totalCount.toLocaleString()} of ${this.totalCount.toLocaleString()} entries`;
+      }
+    }
+
+    serializeState() {
+      const params = new URLSearchParams();
+
+      // Colormap
+      const colorSelector = this.datamap.colorSelector;
+      if (colorSelector && colorSelector.selectedColorMap) {
+        const field = colorSelector.selectedColorMap.field;
+        if (field && field !== 'none') params.set('cm', field);
+      }
+
+      // Range filters
+      for (const [paramKey, filterId] of Object.entries(PARAM_KEY_MAP)) {
+        const f = this.filters[filterId];
+        if (!f || f.type !== 'range') continue;
+        const isFullRange = f.state.minVal <= f.min && f.state.maxVal >= f.sliderMax;
+        if (!isFullRange) {
+          params.set(paramKey, `${f.state.minVal}-${f.state.maxVal}`);
+        }
+      }
+
+      // Checkbox filters
+      for (const [paramKey, filterId] of Object.entries(PARAM_KEY_MAP)) {
+        const f = this.filters[filterId];
+        if (!f || f.type !== 'checkbox') continue;
+        const checked = [];
+        const unchecked = [];
+        f.checkboxes.forEach(cb => {
+          if (cb.checked) checked.push(cb.value);
+          else unchecked.push(cb.value);
+        });
+        if (unchecked.length === 0) continue;
+        if (unchecked.length < checked.length) {
+          params.set(paramKey, unchecked.map(v => '!' + v).join(','));
+        } else {
+          params.set(paramKey, checked.join(','));
+        }
+      }
+
+      // Panel open state
+      const body = document.getElementById('filter-body');
+      if (body.classList.contains('open')) params.set('panel', '1');
+
+      // Subsection expand state
+      const expandedSubs = [];
+      for (const [filterId, f] of Object.entries(this.filters)) {
+        if (f.type !== 'checkbox' || !f.name) continue;
+        const list = f.group.querySelector('.filter-checkbox-list');
+        if (list && !list.classList.contains('collapsed')) expandedSubs.push(f.name);
+      }
+      if (expandedSubs.length > 0) params.set('expanded', expandedSubs.join(','));
+
+      const qs = params.toString();
+      history.replaceState(null, '', qs ? '?' + qs : location.pathname);
+    }
+
+    restoreFromURL() {
+      const params = new URLSearchParams(location.search);
+      if (params.size === 0) return;
+
+      // Colormap
+      const cm = params.get('cm');
+      if (cm) {
+        const colorSelector = this.datamap.colorSelector;
+        if (colorSelector && colorSelector.colorMaps) {
+          const match = colorSelector.colorMaps.find(m => m.field === cm);
+          if (match) colorSelector.handleColorMapSelection(match);
+        }
+      }
+
+      // Range filters
+      for (const [paramKey, filterId] of Object.entries(PARAM_KEY_MAP)) {
+        const f = this.filters[filterId];
+        if (!f || f.type !== 'range') continue;
+        const val = params.get(paramKey);
+        if (!val) continue;
+        const parts = val.split('-');
+        if (parts.length < 2) continue;
+        let lo, hi;
+        if (parts.length === 2) {
+          lo = parseInt(parts[0]); hi = parseInt(parts[1]);
+        } else if (parts.length === 3 && parts[0] === '') {
+          lo = parseInt('-' + parts[1]); hi = parseInt(parts[2]);
+        } else {
+          continue;
+        }
+        if (isNaN(lo) || isNaN(hi)) continue;
+        f.minInput.value = lo;
+        f.maxInput.value = hi;
+        f.minInput.dispatchEvent(new Event('input'));
+      }
+
+      // Checkbox filters
+      for (const [paramKey, filterId] of Object.entries(PARAM_KEY_MAP)) {
+        const f = this.filters[filterId];
+        if (!f || f.type !== 'checkbox') continue;
+        const val = params.get(paramKey);
+        if (!val) continue;
+        const items = val.split(',');
+        const isExclusion = items.length > 0 && items[0].startsWith('!');
+        if (isExclusion) {
+          const excluded = new Set(items.map(v => v.slice(1)));
+          f.checkboxes.forEach(cb => { cb.checked = !excluded.has(cb.value); });
+        } else {
+          const included = new Set(items);
+          f.checkboxes.forEach(cb => { cb.checked = included.has(cb.value); });
+        }
+        if (f.checkboxes.length > 0) {
+          f.checkboxes[0].dispatchEvent(new Event('change'));
+        }
+      }
+
+      // Subsection expand state
+      const expanded = params.get('expanded');
+      if (expanded) {
+        const expandedNames = new Set(expanded.split(','));
+        for (const [filterId, f] of Object.entries(this.filters)) {
+          if (f.type !== 'checkbox' || !f.name) continue;
+          if (expandedNames.has(f.name)) {
+            const list = f.group.querySelector('.filter-checkbox-list');
+            const arrow = f.group.querySelector('.filter-subsection-arrow');
+            if (list) list.classList.remove('collapsed');
+            if (arrow) arrow.classList.remove('collapsed');
+          }
+        }
+      }
+
+      // Panel open state
+      if (params.get('panel') === '1') {
+        const body = document.getElementById('filter-body');
+        const container = document.getElementById('filter-container');
+        const icon = document.getElementById('filter-toggle-icon');
+        body.classList.add('open');
+        container.classList.add('open');
+        icon.innerHTML = '&#9662;';
+        this.updateFilterBodyHeight();
+      }
+    }
+
+    resetAll() {
+      for (const [filterId, f] of Object.entries(this.filters)) {
+        if (f.type === 'range') {
+          f.minInput.value = f.min;
+          f.maxInput.value = f.sliderMax;
+          f.state.minVal = f.min;
+          f.state.maxVal = f.sliderMax;
+          f.minInput.dispatchEvent(new Event('input'));
+        } else if (f.type === 'checkbox') {
+          f.checkboxes.forEach(cb => { cb.checked = true; });
+        }
+        if (f.group) f.group.classList.remove('filter-group-active');
+        this.datamap.removeSelection(filterId);
+      }
+      document.getElementById('filter-reset-inline').classList.remove('filter-reset-active');
+
+      // Reset legend opacities
+      for (const legend of Object.values(this.patchedLegends)) {
+        legend.items.forEach(item => { item.style.opacity = 1; });
+      }
+
+      this.updateMatchCount();
+      this.serializeState();
+    }
+  }
+
+  // Monkey-patch highlightPoints to preserve original point radius settings
+  // and to correctly dim all points when filters are active but match nothing.
+  function patchHighlightPoints(datamap) {
+    var origHighlight = datamap.highlightPoints.bind(datamap);
+    datamap.highlightPoints = function(itemId) {
+      var currentLayer = datamap.pointLayer;
+      var realClone = currentLayer.clone.bind(currentLayer);
+      currentLayer.clone = function(overrides) {
+        overrides.radiusMinPixels = datamap.pointRadiusMinPixels;
+        overrides.radiusMaxPixels = datamap.pointRadiusMaxPixels;
+        return realClone(overrides);
+      };
+      origHighlight(itemId);
+      currentLayer.clone = realClone;
+
+      var mgr = datamap.dataSelectionManager;
+      var hasActiveFilters = Object.keys(mgr.selectedIndicesByItem).length > 0;
+      var selectedIndices = mgr.getSelectedIndices();
+
+      if (hasActiveFilters && selectedIndices.size === 0) {
+        datamap.selected.fill(-1.0);
+        var idx = datamap.layers.indexOf(datamap.pointLayer);
+        if (idx !== -1) {
+          var corrected = datamap.pointLayer.clone({
+            radiusMinPixels: datamap.pointRadiusMinPixels,
+            radiusMaxPixels: datamap.pointRadiusMaxPixels,
+          });
+          datamap.layers[idx] = corrected;
+          datamap.pointLayer = corrected;
+          datamap.deckgl.setProps({ layers: [...datamap.layers] });
+        }
+      }
+    };
+  }
+
+  // Wait for DataMapPlot to finish loading data
+  window.addEventListener('datamapReady', function(e) {
+    const { datamap, hoverData } = e.detail;
+    patchHighlightPoints(datamap);
+    const filterPanel = new FilterPanel(datamap, hoverData, FILTER_CONFIG);
+    filterPanel.restoreFromURL();
+  });
+})();
+</script>
