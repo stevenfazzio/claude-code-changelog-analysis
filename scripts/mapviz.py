@@ -1,5 +1,6 @@
 """Generate interactive DataMapPlot visualization for the map page."""
 
+import json
 import re
 from html import escape
 from pathlib import Path
@@ -14,6 +15,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 INPUT_PATH = ROOT / "data" / "map_data.parquet"
 OUTPUT_PATH = ROOT / "docs" / "map.html"
+FILTER_PANEL_HTML = ROOT / "docs" / "filter_panel.html"
 
 # ── Color palettes (must match dashboard.py) ─────────────────────────────────
 
@@ -104,6 +106,7 @@ def main():
         "change_type": _esc(change_types),
         "type_color": type_colors,
         "complexity": _esc(complexities),
+        "user_facing": _esc(df["user_facing"].fillna("").astype(str).values),
     })
 
     # ── Marker sizes (by complexity) ─────────────────────────────────────────
@@ -263,6 +266,9 @@ def main():
     _inject_nav(OUTPUT_PATH)
     print("Injected navigation bar")
 
+    _inject_filter_panel(OUTPUT_PATH, df)
+    print("Injected filter panel")
+
 
 def _inject_nav(html_path):
     """Add shared site navigation bar to DataMapPlot-generated HTML."""
@@ -335,6 +341,92 @@ def _inject_nav(html_path):
     # Inject nav after <body> tag, plus JS to dynamically offset map content
     html = html.replace("<body>", f"<body>{nav_block}", 1)
     html = html.replace("</body>", f"{nav_resize_js}</body>", 1)
+
+    Path(html_path).write_text(html)
+
+
+def _inject_filter_panel(html_path, df):
+    """Inject the advanced filter panel into DataMapPlot-generated HTML."""
+    html = Path(html_path).read_text()
+
+    # 1. Dispatch datamapReady event after metadata finishes loading
+    html = re.sub(
+        r"(updateProgressBar\('meta-data-progress', 100\);\s*)(checkAllDataLoaded\(\);)",
+        r"\1window.dispatchEvent(new CustomEvent('datamapReady', "
+        r"{ detail: { datamap, hoverData } }));\n          \2",
+        html,
+        count=1,
+    )
+
+    # 2. Fix grid-template-rows to prevent filter panel from stretching the row
+    html = html.replace(
+        "grid-template-rows:1fr 1fr",
+        "grid-template-rows:minmax(0,1fr) minmax(0,1fr)",
+        1,
+    )
+
+    # 3. Compute filter config
+    entry_dates = pd.to_datetime(df["date"], utc=True)
+    epoch = pd.Timestamp("1970-01-01", tz="UTC")
+    date_days = ((entry_dates - epoch).dt.days)
+    min_date = int(date_days.dropna().min())
+    max_date = int(date_days.dropna().max())
+
+    user_facing_vals = sorted(df["user_facing"].fillna("").astype(str).unique().tolist())
+    # Exclude empty strings
+    user_facing_vals = [v for v in user_facing_vals if v]
+
+    filter_config = {
+        "totalCount": len(df),
+        "categories": sorted(CATEGORIES),
+        "changeTypes": sorted(TYPE_COLORS.keys()),
+        "complexities": ["minor", "moderate", "major"],
+        "userFacingValues": user_facing_vals,
+        "ranges": {
+            "date": {
+                "min": min_date,
+                "max": max_date,
+            },
+        },
+        "colormapFieldToFilterId": {
+            "category": "filter-category",
+            "change_type": "filter-change-type",
+            "complexity": "filter-complexity",
+        },
+        "filterIdToColormapField": {
+            "filter-category": "category",
+            "filter-change-type": "change_type",
+            "filter-complexity": "complexity",
+        },
+    }
+
+    # 4. Read and split template by <!-- SECTION: xxx --> markers
+    template = FILTER_PANEL_HTML.read_text()
+    sections = re.split(r"<!-- SECTION: (\w+) -->", template)
+    section_map = {}
+    for i in range(1, len(sections), 2):
+        section_map[sections[i]] = sections[i + 1].strip()
+
+    # 5. Replace config placeholder in JS section
+    js_section = section_map["js"].replace(
+        "__FILTER_CONFIG_JSON__", json.dumps(filter_config)
+    )
+
+    # 6. Inject CSS before </head>
+    html = html.replace("</head>", section_map["css"] + "\n</head>", 1)
+
+    # 7. Inject HTML after search-container div
+    search_pattern = re.compile(
+        r'(<div id="search-container" class="container-box[^"]*">\s*'
+        r"<input[^/]*/>\s*</div>)"
+    )
+    match = search_pattern.search(html)
+    if match:
+        insert_pos = match.end()
+        html = html[:insert_pos] + "\n      " + section_map["html"] + "\n" + html[insert_pos:]
+
+    # 8. Inject JS before </html>
+    html = html.replace("</html>", js_section + "\n</html>", 1)
 
     Path(html_path).write_text(html)
 
