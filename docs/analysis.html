@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Code Changelog — Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        cream: '#faf9f6',
+        'cream-dark': '#f4f2ec',
+        border: '#e0ddd5',
+        'border-light': '#e8e5de',
+        'text-primary': '#2c2c2c',
+        'text-secondary': '#888',
+        'text-muted': '#aaa',
+        divider: '#d5d0c8',
+      },
+      fontFamily: {
+        mono: ['"IBM Plex Mono"', 'monospace'],
+        serif: ['"Newsreader"', 'Georgia', 'serif'],
+      },
+      maxWidth: {
+        site: '1100px',
+      },
+    },
+  },
+}
+</script>
+
+<style>
+.site-nav,
+.site-nav *,
+.site-nav *::before,
+.site-nav *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+.site-nav {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 32px 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.625;
+  color: #2c2c2c;
+}
+@media (max-width: 768px) {
+  .site-nav { padding: 24px 16px 0; }
+}
+.site-nav-title {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: #2c2c2c;
+  line-height: 1.2;
+}
+@media (max-width: 640px) {
+  .site-nav-title { font-size: 1.3rem; }
+}
+.site-nav-subtitle {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 2px;
+  line-height: 1.625;
+}
+.site-nav-links {
+  margin-top: 12px;
+  padding-bottom: 2px;
+  font-size: 0.82rem;
+  line-height: 1.625;
+}
+.site-nav-links a {
+  color: #888;
+  text-decoration: underline;
+  text-decoration-color: rgba(136, 136, 136, 0.5);
+  text-underline-offset: 4px;
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+.site-nav-links a:hover {
+  color: #2c2c2c;
+  text-decoration-color: #2c2c2c;
+}
+.site-nav-links a.active {
+  color: #2c2c2c;
+  font-weight: 600;
+  text-decoration: none;
+}
+.site-nav-sep {
+  color: #d5d0c8;
+  margin: 0 8px;
+}
+.site-nav-hr {
+  border: none;
+  border-top: 1px solid #d5d0c8;
+  margin: 16px 0 24px;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+
+</head>
+<body class="font-mono bg-cream text-text-primary leading-relaxed text-[11px]">
+<div class="site-nav">
+  <h1 class="site-nav-title">Claude Code Changelog</h1>
+  <p class="site-nav-subtitle">Track every change to Claude Code</p>
+  <nav class="site-nav-links"><a href="index.html">Explorer</a><span class="site-nav-sep">&middot;</span><a href="analysis.html" class="active">Analysis</a><span class="site-nav-sep">&middot;</span><a href="map.html">Map</a></nav>
+  <hr class="site-nav-hr">
+</div>
+<div class="max-w-site mx-auto px-8 max-md:px-4">
+
+<div id="kpi-row" class="text-[0.82rem] leading-8 pb-2 flex flex-wrap gap-x-2 max-sm:text-[0.75rem]">
+  <span class="text-text-secondary">Loading...</span>
+</div>
+
+<div class="pt-6 pb-2">
+  <h2 class="font-serif text-[1.1rem] font-normal text-text-secondary tracking-wide mb-3">Timeline Trends</h2>
+  <div class="grid grid-cols-1 gap-4">
+    <div class="border border-border p-2 bg-cream relative">
+      <button id="trend-toggle" class="absolute top-2 right-3 text-[0.7rem] font-mono px-2 py-0.5 border border-border rounded text-text-secondary hover:text-text-primary hover:border-divider cursor-pointer bg-cream z-10">Show %</button>
+      <div id="chart-category-trends" class="h-[400px]"></div>
+    </div>
+    <div class="border border-border p-2 bg-cream"><div id="chart-release-cadence" class="h-[350px]"></div></div>
+  </div>
+</div>
+
+<div class="pt-6 pb-2">
+  <h2 class="font-serif text-[1.1rem] font-normal text-text-secondary tracking-wide mb-3">Distributions</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="border border-border p-2 bg-cream md:col-span-2"><div id="chart-category-dist" class="h-[400px]"></div></div>
+    <div class="border border-border p-2 bg-cream"><div id="chart-change-type" class="h-[350px]"></div></div>
+    <div class="border border-border p-2 bg-cream"><div id="chart-complexity" class="h-[350px]"></div></div>
+  </div>
+</div>
+
+<div class="pt-6 pb-2">
+  <h2 class="font-serif text-[1.1rem] font-normal text-text-secondary tracking-wide mb-3">Deeper Analysis</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="border border-border p-2 bg-cream md:col-span-2"><div id="chart-bugfix-ratio" class="h-[350px]"></div></div>
+    <div class="border border-border p-2 bg-cream"><div id="chart-heatmap" class="h-[400px]"></div></div>
+    <div class="border border-border p-2 bg-cream"><div id="chart-major-changes" class="h-[400px]"></div></div>
+  </div>
+</div>
+
+
+<script>
+var BASE_TEXT = {fontFamily: '"IBM Plex Mono", monospace', color: '#2c2c2c', fontSize: 11};
+var TITLE_TEXT = {fontFamily: '"Newsreader", Georgia, serif', fontSize: 13, color: '#2c2c2c', fontWeight: 'normal'};
+
+function initChart(id, option) {
+  var dom = document.getElementById(id);
+  if (!dom) return null;
+  var chart = echarts.init(dom);
+  chart.setOption(option);
+  return chart;
+}
+
+var charts = [];
+window.addEventListener('resize', function() {
+  charts.forEach(function(c) { if (c) c.resize(); });
+});
+
+fetch('data/analysis.json')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var cc = data.colors.category;
+    var tc = data.colors.type;
+    var xc = data.colors.complexity;
+
+    // KPIs
+    var k = data.kpi;
+    var kpis = [
+      ['Entries', k.entries.toLocaleString()],
+      ['Versions', k.versions.toLocaleString()],
+      ['Range', k.date_min + ' \u2013 ' + k.date_max],
+      ['Top Category', k.top_category],
+      ['Bugfix %', k.bugfix_pct + '%'],
+      ['User-Facing %', k.user_facing_pct + '%'],
+    ];
+    var sep = '<span class="text-border">\u00b7</span>';
+    document.getElementById('kpi-row').innerHTML = kpis.map(function(s) {
+      return '<span class="whitespace-nowrap"><span class="text-text-secondary">' + s[0] + '</span> <span class="font-semibold text-text-primary">' + s[1] + '</span></span>';
+    }).join(' ' + sep + ' ');
+
+    // 1. Category Trends (stacked area) with count/% toggle
+    var trendCats = Object.keys(data.category_trends.series);
+    var trendMonths = data.category_trends.months;
+
+    // Pre-compute monthly totals for percentage mode
+    var monthlyTotals = trendMonths.map(function(m, i) {
+      var total = 0;
+      trendCats.forEach(function(cat) { total += data.category_trends.series[cat][i]; });
+      return total;
+    });
+
+    function makeTrendSeries(mode) {
+      return trendCats.map(function(cat) {
+        return {
+          name: cat,
+          type: 'line',
+          stack: 'total',
+          areaStyle: {opacity: 0.7},
+          symbol: 'none',
+          lineStyle: {width: 1},
+          itemStyle: {color: cc[cat]},
+          data: trendMonths.map(function(m, i) {
+            var val = data.category_trends.series[cat][i];
+            if (mode === 'pct') val = monthlyTotals[i] > 0 ? Math.round(val / monthlyTotals[i] * 1000) / 10 : 0;
+            return [m, val];
+          }),
+        };
+      });
+    }
+
+    var trendChart = initChart('chart-category-trends', {
+      title: {text: 'Category Trends (monthly)', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {trigger: 'axis', confine: true, order: 'seriesDesc'},
+      legend: {type: 'scroll', bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
+      grid: {left: 40, right: 20, top: 45, bottom: 50},
+      xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, axisLabel: {fontSize: 10}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      yAxis: {type: 'value', name: 'Entries', axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      series: makeTrendSeries('count'),
+    });
+    charts.push(trendChart);
+
+    // Wire up toggle
+    var trendMode = 'count';
+    var toggleBtn = document.getElementById('trend-toggle');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', function() {
+        trendMode = trendMode === 'count' ? 'pct' : 'count';
+        toggleBtn.textContent = trendMode === 'count' ? 'Show %' : 'Show #';
+        trendChart.setOption({
+          yAxis: {name: trendMode === 'count' ? 'Entries' : '% of Entries', max: trendMode === 'pct' ? 100 : null},
+          series: makeTrendSeries(trendMode),
+        });
+      });
+    }
+
+    // 2. Release Cadence
+    charts.push(initChart('chart-release-cadence', {
+      title: {text: 'Release Cadence (versions per week)', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {trigger: 'axis', confine: true},
+      grid: {left: 40, right: 20, top: 45, bottom: 35},
+      xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, axisLabel: {fontSize: 10}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      yAxis: {type: 'value', name: 'Versions', axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      series: [{
+        type: 'bar',
+        itemStyle: {color: cc['cli'] || '#2c2c2c'},
+        data: data.release_cadence.weeks.map(function(w, i) {
+          return [w, data.release_cadence.versions[i]];
+        }),
+      }],
+    }));
+
+    // 3. Category Distribution (horizontal bar)
+    charts.push(initChart('chart-category-dist', {
+      title: {text: 'Category Distribution', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {trigger: 'axis', confine: true, axisPointer: {type: 'shadow'}},
+      grid: {left: 100, right: 60, top: 45, bottom: 20},
+      xAxis: {type: 'value', name: 'Entries', splitLine: {lineStyle: {color: '#e8e5de'}}},
+      yAxis: {type: 'category', data: data.category_dist.categories, axisLabel: {fontSize: 10}},
+      series: [{
+        type: 'bar',
+        data: data.category_dist.counts.map(function(v, i) {
+          return {value: v, itemStyle: {color: cc[data.category_dist.categories[i]] || '#888'}};
+        }),
+        label: {show: true, position: 'right', fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'},
+      }],
+    }));
+
+    // 4. Change Type Donut
+    charts.push(initChart('chart-change-type', {
+      title: {text: 'Change Type', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {trigger: 'item', confine: true, formatter: '{b}: {c} ({d}%)'},
+      legend: {bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
+      series: [{
+        type: 'pie',
+        radius: ['40%', '70%'],
+        center: ['50%', '45%'],
+        avoidLabelOverlap: false,
+        label: {show: false},
+        data: data.change_type.labels.map(function(l, i) {
+          return {value: data.change_type.values[i], name: l, itemStyle: {color: tc[l] || '#888'}};
+        }),
+      }],
+    }));
+
+    // 5. Complexity Donut
+    charts.push(initChart('chart-complexity', {
+      title: {text: 'Complexity', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {trigger: 'item', confine: true, formatter: '{b}: {c} ({d}%)'},
+      legend: {bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
+      series: [{
+        type: 'pie',
+        radius: ['40%', '70%'],
+        center: ['50%', '45%'],
+        avoidLabelOverlap: false,
+        label: {show: false},
+        data: data.complexity.labels.map(function(l, i) {
+          return {value: data.complexity.values[i], name: l, itemStyle: {color: xc[l] || '#888'}};
+        }),
+      }],
+    }));
+
+    // 6. Bugfix Ratio (dual axis)
+    charts.push(initChart('chart-bugfix-ratio', {
+      title: {text: 'Bugfix Ratio Over Time', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {trigger: 'axis', confine: true},
+      legend: {data: ['Bugfix %', 'Total entries'], top: 25, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
+      grid: {left: 50, right: 50, top: 60, bottom: 35},
+      xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      yAxis: [
+        {type: 'value', name: 'Bugfix %', splitLine: {lineStyle: {color: '#e8e5de'}}},
+        {type: 'value', name: 'Total entries', splitLine: {show: false}},
+      ],
+      series: [
+        {
+          name: 'Bugfix %',
+          type: 'line',
+          yAxisIndex: 0,
+          symbol: 'circle',
+          symbolSize: 6,
+          itemStyle: {color: tc['bugfix']},
+          data: data.bugfix_ratio.months.map(function(m, i) {
+            return [m, data.bugfix_ratio.pct[i]];
+          }),
+        },
+        {
+          name: 'Total entries',
+          type: 'bar',
+          yAxisIndex: 1,
+          itemStyle: {color: '#a89b7b', opacity: 0.35},
+          data: data.bugfix_ratio.months.map(function(m, i) {
+            return [m, data.bugfix_ratio.total[i]];
+          }),
+        },
+      ],
+    }));
+
+    // 7. Heatmap (Category x Change Type)
+    charts.push(initChart('chart-heatmap', {
+      title: {text: 'Category \u00d7 Change Type (row %)', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {confine: true, formatter: function(p) { return p.data[2].toFixed(0) + '%'; }},
+      grid: {left: 100, right: 60, top: 45, bottom: 60},
+      xAxis: {type: 'category', data: data.heatmap.change_types, axisLabel: {fontSize: 10, interval: 0, rotate: 45}, splitArea: {show: true}},
+      yAxis: {type: 'category', data: data.heatmap.categories, axisLabel: {fontSize: 10}, splitArea: {show: true}},
+      visualMap: {
+        min: 0, max: 100,
+        calculable: false,
+        orient: 'horizontal',
+        left: 'center',
+        bottom: 0,
+        inRange: {color: ['#faf9f6', cc['cli'] || '#c4382a']},
+        textStyle: {fontSize: 10},
+        show: false,
+      },
+      series: [{
+        type: 'heatmap',
+        data: data.heatmap.data,
+        label: {show: true, fontSize: 10, formatter: function(p) { return p.data[2].toFixed(0) + '%'; }},
+        emphasis: {itemStyle: {shadowBlur: 5, shadowColor: 'rgba(0,0,0,0.2)'}},
+      }],
+    }));
+
+    // 8. Major Changes Timeline (scatter)
+    var majorCategories = [...new Set(data.major_changes.map(function(d) { return d.category; }))].sort();
+    charts.push(initChart('chart-major-changes', {
+      title: {text: 'Major Changes Timeline', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {
+        confine: true,
+        formatter: function(p) {
+          var d = data.major_changes[p.dataIndex];
+          return '<b>' + d.date + '</b><br><div style="max-width:300px;white-space:normal;word-wrap:break-word;">' + d.text + '</div>';
+        },
+      },
+      grid: {left: 100, right: 20, top: 45, bottom: 35},
+      xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      yAxis: {type: 'category', data: majorCategories, axisLabel: {fontSize: 10}},
+      series: [{
+        type: 'scatter',
+        symbolSize: 10,
+        data: data.major_changes.map(function(d) {
+          return {
+            value: [d.date, d.category],
+            itemStyle: {color: cc[d.category] || '#888'},
+          };
+        }),
+      }],
+    }));
+  });
+</script>
+
+
+
+<footer class="text-center py-10 text-text-muted text-xs"><span id="generated-at"></span>Data from anthropics/claude-code CHANGELOG.md</footer>
+<script>fetch('data/meta.json').then(r=>r.json()).then(d=>{document.getElementById('generated-at').textContent='Generated '+d.generated_at+' · '}).catch(()=>{})</script>
+</div>
+</body>
+</html>
