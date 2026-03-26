@@ -86,7 +86,7 @@ Return ONLY the JSON array, no other text.""" % (
 )
 
 
-DEFAULT_MODEL = "claude-haiku-4-5"
+DEFAULT_MODEL = "claude-opus-4-6"
 
 FALLBACK_RESULT = {
     "category": "other",
