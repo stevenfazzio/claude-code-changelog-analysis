@@ -33,22 +33,51 @@ For each entry, output a JSON array of objects with these fields:
 - "category": one of %s
 - "change_type": one of %s
 - "complexity": one of %s
-- "user_facing": boolean, whether end users would notice this change
+- "user_facing": boolean
 
-Guidelines:
-- "cli" = general CLI UX, terminal, input/output, commands
-- "mcp" = Model Context Protocol servers, tools, OAuth
+## Category guidelines
+
+Pick the MOST SPECIFIC category that applies:
+- "cli" = general CLI UX, terminal rendering, input/output, slash commands, conversation flow
+- "mcp" = MCP server management, MCP tool behavior, MCP OAuth, MCP resources
 - "voice" = voice mode, audio, microphone
-- "auth" = authentication, OAuth, API keys, login
-- "ide" = VSCode extension, IDE integrations
-- "hooks" = hooks system, SessionEnd, PreToolUse, etc.
-- "permissions" = permission prompts, allow/deny, sandbox
-- "performance" = speed, memory, startup time
-- "agents" = subagents, background tasks, worktrees
-- "plugins" = plugin system, marketplace, plugin install
-- "config" = settings, configuration, managed settings
-- "api" = API integration, providers, Bedrock, Vertex
+- "auth" = authentication, OAuth, API keys, login (NOT MCP OAuth — that's "mcp")
+- "ide" = VSCode extension, IDE integrations, editor features
+- "hooks" = hooks system (SessionEnd, PreToolUse, etc.), hook configuration
+- "permissions" = permission prompts, allow/deny, sandbox, tool approval
+- "performance" = speed, memory, startup time, caching, token usage optimization
+- "agents" = subagents (Explore, Plan, etc.), background tasks, worktrees, task tools
+- "plugins" = plugin system, marketplace, plugin install/discover, skills
+- "config" = settings, env vars, configuration files, managed settings, .claude/ files
+- "api" = API integration, model providers, Bedrock, Vertex, model selection
 - "other" = doesn't fit any category above
+
+Boundary rules (use these to resolve ambiguity):
+- Env vars and settings → "config"; CLI commands and UX flows → "cli"
+- Specific subagent behavior or worktrees → "agents"; general CLI behavior → "cli"
+- Plugin/skill system features → "plugins"; general CLI features → "cli"
+- MCP server/tool management → "mcp"; general tool usage → "cli"
+
+## Change type guidelines
+
+- "feature" = entirely new capability that didn't exist before
+- "improvement" = existing capability made noticeably better (faster, cleaner, more robust, better UX)
+- "bugfix" = something was broken/incorrect and is now fixed (look for "Fixed", "Fix" prefixes)
+- "breaking" = backwards-incompatible change (look for "Breaking" prefix or explicit breaking notes)
+- "internal" = refactoring, test changes, or infra with no user-visible effect
+
+## Complexity guidelines
+
+- "minor" = small tweak: single flag, typo fix, one-line behavior change, simple bugfix
+- "moderate" = meaningful change: new command, new integration, workflow change, multi-component fix
+- "major" = large scope: new subsystem, architectural change, major new feature, breaking change
+
+## user_facing guidelines
+
+Mark true if ANY end user could notice the change in normal usage. This includes: new features, \
+behavior changes, performance improvements, new commands, new settings, bugfixes for user-visible \
+bugs, and new/changed error messages. Only mark false for purely internal refactors, test-only \
+changes, or infrastructure changes with zero observable effect on the user experience.
 
 Return ONLY the JSON array, no other text.""" % (
     json.dumps(CATEGORIES),

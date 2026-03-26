@@ -36,9 +36,16 @@ def main():
         default="all",
         help="Which model to run (default: all)",
     )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=OUTPUT_DIR,
+        help="Output directory for results (default: data/eval/)",
+    )
     args = parser.parse_args()
 
     models_to_run = MODELS if args.model == "all" else {args.model: MODELS[args.model]}
+    output_dir = args.output_dir if args.output_dir.is_absolute() else ROOT / args.output_dir
 
     print("=== Model Comparison: Enrichment ===\n")
     print("Estimated costs:")
@@ -48,10 +55,10 @@ def main():
     print(f"  {'total':8s} ${total:.2f}")
     print()
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     for name, model_id in models_to_run.items():
-        output_path = OUTPUT_DIR / f"enriched_{name}.parquet"
+        output_path = output_dir / f"enriched_{name}.parquet"
         print(f"\n{'='*60}")
         print(f"Running {name} ({model_id})")
         print(f"Output: {output_path}")
