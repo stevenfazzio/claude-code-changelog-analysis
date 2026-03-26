@@ -9,3 +9,6 @@ docs/index.html
 docs/analysis.html
 docs/map.html
 docs/data/
+
+# Eval experiment artifacts
+data/eval/
