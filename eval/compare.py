@@ -143,7 +143,7 @@ def print_terminal_report(merged: pd.DataFrame):
             print(f"\nTop disagreement patterns ({field}):")
             print(f"  {'haiku':>14s} {'sonnet':>14s} {'opus':>14s} {'count':>6s}")
             for p in patterns:
-                print(f"  {p['haiku']:>14s} {p['sonnet']:>14s} {p['opus']:>14s} {p['count']:>6d}")
+                print(f"  {str(p['haiku']):>14s} {str(p['sonnet']):>14s} {str(p['opus']):>14s} {p['count']:>6d}")
 
     # Overall disagreement rate
     disagree = find_disagreements(merged)
