@@ -1,4 +1,4 @@
-"""Enrich changelog entries with LLM-derived features via Claude Haiku."""
+"""Enrich changelog entries with LLM-derived classifications."""
 
 import json
 import os
@@ -57,12 +57,22 @@ Return ONLY the JSON array, no other text.""" % (
 )
 
 
-def enrich_batch(client: anthropic.Anthropic, entries: list[str]) -> list[dict]:
-    """Classify a batch of entries using Claude Haiku."""
+DEFAULT_MODEL = "claude-haiku-4-5"
+
+FALLBACK_RESULT = {
+    "category": "other",
+    "change_type": "internal",
+    "complexity": "minor",
+    "user_facing": True,
+}
+
+
+def enrich_batch(client: anthropic.Anthropic, entries: list[str], model: str = DEFAULT_MODEL) -> list[dict]:
+    """Classify a batch of entries using the specified model."""
     numbered = "\n".join(f"{i}. {text}" for i, text in enumerate(entries))
 
     response = client.messages.create(
-        model="claude-haiku-4-5",
+        model=model,
         max_tokens=4096,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": numbered}],
@@ -78,22 +88,26 @@ def enrich_batch(client: anthropic.Anthropic, entries: list[str]) -> list[dict]:
     return results
 
 
-def main():
-    df = pd.read_parquet(INPUT_PATH)
+def run_enrichment(model: str, input_path: Path, output_path: Path) -> pd.DataFrame:
+    """Run enrichment on all entries, with incremental support.
+
+    Returns the full enriched DataFrame.
+    """
+    df = pd.read_parquet(input_path)
 
     # Check for existing enriched data to enable incremental updates
-    if OUTPUT_PATH.exists():
-        existing = pd.read_parquet(OUTPUT_PATH)
+    if output_path.exists():
+        existing = pd.read_parquet(output_path)
         already_enriched = set(existing["text"].tolist())
         to_enrich = df[~df["text"].isin(already_enriched)]
         print(f"Found {len(existing)} already-enriched entries, {len(to_enrich)} new entries to enrich")
         if len(to_enrich) == 0:
             print("Nothing to do.")
-            return
+            return existing
     else:
         existing = None
         to_enrich = df
-        print(f"Enriching {len(to_enrich)} entries...")
+        print(f"Enriching {len(to_enrich)} entries with {model}...")
 
     client = anthropic.Anthropic()
 
@@ -107,38 +121,23 @@ def main():
         print(f"  Batch {batch_num}/{total_batches} ({len(batch)} entries)...")
 
         try:
-            results = enrich_batch(client, batch)
+            results = enrich_batch(client, batch, model=model)
             # Map results back by index
             result_map = {r["index"]: r for r in results}
             for i in range(len(batch)):
                 if i in result_map:
                     all_results.append(result_map[i])
                 else:
-                    # Fallback for missing entries
-                    all_results.append({
-                        "index": i,
-                        "category": "other",
-                        "change_type": "internal",
-                        "complexity": "minor",
-                        "user_facing": True,
-                    })
+                    all_results.append({"index": i, **FALLBACK_RESULT})
         except Exception as e:
             print(f"    Error: {e}, using fallback for batch")
             for i in range(len(batch)):
-                all_results.append({
-                    "index": i,
-                    "category": "other",
-                    "change_type": "internal",
-                    "complexity": "minor",
-                    "user_facing": True,
-                })
+                all_results.append({"index": i, **FALLBACK_RESULT})
 
     # Attach enrichment columns to the entries being enriched
     enriched_new = to_enrich.copy()
-    enriched_new["category"] = [r["category"] for r in all_results]
-    enriched_new["change_type"] = [r["change_type"] for r in all_results]
-    enriched_new["complexity"] = [r["complexity"] for r in all_results]
-    enriched_new["user_facing"] = [r["user_facing"] for r in all_results]
+    for field in ("category", "change_type", "complexity", "user_facing"):
+        enriched_new[field] = [r[field] for r in all_results]
 
     # Merge with existing if incremental
     if existing is not None:
@@ -149,15 +148,21 @@ def main():
     # Sort to match original order
     enriched = enriched.sort_values(["date", "version", "entry_index"]).reset_index(drop=True)
 
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    enriched.to_parquet(OUTPUT_PATH, index=False)
-    print(f"\nSaved {len(enriched)} enriched entries to {OUTPUT_PATH}")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    enriched.to_parquet(output_path, index=False)
+    print(f"\nSaved {len(enriched)} enriched entries to {output_path}")
 
     # Summary
     print(f"\nCategory distribution:")
     print(enriched["category"].value_counts().to_string())
     print(f"\nChange type distribution:")
     print(enriched["change_type"].value_counts().to_string())
+
+    return enriched
+
+
+def main():
+    run_enrichment(DEFAULT_MODEL, INPUT_PATH, OUTPUT_PATH)
 
 
 if __name__ == "__main__":
