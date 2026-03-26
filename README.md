@@ -47,8 +47,10 @@ The fetch stage requires the [GitHub CLI](https://cli.github.com/) (`gh`) to be 
 
 ## Site
 
-The site is generated in `docs/` and served via GitHub Pages. It includes three pages:
+The site is served via GitHub Pages from the `docs/` directory. Generated HTML and data files are gitignored and built/committed automatically by the [CI workflow](.github/workflows/update.yml), so `docs/` will appear mostly empty after a fresh clone.
+
+It includes three pages:
 
 - **Explorer** — Filterable table of all changelog entries with multiselect and date range filters
 - **Analysis** — Release cadence charts, category trends, distribution breakdowns, and heatmaps
-- **Map** — Semantic map of changes using Cohere embeddings (stub)
+- **Map** — Semantic map of changes using Cohere embeddings with advanced filters for category, change type, complexity, and version range
