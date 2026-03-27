@@ -13,17 +13,22 @@ Run the full pipeline: `uv run python scripts/run_pipeline.py`
 Run individual stages:
 - `uv run python scripts/fetch.py` — fetches CHANGELOG.md via `gh` CLI (requires GitHub auth) and version dates from npm registry
 - `uv run python scripts/parse.py` — parses changelog with version dates into `data/raw_entries.parquet`
-- `uv run python scripts/enrich.py` — classifies entries using Claude Haiku (`ANTHROPIC_API_KEY` required)
+- `uv run python scripts/enrich.py` — classifies entries using Claude Opus (`ANTHROPIC_API_KEY` required)
 - `uv run python scripts/embed.py` — generates Cohere embeddings (`CO_API_KEY` required)
+- `uv run python scripts/reduce.py` — UMAP 2D reduction + Toponymy topic labeling (`ANTHROPIC_API_KEY` + `CO_API_KEY`)
+- `uv run python scripts/mapviz.py` — generates interactive DataMapPlot visualization
 - `uv run python scripts/dashboard.py` — generates 3-page site in `docs/` (Explorer, Analysis, Map)
+
+Standalone analysis:
+- `uv run python scripts/explore_taxonomy.py` — runs Toponymy with EVoC clustering on full 512-dim embeddings (no UMAP reduction) to discover natural semantic structure; compares raw vs bugfix-direction-removed clustering; outputs `data/taxonomy_exploration.md`
 
 Each stage reads the previous stage's output from `data/`. The enrich and embed stages support incremental updates — they skip entries that already exist in their output files.
 
 ## Data Flow
 
 ```
-CHANGELOG.md + versions.json → raw_entries.parquet → enriched.parquet → embeddings.parquet
-                                                         ↓
+CHANGELOG.md + versions.json → raw_entries.parquet → enriched.parquet → embeddings.parquet → map_data.parquet
+                                                         ↓                                       ↓
                                                   docs/ (index.html, analysis.html, map.html)
 ```
 
