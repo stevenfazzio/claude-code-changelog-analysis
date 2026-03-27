@@ -30,7 +30,7 @@ uv run python scripts/run_pipeline.py
 
 ## Setup
 
-Requires Python 3.12+ and [uv](https://github.com/astral-sh/uv).
+Requires Python 3.12+, [uv](https://github.com/astral-sh/uv), and [Git LFS](https://git-lfs.com/) (data files are stored with LFS).
 
 ```sh
 uv sync
