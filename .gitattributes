@@ -2,3 +2,4 @@
 # to auto-resolve conflicts (the auto-update job regenerates these on main).
 # Requires one-time setup: git config merge.ours.driver true
 docs/map.html merge=ours
+data/*.parquet filter=lfs diff=lfs merge=lfs -text
