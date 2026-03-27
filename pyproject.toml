@@ -13,6 +13,7 @@ dependencies = [
     "toponymy>=0.4",
     "fast-hdbscan>=0.3",
     "nest-asyncio>=1.5",
+    "evoc",
     "transformers>=4.0",
     "marimo>=0.10",
     "python-dotenv>=1.0",
