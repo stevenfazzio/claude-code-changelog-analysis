@@ -1,0 +1,4 @@
+# Generated HTML files with large embedded data — use "ours" merge strategy
+# to auto-resolve conflicts (the auto-update job regenerates these on main).
+# Requires one-time setup: git config merge.ours.driver true
+docs/map.html merge=ours

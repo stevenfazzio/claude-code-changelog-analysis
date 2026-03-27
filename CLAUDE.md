@@ -41,6 +41,16 @@ Key columns added at each stage:
 
 The site is served via GitHub Pages from the `docs/` directory on the `main` branch.
 
+## Branching
+
+Files in `docs/` are generated output. On feature branches, only commit changes to scripts — do not commit regenerated `docs/` files. The auto-update job on `main` will regenerate them after merge. Run the generation scripts locally to verify your changes, but leave the output uncommitted.
+
+A `.gitattributes` merge strategy auto-resolves conflicts in `docs/map.html`. New clones need a one-time setup:
+
+```
+git config merge.ours.driver true
+```
+
 ## Environment
 
 - Python 3.12+, managed with `uv`
