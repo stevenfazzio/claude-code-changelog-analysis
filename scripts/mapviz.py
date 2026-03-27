@@ -20,8 +20,9 @@ FILTER_PANEL_HTML = ROOT / "docs" / "filter_panel.html"
 # ── Color palettes (must match dashboard.py) ─────────────────────────────────
 
 CATEGORIES = [
-    "cli", "config", "mcp", "agents", "other", "performance",
-    "ide", "permissions", "voice", "auth", "hooks", "plugins", "api",
+    "terminal", "input", "slash_commands", "sessions",
+    "mcp", "voice", "auth", "ide", "hooks", "permissions",
+    "performance", "agents", "plugins", "config", "api", "sdk", "other",
 ]
 CATEGORY_COLORS = dict(zip(
     CATEGORIES,
@@ -106,7 +107,7 @@ def main():
         "change_type": _esc(change_types),
         "type_color": type_colors,
         "complexity": _esc(complexities),
-        "user_facing": _esc(df["user_facing"].fillna("").astype(str).values),
+        "audience": _esc(df["audience"].fillna("interactive_user").values),
     })
 
     # ── Marker sizes (by complexity) ─────────────────────────────────────────
@@ -372,16 +373,15 @@ def _inject_filter_panel(html_path, df):
     min_date = int(date_days.dropna().min())
     max_date = int(date_days.dropna().max())
 
-    user_facing_vals = sorted(df["user_facing"].fillna("").astype(str).unique().tolist())
-    # Exclude empty strings
-    user_facing_vals = [v for v in user_facing_vals if v]
+    audience_vals = sorted(df["audience"].fillna("interactive_user").unique().tolist())
+    audience_vals = [v for v in audience_vals if v]
 
     filter_config = {
         "totalCount": len(df),
         "categories": sorted(CATEGORIES),
         "changeTypes": sorted(TYPE_COLORS.keys()),
         "complexities": ["minor", "moderate", "major"],
-        "userFacingValues": user_facing_vals,
+        "audiences": audience_vals,
         "ranges": {
             "date": {
                 "min": min_date,

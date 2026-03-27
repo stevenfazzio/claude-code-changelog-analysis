@@ -17,11 +17,13 @@ INPUT_PATH = ROOT / "data" / "raw_entries.parquet"
 OUTPUT_PATH = ROOT / "data" / "enriched.parquet"
 
 CATEGORIES = [
-    "cli", "mcp", "voice", "auth", "ide", "hooks", "permissions",
-    "performance", "agents", "plugins", "config", "api", "other",
+    "terminal", "input", "slash_commands", "sessions",
+    "mcp", "voice", "auth", "ide", "hooks", "permissions",
+    "performance", "agents", "plugins", "config", "api", "sdk", "other",
 ]
 CHANGE_TYPES = ["feature", "bugfix", "improvement", "breaking", "internal"]
 COMPLEXITIES = ["minor", "moderate", "major"]
+AUDIENCES = ["interactive_user", "sdk_developer", "admin", "extension_developer"]
 
 BATCH_SIZE = 20
 
@@ -33,30 +35,37 @@ For each entry, output a JSON array of objects with these fields:
 - "category": one of %s
 - "change_type": one of %s
 - "complexity": one of %s
-- "user_facing": boolean
+- "audience": one of %s
 
 ## Category guidelines
 
 Pick the MOST SPECIFIC category that applies:
-- "cli" = general CLI UX, terminal rendering, input/output, slash commands, conversation flow
+- "terminal" = terminal rendering, display, cursor, flickering, UI layout, spinner, progress indicators
+- "input" = keyboard handling, text entry, vim mode, readline keybindings, CJK/IME, clipboard/paste
+- "slash_commands" = slash command system, autocomplete, custom commands (/help, /config, /resume etc.)
+- "sessions" = session resume, session management, remote control, conversation compaction, history
 - "mcp" = MCP server management, MCP tool behavior, MCP OAuth, MCP resources
-- "voice" = voice mode, audio, microphone
+- "voice" = voice mode, audio, microphone, push-to-talk
 - "auth" = authentication, OAuth, API keys, login (NOT MCP OAuth — that's "mcp")
 - "ide" = VSCode extension, IDE integrations, editor features
-- "hooks" = hooks system (SessionEnd, PreToolUse, etc.), hook configuration
+- "hooks" = hooks system (SessionEnd, PreToolUse, PostCompact, etc.), hook configuration
 - "permissions" = permission prompts, allow/deny, sandbox, tool approval
 - "performance" = speed, memory, startup time, caching, token usage optimization
-- "agents" = subagents (Explore, Plan, etc.), background tasks, worktrees, task tools
+- "agents" = subagents (Explore, Plan, etc.), background tasks/agents, worktrees, task tools, agent teams
 - "plugins" = plugin system, marketplace, plugin install/discover, skills
-- "config" = settings, env vars, configuration files, managed settings, .claude/ files
-- "api" = API integration, model providers, Bedrock, Vertex, model selection
+- "config" = settings, env vars, configuration files, managed settings, .claude/ files, CLAUDE.md
+- "api" = API integration, model providers, Bedrock, Vertex, model selection, rate limits
+- "sdk" = SDK features, SDK messages, SDK configuration, non-interactive/print mode (-p)
 - "other" = doesn't fit any category above
 
 Boundary rules (use these to resolve ambiguity):
-- Env vars and settings → "config"; CLI commands and UX flows → "cli"
-- Specific subagent behavior or worktrees → "agents"; general CLI behavior → "cli"
-- Plugin/skill system features → "plugins"; general CLI features → "cli"
-- MCP server/tool management → "mcp"; general tool usage → "cli"
+- Env vars and settings → "config"; terminal display and rendering → "terminal"
+- Keyboard/text input behavior → "input"; slash command system → "slash_commands"
+- Session resume/management → "sessions"; general conversation flow → "sessions"
+- Specific subagent behavior or worktrees → "agents"; general tool behavior → "other"
+- Plugin/skill system features → "plugins"; general features → "other"
+- MCP server/tool management → "mcp"; general tool usage → "other"
+- SDK and -p/print mode → "sdk"; interactive CLI features → use specific category
 
 ## Change type guidelines
 
@@ -72,17 +81,19 @@ Boundary rules (use these to resolve ambiguity):
 - "moderate" = meaningful change: new command, new integration, workflow change, multi-component fix
 - "major" = large scope: new subsystem, architectural change, major new feature, breaking change
 
-## user_facing guidelines
+## Audience guidelines
 
-Mark true if ANY end user could notice the change in normal usage. This includes: new features, \
-behavior changes, performance improvements, new commands, new settings, bugfixes for user-visible \
-bugs, and new/changed error messages. Only mark false for purely internal refactors, test-only \
-changes, or infrastructure changes with zero observable effect on the user experience.
+Who is the primary target of this change?
+- "interactive_user" = someone using Claude Code interactively in a terminal (most changes)
+- "sdk_developer" = someone building on the SDK, using -p/print mode, or programmatic APIs
+- "admin" = system administrators configuring managed settings, permissions, or deployment
+- "extension_developer" = someone building plugins, hooks, skills, or MCP integrations
 
 Return ONLY the JSON array, no other text.""" % (
     json.dumps(CATEGORIES),
     json.dumps(CHANGE_TYPES),
     json.dumps(COMPLEXITIES),
+    json.dumps(AUDIENCES),
 )
 
 
@@ -92,7 +103,7 @@ FALLBACK_RESULT = {
     "category": "other",
     "change_type": "internal",
     "complexity": "minor",
-    "user_facing": True,
+    "audience": "interactive_user",
 }
 
 
@@ -165,8 +176,8 @@ def run_enrichment(model: str, input_path: Path, output_path: Path) -> pd.DataFr
 
     # Attach enrichment columns to the entries being enriched
     enriched_new = to_enrich.copy()
-    for field in ("category", "change_type", "complexity", "user_facing"):
-        enriched_new[field] = [r[field] for r in all_results]
+    for field in ("category", "change_type", "complexity", "audience"):
+        enriched_new[field] = [r.get(field, FALLBACK_RESULT[field]) for r in all_results]
 
     # Merge with existing if incremental
     if existing is not None:
