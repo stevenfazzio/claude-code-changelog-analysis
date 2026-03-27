@@ -8,9 +8,7 @@ import anthropic
 import pandas as pd
 from dotenv import load_dotenv
 
-# Load centralized credentials, then project-local overrides
-load_dotenv(Path.home() / ".config" / "data-apis" / ".env")
-load_dotenv(override=True)
+load_dotenv()
 
 ROOT = Path(__file__).resolve().parent.parent
 INPUT_PATH = ROOT / "data" / "raw_entries.parquet"
