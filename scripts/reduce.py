@@ -88,7 +88,7 @@ def main():
     if not anthropic_key or not co_key:
         raise EnvironmentError("ANTHROPIC_API_KEY and CO_API_KEY required for Toponymy labeling")
 
-    llm = AsyncAnthropicNamer(api_key=anthropic_key, model="claude-haiku-4-5-20251001")
+    llm = AsyncAnthropicNamer(api_key=anthropic_key, model="claude-sonnet-4-6-20250514")
     embedder = CohereEmbedder(api_key=co_key, model="embed-v4.0")
     clusterer = ToponymyClusterer(min_clusters=4)
 
