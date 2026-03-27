@@ -46,6 +46,13 @@ COMPLEXITY_COLORS = {
 
 AUDIENCES = ["interactive_user", "sdk_developer", "admin", "extension_developer"]
 
+AUDIENCE_COLORS = {
+    "interactive_user": "#7c3aed",     # violet
+    "extension_developer": "#e85d04",  # orange
+    "admin": "#0e7490",                # teal
+    "sdk_developer": "#be185d",        # pink
+}
+
 
 def load_data() -> pd.DataFrame:
     df = pd.read_parquet(INPUT_PATH)
@@ -96,6 +103,9 @@ def generate_analysis_json(df: pd.DataFrame) -> dict:
     # Complexity counts
     complexity_order = ["minor", "moderate", "major"]
     complexity_counts = df["complexity"].value_counts().reindex(complexity_order).dropna()
+
+    # Audience counts
+    audience_counts = df["audience"].value_counts()
 
     # Bugfix ratio
     monthly_agg = df.groupby("month").agg(
@@ -157,6 +167,10 @@ def generate_analysis_json(df: pd.DataFrame) -> dict:
             "labels": complexity_counts.index.tolist(),
             "values": [int(v) for v in complexity_counts.values],
         },
+        "audience": {
+            "labels": audience_counts.index.tolist(),
+            "values": [int(v) for v in audience_counts.values],
+        },
         "bugfix_ratio": {
             "months": [m.strftime("%Y-%m-%d") for m in monthly_agg.index],
             "pct": monthly_agg["pct"].tolist(),
@@ -173,6 +187,7 @@ def generate_analysis_json(df: pd.DataFrame) -> dict:
             "category": CATEGORY_COLORS,
             "type": TYPE_COLORS,
             "complexity": COMPLEXITY_COLORS,
+            "audience": AUDIENCE_COLORS,
         },
     }
 
@@ -286,6 +301,7 @@ def render_explorer_page(df: pd.DataFrame) -> str:
     cat_colors_js = json.dumps(CATEGORY_COLORS)
     type_colors_js = json.dumps(TYPE_COLORS)
     complexity_colors_js = json.dumps(COMPLEXITY_COLORS)
+    audience_colors_js = json.dumps(AUDIENCE_COLORS)
 
     body = f"""<div id="kpi-row" class="text-[0.82rem] leading-8 pb-2 flex flex-wrap gap-x-2 max-sm:text-[0.75rem]"></div>
 
@@ -297,6 +313,7 @@ var TYPE_COLORS = {type_colors_js};
 var TYPE_ICONS = {{feature:"\u2726", bugfix:"\u2715", improvement:"\u2191", breaking:"\u26a0", internal:"\u2699"}};
 var COMPLEXITY_COLORS = {complexity_colors_js};
 var COMPLEXITY_DOTS = {{minor:"\u25cf\u25cb\u25cb", moderate:"\u25cf\u25cf\u25cb", major:"\u25cf\u25cf\u25cf"}};
+var AUDIENCE_COLORS = {audience_colors_js};
 </script>
 
 <script>
@@ -430,6 +447,17 @@ fetch("data/entries.json")
             return '<span class="pill" style="background:' + bg + ';">' + icon + ' ' + v + '</span>';
           }}
         }},
+        {{title: "Audience", field: "audience", width: 160, responsive: 3,
+          headerFilter: "list",
+          headerFilterParams: {{multiselect: true,
+            values: {json.dumps(AUDIENCES)}}},
+          headerFilterFunc: "in",
+          formatter: function(cell) {{
+            var v = cell.getValue();
+            var bg = AUDIENCE_COLORS[v] || "#888";
+            return '<span class="pill" style="background:' + bg + ';">' + v.replace(/_/g, ' ') + '</span>';
+          }}
+        }},
         {{title: "Complexity", field: "complexity", width: 130, responsive: 3,
           headerFilter: "list",
           headerFilterParams: {{multiselect: true,
@@ -442,11 +470,6 @@ fetch("data/entries.json")
             return '<span class="complexity-indicator" style="color:' + color + ';">' + dots + ' ' + v + '</span>';
           }}
         }},
-        {{title: "Audience", field: "audience", width: 160, responsive: 3,
-          headerFilter: "list",
-          headerFilterParams: {{multiselect: true,
-            values: {json.dumps(AUDIENCES)}}},
-          headerFilterFunc: "in"}},
       ],
     }});
 
@@ -506,6 +529,7 @@ fetch('data/analysis.json')
     var cc = data.colors.category;
     var tc = data.colors.type;
     var xc = data.colors.complexity;
+    var ac = data.colors.audience;
 
     // KPIs
     var k = data.kpi;
@@ -588,7 +612,7 @@ fetch('data/analysis.json')
       yAxis: {type: 'value', name: 'Versions', axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
       series: [{
         type: 'bar',
-        itemStyle: {color: cc['cli'] || '#2c2c2c'},
+        itemStyle: {color: '#6b7280'},
         data: data.release_cadence.weeks.map(function(w, i) {
           return [w, data.release_cadence.versions[i]];
         }),
@@ -648,7 +672,27 @@ fetch('data/analysis.json')
       }],
     }));
 
-    // 6. Bugfix Ratio (dual axis)
+    // 6. Audience Donut
+    charts.push(initChart('chart-audience', {
+      title: {text: 'Audience', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {trigger: 'item', confine: true, formatter: function(p) {
+        return p.name.replace(/_/g, ' ') + ': ' + p.value + ' (' + p.percent + '%)';
+      }},
+      legend: {bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}, formatter: function(n) { return n.replace(/_/g, ' '); }},
+      series: [{
+        type: 'pie',
+        radius: ['40%', '70%'],
+        center: ['50%', '45%'],
+        avoidLabelOverlap: false,
+        label: {show: false},
+        data: data.audience.labels.map(function(l, i) {
+          return {value: data.audience.values[i], name: l, itemStyle: {color: ac[l] || '#888'}};
+        }),
+      }],
+    }));
+
+    // 7. Bugfix Ratio (dual axis)
     charts.push(initChart('chart-bugfix-ratio', {
       title: {text: 'Bugfix Ratio Over Time', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
@@ -698,7 +742,7 @@ fetch('data/analysis.json')
         orient: 'horizontal',
         left: 'center',
         bottom: 0,
-        inRange: {color: ['#faf9f6', cc['cli'] || '#c4382a']},
+        inRange: {color: ['#faf9f6', '#c4382a']},
         textStyle: {fontSize: 10},
         show: false,
       },
@@ -767,6 +811,7 @@ def render_analysis_page() -> str:
     <div class="border border-border p-2 bg-cream md:col-span-2"><div id="chart-category-dist" class="h-[400px]"></div></div>
     <div class="border border-border p-2 bg-cream"><div id="chart-change-type" class="h-[350px]"></div></div>
     <div class="border border-border p-2 bg-cream"><div id="chart-complexity" class="h-[350px]"></div></div>
+    <div class="border border-border p-2 bg-cream md:col-span-2"><div id="chart-audience" class="h-[350px]"></div></div>
   </div>
 </div>
 
