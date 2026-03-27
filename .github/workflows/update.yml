@@ -58,6 +58,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          gh label create "pipeline-failure" --color "d73a4a" --description "Automated pipeline failure" 2>/dev/null || true
           existing=$(gh issue list --label "pipeline-failure" --state open --json number --jq 'length')
           if [ "$existing" -gt 0 ]; then
             echo "Open pipeline-failure issue already exists, skipping."
