@@ -184,7 +184,7 @@ fetch('data/analysis.json')
       ['Range', k.date_min + ' \u2013 ' + k.date_max],
       ['Top Category', k.top_category],
       ['Bugfix %', k.bugfix_pct + '%'],
-      ['User-Facing %', k.user_facing_pct + '%'],
+      ['Top Audience', (k.top_audience || '').replace(/_/g, ' ')],
     ];
     var sep = '<span class="text-border">\u00b7</span>';
     document.getElementById('kpi-row').innerHTML = kpis.map(function(s) {

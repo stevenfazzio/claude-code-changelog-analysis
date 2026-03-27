@@ -17,8 +17,9 @@ DATA_DIR = OUTPUT_DIR / "data"
 
 # ── Unified color palette ────────────────────────────────────────────────────
 CATEGORIES = [
-    "cli", "config", "mcp", "agents", "other", "performance",
-    "ide", "permissions", "voice", "auth", "hooks", "plugins", "api",
+    "terminal", "input", "slash_commands", "sessions",
+    "mcp", "voice", "auth", "ide", "hooks", "permissions",
+    "performance", "agents", "plugins", "config", "api", "sdk", "other",
 ]
 CATEGORY_COLORS = dict(zip(
     CATEGORIES,
@@ -43,6 +44,9 @@ COMPLEXITY_COLORS = {
     "major": "#c4382a",
 }
 
+PLATFORMS = ["cross_platform", "windows", "macos", "linux", "wsl"]
+AUDIENCES = ["interactive_user", "sdk_developer", "admin", "extension_developer"]
+
 
 def load_data() -> pd.DataFrame:
     df = pd.read_parquet(INPUT_PATH)
@@ -56,10 +60,9 @@ def load_data() -> pd.DataFrame:
 
 
 def generate_entries_json(df: pd.DataFrame) -> list[dict]:
-    cols = ["date", "text", "category", "change_type", "complexity", "user_facing"]
+    cols = ["date", "text", "category", "change_type", "complexity", "platform", "audience"]
     export = df[cols].copy()
     export["date"] = export["date"].dt.strftime("%Y-%m-%d").replace("NaT", "")
-    export["user_facing"] = export["user_facing"].map({True: "Yes", False: "No"})
     records = export.to_dict(orient="records")
     # Replace any remaining NaN/None values with empty strings for JSON safety
     for rec in records:
@@ -113,7 +116,7 @@ def generate_analysis_json(df: pd.DataFrame) -> dict:
 
     # Major changes
     major = df[df["complexity"] == "major"].copy()
-    major = major.sort_values("date")
+    major = major.dropna(subset=["date"]).sort_values("date")
     major_list = [
         {
             "date": row["date"].strftime("%Y-%m-%d"),
@@ -131,7 +134,7 @@ def generate_analysis_json(df: pd.DataFrame) -> dict:
         "date_max": df["date"].max().strftime("%b %Y"),
         "top_category": df["category"].value_counts().index[0],
         "bugfix_pct": int(round((df["change_type"] == "bugfix").mean() * 100)),
-        "user_facing_pct": int(round(df["user_facing"].mean() * 100)),
+        "top_audience": df["audience"].value_counts().index[0],
     }
 
     return {
@@ -361,26 +364,26 @@ function updateKpis(rows) {{
   var dates = rows.map(function(r) {{ return r.getData().date; }}).filter(Boolean).sort();
   var cats = {{}};
   var bugfixes = 0;
-  var userFacing = 0;
+  var audiences = {{}};
   rows.forEach(function(r) {{
     var d = r.getData();
     cats[d.category] = (cats[d.category] || 0) + 1;
     if (d.change_type === "bugfix") bugfixes++;
-    if (d.user_facing === "Yes") userFacing++;
+    audiences[d.audience] = (audiences[d.audience] || 0) + 1;
   }});
   var topCat = Object.keys(cats).sort(function(a, b) {{ return cats[b] - cats[a]; }})[0];
+  var topAudience = Object.keys(audiences).sort(function(a, b) {{ return audiences[b] - audiences[a]; }})[0] || "";
   var minDate = new Date(dates[0]);
   var maxDate = new Date(dates[dates.length - 1]);
   var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   var range = months[minDate.getMonth()] + " " + minDate.getDate() + ", " + minDate.getFullYear() + " \u2013 " + months[maxDate.getMonth()] + " " + maxDate.getDate() + ", " + maxDate.getFullYear();
   var bugPct = Math.round(bugfixes / n * 100) + "%";
-  var ufPct = Math.round(userFacing / n * 100) + "%";
   var stats = [
     ["Entries", n.toLocaleString()],
     ["Range", range],
     ["Top Category", topCat],
     ["Bugfix %", bugPct],
-    ["User-Facing %", ufPct],
+    ["Top Audience", topAudience.replace(/_/g, " ")],
   ];
   var sep = '<span class="text-border">&middot;</span>';
   document.getElementById("kpi-row").innerHTML = stats.map(function(s) {{
@@ -440,9 +443,16 @@ fetch("data/entries.json")
             return '<span class="complexity-indicator" style="color:' + color + ';">' + dots + ' ' + v + '</span>';
           }}
         }},
-        {{title: "User-facing", field: "user_facing", width: 115, responsive: 3,
+        {{title: "Platform", field: "platform", width: 130, responsive: 3,
           headerFilter: "list",
-          headerFilterParams: {{values: ["Yes", "No"]}}}},
+          headerFilterParams: {{multiselect: true,
+            values: {json.dumps(PLATFORMS)}}},
+          headerFilterFunc: "in"}},
+        {{title: "Audience", field: "audience", width: 160, responsive: 3,
+          headerFilter: "list",
+          headerFilterParams: {{multiselect: true,
+            values: {json.dumps(AUDIENCES)}}},
+          headerFilterFunc: "in"}},
       ],
     }});
 
@@ -511,7 +521,7 @@ fetch('data/analysis.json')
       ['Range', k.date_min + ' \\u2013 ' + k.date_max],
       ['Top Category', k.top_category],
       ['Bugfix %', k.bugfix_pct + '%'],
-      ['User-Facing %', k.user_facing_pct + '%'],
+      ['Top Audience', (k.top_audience || '').replace(/_/g, ' ')],
     ];
     var sep = '<span class="text-border">\\u00b7</span>';
     document.getElementById('kpi-row').innerHTML = kpis.map(function(s) {

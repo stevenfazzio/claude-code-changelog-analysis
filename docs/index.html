@@ -159,7 +159,7 @@ tailwind.config = {
 <div id="table"></div>
 
 <script>
-var CAT_COLORS = {"cli": "#ba515d", "config": "#008ab2", "mcp": "#86a641", "agents": "#c292ef", "other": "#e39249", "performance": "#39c28e", "ide": "#a25da2", "permissions": "#55866d", "voice": "#927145", "auth": "#db8eaa", "hooks": "#86aaf7", "plugins": "#6d71c6", "api": "#7daeb6"};
+var CAT_COLORS = {"terminal": "#ba515d", "input": "#008eb6", "slash_commands": "#aaae3d", "sessions": "#c292ef", "mcp": "#e39249", "voice": "#0cc2a6", "auth": "#8a6d96", "ide": "#55866d", "hooks": "#ae611c", "permissions": "#ca96b2", "performance": "#82aaf3", "agents": "#6d71c6", "plugins": "#7daab6", "config": "#65ae69", "api": "#c261a2", "sdk": "#8a7908", "other": "#b67d6d"};
 var TYPE_COLORS = {"feature": "#2d7d46", "bugfix": "#c4382a", "improvement": "#2e6eb8", "breaking": "#d4710e", "internal": "#777777"};
 var TYPE_ICONS = {feature:"✦", bugfix:"✕", improvement:"↑", breaking:"⚠", internal:"⚙"};
 var COMPLEXITY_COLORS = {"minor": "#888888", "moderate": "#d4910e", "major": "#c4382a"};
@@ -230,26 +230,26 @@ function updateKpis(rows) {
   var dates = rows.map(function(r) { return r.getData().date; }).filter(Boolean).sort();
   var cats = {};
   var bugfixes = 0;
-  var userFacing = 0;
+  var audiences = {};
   rows.forEach(function(r) {
     var d = r.getData();
     cats[d.category] = (cats[d.category] || 0) + 1;
     if (d.change_type === "bugfix") bugfixes++;
-    if (d.user_facing === "Yes") userFacing++;
+    audiences[d.audience] = (audiences[d.audience] || 0) + 1;
   });
   var topCat = Object.keys(cats).sort(function(a, b) { return cats[b] - cats[a]; })[0];
+  var topAudience = Object.keys(audiences).sort(function(a, b) { return audiences[b] - audiences[a]; })[0] || "";
   var minDate = new Date(dates[0]);
   var maxDate = new Date(dates[dates.length - 1]);
   var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   var range = months[minDate.getMonth()] + " " + minDate.getDate() + ", " + minDate.getFullYear() + " – " + months[maxDate.getMonth()] + " " + maxDate.getDate() + ", " + maxDate.getFullYear();
   var bugPct = Math.round(bugfixes / n * 100) + "%";
-  var ufPct = Math.round(userFacing / n * 100) + "%";
   var stats = [
     ["Entries", n.toLocaleString()],
     ["Range", range],
     ["Top Category", topCat],
     ["Bugfix %", bugPct],
-    ["User-Facing %", ufPct],
+    ["Top Audience", topAudience.replace(/_/g, " ")],
   ];
   var sep = '<span class="text-border">&middot;</span>';
   document.getElementById("kpi-row").innerHTML = stats.map(function(s) {
@@ -309,9 +309,16 @@ fetch("data/entries.json")
             return '<span class="complexity-indicator" style="color:' + color + ';">' + dots + ' ' + v + '</span>';
           }
         },
-        {title: "User-facing", field: "user_facing", width: 115, responsive: 3,
+        {title: "Platform", field: "platform", width: 130, responsive: 3,
           headerFilter: "list",
-          headerFilterParams: {values: ["Yes", "No"]}},
+          headerFilterParams: {multiselect: true,
+            values: ["cross_platform", "windows", "macos", "linux", "wsl"]},
+          headerFilterFunc: "in"},
+        {title: "Audience", field: "audience", width: 160, responsive: 3,
+          headerFilter: "list",
+          headerFilterParams: {multiselect: true,
+            values: ["interactive_user", "sdk_developer", "admin", "extension_developer"]},
+          headerFilterFunc: "in"},
       ],
     });
 
