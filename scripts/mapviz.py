@@ -7,7 +7,7 @@ from pathlib import Path
 
 import datamapplot
 
-from nav import NAV_CSS, PLAUSIBLE_SCRIPT, nav_html
+from nav import NAV_CSS, PLAUSIBLE_EVENTS_SCRIPT, PLAUSIBLE_SCRIPT, nav_html
 import glasbey
 import numpy as np
 import pandas as pd
@@ -358,6 +358,7 @@ def _inject_nav(html_path):
         'family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
         f'{PLAUSIBLE_SCRIPT}\n'
+        f'{PLAUSIBLE_EVENTS_SCRIPT}\n'
         f'{NAV_CSS}\n'
         f'{fixed_wrapper_css}\n'
     )

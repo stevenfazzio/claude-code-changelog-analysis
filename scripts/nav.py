@@ -79,6 +79,15 @@ PLAUSIBLE_SCRIPT = (
     "</script>"
 )
 
+PLAUSIBLE_EVENTS_SCRIPT = (
+    "<script>\n"
+    "function track(name,props){if(window.plausible)plausible(name,{props:props||{}})}\n"
+    "var _trackTimers={};\n"
+    "function trackDebounced(name,propsFn,ms){clearTimeout(_trackTimers[name]);"
+    "_trackTimers[name]=setTimeout(function(){track(name,propsFn())},ms||500)}\n"
+    "</script>"
+)
+
 PAGES = [("Explorer", "index.html"), ("Analysis", "analysis.html"), ("Map", "map.html")]
 
 
