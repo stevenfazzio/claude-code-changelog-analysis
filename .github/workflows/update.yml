@@ -37,7 +37,8 @@ jobs:
 
       - name: Commit and push if changed
         run: |
-          git add data/ CHANGELOG.md
+          git add data/
+          git add -f CHANGELOG.md
           git add -f docs/index.html docs/analysis.html docs/map.html docs/data/
           git diff --cached --quiet && exit 0
           git config user.name "github-actions[bot]"
