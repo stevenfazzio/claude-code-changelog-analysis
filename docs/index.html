@@ -12,6 +12,11 @@
   window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
   plausible.init()
 </script>
+<script>
+function track(name,props){if(window.plausible)plausible(name,{props:props||{}})}
+var _trackTimers={};
+function trackDebounced(name,propsFn,ms){clearTimeout(_trackTimers[name]);_trackTimers[name]=setTimeout(function(){track(name,propsFn())},ms||500)}
+</script>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
@@ -342,15 +347,28 @@ fetch("data/entries.json")
       });
     }
 
+    var _tableReady = false;
     table.on("dataFiltered", function(filters, rows) {
       updateKpis(rows);
+      if (!_tableReady) return;
+      var hf = table.getHeaderFilters();
+      hf.forEach(function(f) {
+        if (f.value && String(f.value).length > 0) {
+          track('Filter Applied', {column: f.field, value: String(f.value)});
+        }
+      });
     });
 
-    table.on("dataSorted", applyDateBanding);
+    table.on("dataSorted", function(sorters, rows) {
+      applyDateBanding();
+      if (!_tableReady || !sorters.length) return;
+      track('Table Sorted', {column: sorters[0].field, direction: sorters[0].dir});
+    });
     table.on("renderComplete", applyDateBanding);
 
     table.on("tableBuilt", function() {
       updateKpis(table.getRows("active"));
+      _tableReady = true;
     });
   });
 </script>
