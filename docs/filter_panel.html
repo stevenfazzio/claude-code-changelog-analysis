@@ -374,7 +374,10 @@
       });
 
       // Reset button
-      document.getElementById('filter-reset-inline').addEventListener('click', () => this.resetAll());
+      document.getElementById('filter-reset-inline').addEventListener('click', () => {
+        this.resetAll();
+        track('Map Filter Reset');
+      });
 
       this.updateMatchCount();
     }
@@ -430,6 +433,7 @@
         group.classList.toggle('filter-group-active', !(lo <= min && hi >= sliderMax));
         this.applyRangeFilter(filterId);
         this._updateResetButtonState();
+        trackDebounced('Map Date Range', () => ({min: fmt(lo), max: fmt(hi)}));
       };
 
       minInput.addEventListener('input', onInput);
@@ -519,6 +523,7 @@
         this.updateMatchCount();
         this.serializeState();
         this._updateResetButtonState();
+        track('Map Filter', {group: name, values: Array.from(checked).join(',')});
       };
 
       checkboxes.forEach(cb => cb.addEventListener('change', onChange));
@@ -548,6 +553,7 @@
         origHandler(field);
         self.onColormapChanged(field);
         self.serializeState();
+        track('Map Colormap', {field: field.field || field.description || String(field)});
       };
     }
 
@@ -866,6 +872,15 @@
     patchHighlightPoints(datamap);
     const filterPanel = new FilterPanel(datamap, hoverData, FILTER_CONFIG);
     filterPanel.restoreFromURL();
+
+    // Track search usage
+    const searchInput = document.querySelector('#search-container input');
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        const q = searchInput.value.trim();
+        if (q) trackDebounced('Map Search', () => ({query: q}));
+      });
+    }
   });
 })();
 </script>
