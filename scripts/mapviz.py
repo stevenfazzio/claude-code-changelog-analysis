@@ -77,7 +77,7 @@ def main():
         t = str(t).strip()
         if len(t) > MAX_HOVER_CHARS:
             t = t[:MAX_HOVER_CHARS].rsplit(" ", 1)[0] + "…"
-        hover_text.append(t)
+        hover_text.append(escape(t))
 
     hover_text_html_template = (
         '<div class="hc">'
