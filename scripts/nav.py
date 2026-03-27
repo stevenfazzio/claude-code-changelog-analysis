@@ -71,6 +71,14 @@ NAV_CSS = """<style>
 }
 </style>"""
 
+PLAUSIBLE_SCRIPT = (
+    '<script async src="https://plausible.io/js/pa-9xq45uThwNCmhvlOMB0yM.js"></script>\n'
+    "<script>\n"
+    "  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};\n"
+    "  plausible.init()\n"
+    "</script>"
+)
+
 PAGES = [("Explorer", "index.html"), ("Analysis", "analysis.html"), ("Map", "map.html")]
 
 
