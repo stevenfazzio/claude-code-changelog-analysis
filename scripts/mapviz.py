@@ -107,7 +107,6 @@ def main():
         "change_type": _esc(change_types),
         "type_color": type_colors,
         "complexity": _esc(complexities),
-        "platform": _esc(df["platform"].fillna("cross_platform").values),
         "audience": _esc(df["audience"].fillna("interactive_user").values),
     })
 
@@ -376,8 +375,6 @@ def _inject_filter_panel(html_path, df):
 
     audience_vals = sorted(df["audience"].fillna("interactive_user").unique().tolist())
     audience_vals = [v for v in audience_vals if v]
-    platform_vals = sorted(df["platform"].fillna("cross_platform").unique().tolist())
-    platform_vals = [v for v in platform_vals if v]
 
     filter_config = {
         "totalCount": len(df),
@@ -385,7 +382,6 @@ def _inject_filter_panel(html_path, df):
         "changeTypes": sorted(TYPE_COLORS.keys()),
         "complexities": ["minor", "moderate", "major"],
         "audiences": audience_vals,
-        "platforms": platform_vals,
         "ranges": {
             "date": {
                 "min": min_date,

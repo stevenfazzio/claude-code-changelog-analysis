@@ -34,7 +34,7 @@ CHANGELOG.md + versions.json → raw_entries.parquet → enriched.parquet → em
 
 Key columns added at each stage:
 - **parse**: version, text, date, prefix, is_vscode, is_breaking
-- **enrich**: category, change_type, complexity, platform, audience
+- **enrich**: category, change_type, complexity, audience
 - **embed**: emb_0 through emb_511 (512-dimensional Cohere embed-v4.0 vectors)
 
 ## Deployment
@@ -53,5 +53,4 @@ The enrich stage classifies entries along these dimensions:
 - **category**: terminal, input, slash_commands, sessions, mcp, voice, auth, ide, hooks, permissions, performance, agents, plugins, config, api, sdk, other
 - **change_type**: feature, bugfix, improvement, breaking, internal
 - **complexity**: minor, moderate, major
-- **platform**: cross_platform, windows, macos, linux, wsl
 - **audience**: interactive_user, sdk_developer, admin, extension_developer

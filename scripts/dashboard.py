@@ -44,7 +44,6 @@ COMPLEXITY_COLORS = {
     "major": "#c4382a",
 }
 
-PLATFORMS = ["cross_platform", "windows", "macos", "linux", "wsl"]
 AUDIENCES = ["interactive_user", "sdk_developer", "admin", "extension_developer"]
 
 
@@ -60,7 +59,7 @@ def load_data() -> pd.DataFrame:
 
 
 def generate_entries_json(df: pd.DataFrame) -> list[dict]:
-    cols = ["date", "text", "category", "change_type", "complexity", "platform", "audience"]
+    cols = ["date", "text", "category", "change_type", "complexity", "audience"]
     export = df[cols].copy()
     export["date"] = export["date"].dt.strftime("%Y-%m-%d").replace("NaT", "")
     records = export.to_dict(orient="records")
@@ -443,11 +442,6 @@ fetch("data/entries.json")
             return '<span class="complexity-indicator" style="color:' + color + ';">' + dots + ' ' + v + '</span>';
           }}
         }},
-        {{title: "Platform", field: "platform", width: 130, responsive: 3,
-          headerFilter: "list",
-          headerFilterParams: {{multiselect: true,
-            values: {json.dumps(PLATFORMS)}}},
-          headerFilterFunc: "in"}},
         {{title: "Audience", field: "audience", width: 160, responsive: 3,
           headerFilter: "list",
           headerFilterParams: {{multiselect: true,

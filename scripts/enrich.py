@@ -23,7 +23,6 @@ CATEGORIES = [
 ]
 CHANGE_TYPES = ["feature", "bugfix", "improvement", "breaking", "internal"]
 COMPLEXITIES = ["minor", "moderate", "major"]
-PLATFORMS = ["cross_platform", "windows", "macos", "linux", "wsl"]
 AUDIENCES = ["interactive_user", "sdk_developer", "admin", "extension_developer"]
 
 BATCH_SIZE = 20
@@ -36,7 +35,6 @@ For each entry, output a JSON array of objects with these fields:
 - "category": one of %s
 - "change_type": one of %s
 - "complexity": one of %s
-- "platform": one of %s
 - "audience": one of %s
 
 ## Category guidelines
@@ -83,15 +81,6 @@ Boundary rules (use these to resolve ambiguity):
 - "moderate" = meaningful change: new command, new integration, workflow change, multi-component fix
 - "major" = large scope: new subsystem, architectural change, major new feature, breaking change
 
-## Platform guidelines
-
-Default to "cross_platform". Only use a specific platform when the entry explicitly mentions it:
-- "windows" = Windows-specific (look for "Windows", "win32", ".exe", "OneDrive")
-- "macos" = macOS-specific (look for "macOS", "Mac", "Cmd+", "⌘")
-- "linux" = Linux-specific (look for "Linux", "musl", "Alpine")
-- "wsl" = WSL-specific (look for "WSL", "Windows Subsystem")
-- "cross_platform" = no platform mentioned, or applies to all platforms
-
 ## Audience guidelines
 
 Who is the primary target of this change?
@@ -104,7 +93,6 @@ Return ONLY the JSON array, no other text.""" % (
     json.dumps(CATEGORIES),
     json.dumps(CHANGE_TYPES),
     json.dumps(COMPLEXITIES),
-    json.dumps(PLATFORMS),
     json.dumps(AUDIENCES),
 )
 
@@ -115,7 +103,6 @@ FALLBACK_RESULT = {
     "category": "other",
     "change_type": "internal",
     "complexity": "minor",
-    "platform": "cross_platform",
     "audience": "interactive_user",
 }
 
@@ -189,7 +176,7 @@ def run_enrichment(model: str, input_path: Path, output_path: Path) -> pd.DataFr
 
     # Attach enrichment columns to the entries being enriched
     enriched_new = to_enrich.copy()
-    for field in ("category", "change_type", "complexity", "platform", "audience"):
+    for field in ("category", "change_type", "complexity", "audience"):
         enriched_new[field] = [r.get(field, FALLBACK_RESULT[field]) for r in all_results]
 
     # Merge with existing if incremental

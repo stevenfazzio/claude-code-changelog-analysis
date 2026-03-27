@@ -309,11 +309,6 @@ fetch("data/entries.json")
             return '<span class="complexity-indicator" style="color:' + color + ';">' + dots + ' ' + v + '</span>';
           }
         },
-        {title: "Platform", field: "platform", width: 130, responsive: 3,
-          headerFilter: "list",
-          headerFilterParams: {multiselect: true,
-            values: ["cross_platform", "windows", "macos", "linux", "wsl"]},
-          headerFilterFunc: "in"},
         {title: "Audience", field: "audience", width: 160, responsive: 3,
           headerFilter: "list",
           headerFilterParams: {multiselect: true,
