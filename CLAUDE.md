@@ -17,7 +17,7 @@ Run individual stages:
 - `uv run python scripts/embed.py` — generates Cohere embeddings (`CO_API_KEY` required)
 - `uv run python scripts/reduce.py` — UMAP 2D reduction + Toponymy topic labeling (`ANTHROPIC_API_KEY` + `CO_API_KEY`)
 - `uv run python scripts/mapviz.py` — generates interactive DataMapPlot visualization
-- `uv run python scripts/dashboard.py` — generates 3-page site in `docs/` (Explorer, Analysis, Map)
+- `uv run python scripts/dashboard.py` — generates site pages in `docs/` (Explorer, Analysis, About)
 
 Standalone analysis:
 - `uv run python scripts/explore_taxonomy.py` — runs Toponymy with EVoC clustering on full 512-dim embeddings (no UMAP reduction) to discover natural semantic structure; compares raw vs bugfix-direction-removed clustering; outputs `data/taxonomy_exploration.md`
@@ -29,7 +29,7 @@ Each stage reads the previous stage's output from `data/`. The enrich and embed 
 ```
 CHANGELOG.md + versions.json → raw_entries.parquet → enriched.parquet → embeddings.parquet → map_data.parquet
                                                          ↓                                       ↓
-                                                  docs/ (index.html, analysis.html, map.html)
+                                                  docs/ (index.html, analysis.html, about.html, map.html)
 ```
 
 Key columns added at each stage:

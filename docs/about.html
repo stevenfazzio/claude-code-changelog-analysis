@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Code Changelog — About</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">
+<script async src="https://plausible.io/js/pa-9xq45uThwNCmhvlOMB0yM.js"></script>
+<script>
+  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+  plausible.init()
+</script>
+<script>
+function track(name,props){if(window.plausible)plausible(name,{props:props||{}})}
+var _trackTimers={};
+function trackDebounced(name,propsFn,ms){clearTimeout(_trackTimers[name]);_trackTimers[name]=setTimeout(function(){track(name,propsFn())},ms||500)}
+</script>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        cream: '#faf9f6',
+        'cream-dark': '#f4f2ec',
+        border: '#e0ddd5',
+        'border-light': '#e8e5de',
+        'text-primary': '#2c2c2c',
+        'text-secondary': '#888',
+        'text-muted': '#aaa',
+        divider: '#d5d0c8',
+      },
+      fontFamily: {
+        mono: ['"IBM Plex Mono"', 'monospace'],
+        serif: ['"Newsreader"', 'Georgia', 'serif'],
+      },
+      maxWidth: {
+        site: '1100px',
+      },
+    },
+  },
+}
+</script>
+
+<style>
+.site-nav,
+.site-nav *,
+.site-nav *::before,
+.site-nav *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+.site-nav {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 32px 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.625;
+  color: #2c2c2c;
+}
+@media (max-width: 768px) {
+  .site-nav { padding: 24px 16px 0; }
+}
+.site-nav-title {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: #2c2c2c;
+  line-height: 1.2;
+}
+@media (max-width: 640px) {
+  .site-nav-title { font-size: 1.3rem; }
+}
+.site-nav-subtitle {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 2px;
+  line-height: 1.625;
+}
+.site-nav-links {
+  margin-top: 12px;
+  padding-bottom: 2px;
+  font-size: 0.82rem;
+  line-height: 1.625;
+}
+.site-nav-links a {
+  color: #888;
+  text-decoration: underline;
+  text-decoration-color: rgba(136, 136, 136, 0.5);
+  text-underline-offset: 4px;
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+.site-nav-links a:hover {
+  color: #2c2c2c;
+  text-decoration-color: #2c2c2c;
+}
+.site-nav-links a.active {
+  color: #2c2c2c;
+  font-weight: 600;
+  text-decoration: none;
+}
+.site-nav-sep {
+  color: #d5d0c8;
+  margin: 0 8px;
+}
+.site-nav-hr {
+  border: none;
+  border-top: 1px solid #d5d0c8;
+  margin: 16px 0 24px;
+}
+</style>
+<style>
+.about h2 { font-family: 'Newsreader', Georgia, serif; font-size: 1.35rem; font-weight: 400; margin: 2.5rem 0 0.75rem; color: #2c2c2c; }
+.about h2:first-child { margin-top: 0; }
+.about p { margin: 0.6rem 0; color: #444; line-height: 1.8; font-size: 0.82rem; }
+.about ul { margin: 0.4rem 0 0.6rem 1.2rem; color: #444; font-size: 0.82rem; line-height: 1.8; }
+.about li { margin: 0.15rem 0; }
+.about code { background: #f0ece4; padding: 1px 5px; border-radius: 3px; font-size: 0.78rem; }
+.about a { color: #2e6eb8; text-decoration: underline; text-underline-offset: 3px; }
+.about a:hover { color: #1a4a7a; }
+.about .dim { color: #888; }
+.about hr { border: none; border-top: 1px solid #d5d0c8; margin: 2.5rem 0; }
+.about details { margin: 0.6rem 0; }
+.about summary { cursor: pointer; color: #2e6eb8; font-size: 0.82rem; }
+.about summary:hover { color: #1a4a7a; }
+.about pre.prompt { background: #f0ece4; padding: 16px; border-radius: 6px; font-size: 0.75rem; line-height: 1.7; overflow-x: auto; white-space: pre-wrap; word-break: break-word; color: #444; margin-top: 0.5rem; }
+</style>
+</head>
+<body class="font-mono bg-cream text-text-primary leading-relaxed text-[11px]">
+<div class="site-nav">
+  <h1 class="site-nav-title">Claude Code Changelog</h1>
+  <p class="site-nav-subtitle">Track every change to Claude Code</p>
+  <nav class="site-nav-links"><a href="index.html">Explorer</a><span class="site-nav-sep">&middot;</span><a href="analysis.html">Analysis</a><span class="site-nav-sep">&middot;</span><a href="map.html">Map</a><span class="site-nav-sep">&middot;</span><a href="about.html" class="active">About</a></nav>
+  <hr class="site-nav-hr">
+</div>
+<div class="max-w-site mx-auto px-8 max-md:px-4">
+
+<div class="about max-w-[680px] mx-auto pb-12">
+
+<h2>What is this?</h2>
+<p>
+  This site tracks every change to
+  <a href="https://github.com/anthropics/claude-code">Claude Code</a>,
+  Anthropic's official CLI for Claude. It automatically fetches the
+  CHANGELOG.md from the repository, parses each entry, enriches it with
+  LLM-derived classifications, and presents the results as an interactive,
+  browsable site.
+</p>
+
+<h2>Data source</h2>
+<p>
+  Raw data comes from two places: the
+  <a href="https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md">CHANGELOG.md</a>
+  file in the Claude Code repository (fetched via the <code>gh</code> CLI),
+  and version publication dates from the npm registry. Each changelog entry is
+  associated with its version number and release date.
+</p>
+
+<h2>Enrichment pipeline</h2>
+<p>
+  After parsing, every entry is classified by Claude (Opus) along four
+  dimensions:
+</p>
+<ul>
+  <li><strong>Category</strong> &mdash; the area of Claude Code affected:
+    <span class="dim">terminal, input, slash_commands, sessions, mcp, voice, auth,
+    ide, hooks, permissions, performance, agents, plugins, config, api, sdk,
+    other</span></li>
+  <li><strong>Change type</strong> &mdash;
+    <span class="dim">feature, bugfix, improvement, breaking, internal</span></li>
+  <li><strong>Complexity</strong> &mdash;
+    <span class="dim">minor, moderate, major</span></li>
+  <li><strong>Audience</strong> &mdash; who the change matters most to:
+    <span class="dim">interactive_user, sdk_developer, admin,
+    extension_developer</span></li>
+</ul>
+<p>
+  Both enrichment and embedding stages are incremental &mdash; only new or
+  changed entries are processed on each run.
+</p>
+<details>
+  <summary>View the full classification prompt</summary>
+  <pre class="prompt">You classify changelog entries for Claude Code (an AI coding assistant CLI tool).
+
+For each entry, output a JSON array of objects with these fields:
+- &quot;index&quot;: the entry&#x27;s position in the input list (0-based)
+- &quot;category&quot;: one of [&quot;terminal&quot;, &quot;input&quot;, &quot;slash_commands&quot;, &quot;sessions&quot;, &quot;mcp&quot;, &quot;voice&quot;, &quot;auth&quot;, &quot;ide&quot;, &quot;hooks&quot;, &quot;permissions&quot;, &quot;performance&quot;, &quot;agents&quot;, &quot;plugins&quot;, &quot;config&quot;, &quot;api&quot;, &quot;sdk&quot;, &quot;other&quot;]
+- &quot;change_type&quot;: one of [&quot;feature&quot;, &quot;bugfix&quot;, &quot;improvement&quot;, &quot;breaking&quot;, &quot;internal&quot;]
+- &quot;complexity&quot;: one of [&quot;minor&quot;, &quot;moderate&quot;, &quot;major&quot;]
+- &quot;audience&quot;: one of [&quot;interactive_user&quot;, &quot;sdk_developer&quot;, &quot;admin&quot;, &quot;extension_developer&quot;]
+
+## Category guidelines
+
+Pick the MOST SPECIFIC category that applies:
+- &quot;terminal&quot; = terminal rendering, display, cursor, flickering, UI layout, spinner, progress indicators
+- &quot;input&quot; = keyboard handling, text entry, vim mode, readline keybindings, CJK/IME, clipboard/paste
+- &quot;slash_commands&quot; = slash command system, autocomplete, custom commands (/help, /config, /resume etc.)
+- &quot;sessions&quot; = session resume, session management, remote control, conversation compaction, history
+- &quot;mcp&quot; = MCP server management, MCP tool behavior, MCP OAuth, MCP resources
+- &quot;voice&quot; = voice mode, audio, microphone, push-to-talk
+- &quot;auth&quot; = authentication, OAuth, API keys, login (NOT MCP OAuth — that&#x27;s &quot;mcp&quot;)
+- &quot;ide&quot; = VSCode extension, IDE integrations, editor features
+- &quot;hooks&quot; = hooks system (SessionEnd, PreToolUse, PostCompact, etc.), hook configuration
+- &quot;permissions&quot; = permission prompts, allow/deny, sandbox, tool approval
+- &quot;performance&quot; = speed, memory, startup time, caching, token usage optimization
+- &quot;agents&quot; = subagents (Explore, Plan, etc.), background tasks/agents, worktrees, task tools, agent teams
+- &quot;plugins&quot; = plugin system, marketplace, plugin install/discover, skills
+- &quot;config&quot; = settings, env vars, configuration files, managed settings, .claude/ files, CLAUDE.md
+- &quot;api&quot; = API integration, model providers, Bedrock, Vertex, model selection, rate limits
+- &quot;sdk&quot; = SDK features, SDK messages, SDK configuration, non-interactive/print mode (-p)
+- &quot;other&quot; = doesn&#x27;t fit any category above
+
+Boundary rules (use these to resolve ambiguity):
+- Env vars and settings → &quot;config&quot;; terminal display and rendering → &quot;terminal&quot;
+- Keyboard/text input behavior → &quot;input&quot;; slash command system → &quot;slash_commands&quot;
+- Session resume/management → &quot;sessions&quot;; general conversation flow → &quot;sessions&quot;
+- Specific subagent behavior or worktrees → &quot;agents&quot;; general tool behavior → &quot;other&quot;
+- Plugin/skill system features → &quot;plugins&quot;; general features → &quot;other&quot;
+- MCP server/tool management → &quot;mcp&quot;; general tool usage → &quot;other&quot;
+- SDK and -p/print mode → &quot;sdk&quot;; interactive CLI features → use specific category
+
+## Change type guidelines
+
+- &quot;feature&quot; = entirely new capability that didn&#x27;t exist before
+- &quot;improvement&quot; = existing capability made noticeably better (faster, cleaner, more robust, better UX)
+- &quot;bugfix&quot; = something was broken/incorrect and is now fixed (look for &quot;Fixed&quot;, &quot;Fix&quot; prefixes)
+- &quot;breaking&quot; = backwards-incompatible change (look for &quot;Breaking&quot; prefix or explicit breaking notes)
+- &quot;internal&quot; = refactoring, test changes, or infra with no user-visible effect
+
+## Complexity guidelines
+
+- &quot;minor&quot; = small tweak: single flag, typo fix, one-line behavior change, simple bugfix
+- &quot;moderate&quot; = meaningful change: new command, new integration, workflow change, multi-component fix
+- &quot;major&quot; = large scope: new subsystem, architectural change, major new feature, breaking change
+
+## Audience guidelines
+
+Who is the primary target of this change?
+- &quot;interactive_user&quot; = someone using Claude Code interactively in a terminal (most changes)
+- &quot;sdk_developer&quot; = someone building on the SDK, using -p/print mode, or programmatic APIs
+- &quot;admin&quot; = system administrators configuring managed settings, permissions, or deployment
+- &quot;extension_developer&quot; = someone building plugins, hooks, skills, or MCP integrations
+
+Return ONLY the JSON array, no other text.</pre>
+</details>
+
+<h2>Embeddings &amp; the Map</h2>
+<p>
+  Each entry is embedded into a 512-dimensional vector using
+  <a href="https://cohere.com/">Cohere</a>'s embed-v4.0 model.
+  These high-dimensional vectors are then projected into 2D with
+  <a href="https://umap-learn.readthedocs.io/">UMAP</a> for the
+  <a href="map.html">Map</a> visualization. Semantic topic labels on the map
+  are generated by
+  <a href="https://github.com/TutteInstitute/Toponymy">Toponymy</a>
+  producing hierarchical labels from coarse themes down
+  to fine-grained topics.
+</p>
+
+<h2>Site generation</h2>
+<p>
+  The site is fully static &mdash; all pages are generated by Python scripts
+  and served via GitHub Pages. Data is pre-computed into JSON files and
+  rendered client-side:
+</p>
+<ul>
+  <li><a href="index.html">Explorer</a> &mdash;
+    interactive table powered by <a href="https://tabulator.info/">Tabulator</a></li>
+  <li><a href="analysis.html">Analysis</a> &mdash;
+    charts built with <a href="https://echarts.apache.org/">ECharts</a></li>
+  <li><a href="map.html">Map</a> &mdash;
+    2D scatter plot via <a href="https://github.com/TutteInstitute/datamapplot">DataMapPlot</a>
+    (deck.gl + d3)</li>
+</ul>
+<p>
+  The pipeline runs automatically and regenerates the site whenever the
+  upstream changelog is updated.
+</p>
+
+<hr>
+
+<p>
+  Built by Steven Fazzio. Source code is on
+  <a href="https://github.com/stevenfazzio/claude-code-changelog-analysis">GitHub</a>
+  &mdash; feel free to
+  <a href="https://github.com/stevenfazzio/claude-code-changelog-analysis/issues">open an issue</a>
+  if you spot a bug or have a suggestion.
+</p>
+<p>
+  Released under the
+  <a href="https://github.com/stevenfazzio/claude-code-changelog-analysis/blob/main/LICENSE">MIT License</a>
+  &copy; 2026 Steven Fazzio.
+</p>
+
+</div>
+
+<footer class="text-center py-10 text-text-muted text-xs"><span id="generated-at"></span>Data from anthropics/claude-code CHANGELOG.md</footer>
+<script>fetch('data/meta.json').then(r=>r.json()).then(d=>{document.getElementById('generated-at').textContent='Generated '+d.generated_at+' · '}).catch(()=>{})</script>
+</div>
+</body>
+</html>

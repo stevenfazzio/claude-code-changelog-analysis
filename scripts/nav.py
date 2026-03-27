@@ -88,7 +88,7 @@ PLAUSIBLE_EVENTS_SCRIPT = (
     "</script>"
 )
 
-PAGES = [("Explorer", "index.html"), ("Analysis", "analysis.html"), ("Map", "map.html")]
+PAGES = [("Explorer", "index.html"), ("Analysis", "analysis.html"), ("Map", "map.html"), ("About", "about.html")]
 
 
 def nav_html(active: str) -> str:
