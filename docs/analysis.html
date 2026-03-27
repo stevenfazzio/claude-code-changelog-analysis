@@ -139,6 +139,7 @@ tailwind.config = {
     <div class="border border-border p-2 bg-cream md:col-span-2"><div id="chart-category-dist" class="h-[400px]"></div></div>
     <div class="border border-border p-2 bg-cream"><div id="chart-change-type" class="h-[350px]"></div></div>
     <div class="border border-border p-2 bg-cream"><div id="chart-complexity" class="h-[350px]"></div></div>
+    <div class="border border-border p-2 bg-cream md:col-span-2"><div id="chart-audience" class="h-[350px]"></div></div>
   </div>
 </div>
 
@@ -175,6 +176,7 @@ fetch('data/analysis.json')
     var cc = data.colors.category;
     var tc = data.colors.type;
     var xc = data.colors.complexity;
+    var ac = data.colors.audience;
 
     // KPIs
     var k = data.kpi;
@@ -257,7 +259,7 @@ fetch('data/analysis.json')
       yAxis: {type: 'value', name: 'Versions', axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
       series: [{
         type: 'bar',
-        itemStyle: {color: cc['cli'] || '#2c2c2c'},
+        itemStyle: {color: '#6b7280'},
         data: data.release_cadence.weeks.map(function(w, i) {
           return [w, data.release_cadence.versions[i]];
         }),
@@ -317,7 +319,27 @@ fetch('data/analysis.json')
       }],
     }));
 
-    // 6. Bugfix Ratio (dual axis)
+    // 6. Audience Donut
+    charts.push(initChart('chart-audience', {
+      title: {text: 'Audience', textStyle: TITLE_TEXT},
+      textStyle: BASE_TEXT,
+      tooltip: {trigger: 'item', confine: true, formatter: function(p) {
+        return p.name.replace(/_/g, ' ') + ': ' + p.value + ' (' + p.percent + '%)';
+      }},
+      legend: {bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}, formatter: function(n) { return n.replace(/_/g, ' '); }},
+      series: [{
+        type: 'pie',
+        radius: ['40%', '70%'],
+        center: ['50%', '45%'],
+        avoidLabelOverlap: false,
+        label: {show: false},
+        data: data.audience.labels.map(function(l, i) {
+          return {value: data.audience.values[i], name: l, itemStyle: {color: ac[l] || '#888'}};
+        }),
+      }],
+    }));
+
+    // 7. Bugfix Ratio (dual axis)
     charts.push(initChart('chart-bugfix-ratio', {
       title: {text: 'Bugfix Ratio Over Time', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
@@ -367,7 +389,7 @@ fetch('data/analysis.json')
         orient: 'horizontal',
         left: 'center',
         bottom: 0,
-        inRange: {color: ['#faf9f6', cc['cli'] || '#c4382a']},
+        inRange: {color: ['#faf9f6', '#c4382a']},
         textStyle: {fontSize: 10},
         show: false,
       },

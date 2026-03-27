@@ -164,6 +164,7 @@ var TYPE_COLORS = {"feature": "#2d7d46", "bugfix": "#c4382a", "improvement": "#2
 var TYPE_ICONS = {feature:"✦", bugfix:"✕", improvement:"↑", breaking:"⚠", internal:"⚙"};
 var COMPLEXITY_COLORS = {"minor": "#888888", "moderate": "#d4910e", "major": "#c4382a"};
 var COMPLEXITY_DOTS = {minor:"●○○", moderate:"●●○", major:"●●●"};
+var AUDIENCE_COLORS = {"interactive_user": "#7c3aed", "extension_developer": "#e85d04", "admin": "#0e7490", "sdk_developer": "#be185d"};
 </script>
 
 <script>
@@ -297,6 +298,17 @@ fetch("data/entries.json")
             return '<span class="pill" style="background:' + bg + ';">' + icon + ' ' + v + '</span>';
           }
         },
+        {title: "Audience", field: "audience", width: 160, responsive: 3,
+          headerFilter: "list",
+          headerFilterParams: {multiselect: true,
+            values: ["interactive_user", "sdk_developer", "admin", "extension_developer"]},
+          headerFilterFunc: "in",
+          formatter: function(cell) {
+            var v = cell.getValue();
+            var bg = AUDIENCE_COLORS[v] || "#888";
+            return '<span class="pill" style="background:' + bg + ';">' + v.replace(/_/g, ' ') + '</span>';
+          }
+        },
         {title: "Complexity", field: "complexity", width: 130, responsive: 3,
           headerFilter: "list",
           headerFilterParams: {multiselect: true,
@@ -309,11 +321,6 @@ fetch("data/entries.json")
             return '<span class="complexity-indicator" style="color:' + color + ';">' + dots + ' ' + v + '</span>';
           }
         },
-        {title: "Audience", field: "audience", width: 160, responsive: 3,
-          headerFilter: "list",
-          headerFilterParams: {multiselect: true,
-            values: ["interactive_user", "sdk_developer", "admin", "extension_developer"]},
-          headerFilterFunc: "in"},
       ],
     });
 

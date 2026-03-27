@@ -47,6 +47,13 @@ COMPLEXITY_COLORS = {
     "major": "#c4382a",
 }
 
+AUDIENCE_COLORS = {
+    "interactive_user": "#7c3aed",     # violet
+    "extension_developer": "#e85d04",  # orange
+    "admin": "#0e7490",                # teal
+    "sdk_developer": "#be185d",        # pink
+}
+
 # Marker sizes by complexity
 COMPLEXITY_SIZES = {"minor": 4, "moderate": 7, "major": 12}
 
@@ -144,7 +151,17 @@ def main():
         "color_mapping": COMPLEXITY_COLORS,
     })
 
-    # 4. Date (temporal)
+    # 4. Audience (categorical)
+    audiences = df["audience"].fillna("interactive_user").values
+    all_rawdata.append(audiences)
+    all_metadata.append({
+        "field": "audience",
+        "description": "Audience",
+        "kind": "categorical",
+        "color_mapping": AUDIENCE_COLORS,
+    })
+
+    # 5. Date (temporal)
     entry_dates = pd.to_datetime(df["date"], utc=True).values
     all_rawdata.append(entry_dates)
     all_metadata.append({
@@ -229,6 +246,12 @@ def main():
         letter-spacing: 0.06em;
     }
     .hc-complexity:empty { display: none; }
+
+    /* Align colormap dropdown labels by giving swatch blocks a consistent width */
+    .color-map-option .color-swatch {
+        display: inline-block;
+        min-width: 72px;
+    }
     """
 
     # Increase scroll-to-zoom speed
