@@ -41,7 +41,7 @@ jobs:
         run: |
           git add data/
           git add -f CHANGELOG.md
-          git add -f docs/index.html docs/analysis.html docs/map.html docs/data/
+          git add -f docs/index.html docs/analysis.html docs/about.html docs/map.html docs/data/
           git diff --cached --quiet && exit 0
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
