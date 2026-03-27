@@ -8,7 +8,7 @@ import glasbey
 import numpy as np
 import pandas as pd
 
-from nav import NAV_CSS, nav_html
+from nav import NAV_CSS, PLAUSIBLE_SCRIPT, nav_html
 
 ROOT = Path(__file__).resolve().parent.parent
 INPUT_PATH = ROOT / "data" / "enriched.parquet"
@@ -271,6 +271,7 @@ def page_shell(title: str, nav_active: str, body_content: str, extra_head: str =
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">
+{PLAUSIBLE_SCRIPT}
 {TAILWIND_CONFIG}
 {NAV_CSS}
 {extra_head}
