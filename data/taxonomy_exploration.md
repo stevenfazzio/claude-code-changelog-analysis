@@ -1,0 +1,1022 @@
+# Taxonomy Exploration
+
+Generated: 2026-03-26 23:21
+Entries: 1821
+Bugfix entries: 879 (48.3%)
+
+## Raw Embeddings
+
+### Layer 0 (5 topics, 1107 clustered, 714 noise)
+
+- **Terminal Interface** (348 entries)
+  - "Fixed ghost text flickering when typing slash commands mid-input"
+  - "Fixed native terminal cursor not tracking the text input caret, so IME composition (CJK input) now renders inline and..."
+  - "Fixed Tab key queueing slash commands instead of autocompleting"
+- **** (294 entries)
+  - "Improved memory usage in long sessions with subagents by stripping heavy progress message payloads during context com..."
+  - "Fixed out-of-memory crashes when resuming sessions with heavy subagent usage"
+  - "Reduced memory usage when resuming large sessions (including compacted history)"
+- **System Features** (193 entries)
+  - "Added support for Claude Skills"
+  - "Fixed global `.claude` folder detection on Windows"
+  - "CLAUDE.md files can now import other files. Add @path/to/file.md to ./CLAUDE.md to load additional files on launch"
+- **Bash Tool Permissions** (138 entries)
+  - "Fixed security vulnerability in Bash tool permission checks"
+  - "Fixed a bug where commands excluded from sandboxing (via `sandbox.excludedCommands` or `dangerouslyDisableSandbox`) c..."
+  - "Fixed permission rules incorrectly rejecting valid bash commands containing shell glob patterns (e.g., `ls *.txt`, `f..."
+- **MCP Enhancements** (134 entries)
+  - "Improved MCP OAuth authentication with step-up auth support and discovery caching, reducing redundant network request..."
+  - "Added support for MCP OAuth Authorization Server discovery"
+  - "Remote MCP servers (SSE and HTTP) now support OAuth"
+
+### Layer 1 (18 topics, 1256 clustered, 565 noise)
+
+- **Bash Tool Permissions** (138 entries)
+  - "Fixed security vulnerability in Bash tool permission checks"
+  - "Fixed a bug where commands excluded from sandboxing (via `sandbox.excludedCommands` or `dangerouslyDisableSandbox`) c..."
+  - "Fixed permission rules incorrectly rejecting valid bash commands containing shell glob patterns (e.g., `ls *.txt`, `f..."
+- **MCP Enhancements** (134 entries)
+  - "Improved MCP OAuth authentication with step-up auth support and discovery caching, reducing redundant network request..."
+  - "Added support for MCP OAuth Authorization Server discovery"
+  - "Remote MCP servers (SSE and HTTP) now support OAuth"
+- **Terminal Input Fixes** (123 entries)
+  - "Fixed Option+Return not inserting newlines in Kitty keyboard protocol terminals"
+  - "Added readline-style ctrl-y for pasting deleted text"
+  - "Fixed Escape not interrupting a running turn when the input box has draft text. Use Up arrow to pull queued messages ..."
+- **Memory Usage Optimization** (118 entries)
+  - "Reduced memory usage when resuming large sessions (including compacted history)"
+  - "Improved memory usage during long sessions by clearing internal caches after compaction"
+  - "Fixed memory growth in long-running sessions from progress messages surviving compaction"
+- **Rendering and Stability** (81 entries)
+  - "Improved terminal rendering performance"
+  - "Several improvements to rendering"
+  - "Various bug fixes and presentation improvements"
+- **Hooks SDK Enhancements** (74 entries)
+  - "Hooks: Added "hook_event_name" to hook input"
+  - "SDK: Support custom timeouts for hooks"
+  - "Added hooks support to agent frontmatter, allowing agents to define PreToolUse, PostToolUse, and Stop hooks scoped to..."
+- **Configuration Management** (66 entries)
+  - "Fixed global `.claude` folder detection on Windows"
+  - "Changed terminal title to "Claude Code" on startup for better window identification"
+  - "VS Code: Fixed .claude.json config file being read from incorrect location"
+- **VSCode Extension UI Enhancements** (65 entries)
+  - "[VSCode] Added rate limit warning banner with usage percentage and reset time"
+  - "VSCode: Fixed scroll-to-bottom under-scrolling on initial session load and session switch"
+  - "[VSCode] Fixed duplicate sessions appearing in the session list when starting a new conversation"
+- **Model Updates and Configuration** (65 entries)
+  - "Changed default Opus model on Bedrock, Vertex, and Microsoft Foundry to Opus 4.6 (was Opus 4.1)"
+  - "Bedrock: Updated default Sonnet model to Sonnet 4"
+  - "Introduced `ANTHROPIC_DEFAULT_SONNET_MODEL` and `ANTHROPIC_DEFAULT_OPUS_MODEL` for controlling model aliases opusplan..."
+- **Slash Command Functionality and Autocomplete Improvements** (59 entries)
+  - "Fixed slash command selection not working when multiple commands share the same name"
+  - "Fixed slash commands not found when typing the exact name of a soft-hidden command"
+  - "Added slash command autocomplete support when `/` appears anywhere in input, not just at the beginning"
+- **Plugin Marketplace and Management** (58 entries)
+  - "Changed `--plugin-dir` so local dev copies now override installed marketplace plugins with the same name (unless that..."
+  - "Fixed plugin path resolution for file-based marketplace sources"
+  - "Fixed marketplace update not syncing git submodules — plugin sources in submodules no longer break after update"
+- **Session Management and Remote Control Features** (54 entries)
+  - "Improved Remote Control session titles — now derived from your first prompt instead of showing "Interactive session""
+  - "Fixed `/resume` losing session names after resuming a forked or continued session"
+  - "Fixed `/resume` session picker showing raw XML markup instead of clean titles for sessions started with slash commands"
+- **Background Task Management** (42 entries)
+  - "Fixed a race condition where background agent task output could hang indefinitely when the task completed between pol..."
+  - "Fixed `/clear` killing background agent/bash tasks — only foreground tasks are now cleared"
+  - "Added unified Ctrl+B backgrounding for both bash commands and agents - pressing Ctrl+B now backgrounds all running fo..."
+- **Agent Teams and Subagent Management Features** (40 entries)
+  - "Fixed subagents sometimes not inheriting the parent's model by default"
+  - "Added support for restricting which sub-agents can be spawned via `Task(agent_type)` syntax in agent "tools" frontmatter"
+  - "Fixed team agents to inherit the leader's model"
+- **File Mention and Path Autocomplete Improvements** (38 entries)
+  - "Added hidden files to file search and @-mention suggestions"
+  - "Improved @ mention file suggestion speed (~3× faster in git repositories)"
+  - "Improved fuzzy matching for `@` file suggestions with faster, more accurate results"
+- **New Features and Product Releases** (37 entries)
+  - "Introducing Claude Code for Desktop: https://claude.com/download"
+  - "Released Python SDK: pip install claude-code-sdk to get started"
+  - "Claude Code can now also be used with a Claude Max subscription (https://claude.ai/upgrade)"
+- **Thinking Mode and UI Display Fixes** (33 entries)
+  - "Fixed a bug where thinking was not working in -p mode"
+  - "Tab to toggle thinking (sticky across sessions)"
+  - "IDE: Add toggle to enable/disable thinking."
+- **Voice Mode Bug Fixes and Improvements** (31 entries)
+  - "Fixed voice mode not activating correctly on startup when `voiceEnabled: true` is set"
+  - "Fixed voice mode not activating correctly on fresh installs without toggling `/voice` twice"
+  - "Fixed several voice mode issues: occasional input lag, false "No speech detected" errors after releasing push-to-talk..."
+
+### Layer 2 (42 topics, 1142 clustered, 679 noise)
+
+- **MCP Server Integration Improvements** (77 entries)
+  - "Added support for MCP server instructions"
+  - "Added expanding variables support for MCP server configuration"
+  - "New MCP "project" scope now allows you to add MCP servers to .mcp.json files and commit them to your repository"
+- **VSCode Extension UI Enhancements** (65 entries)
+  - "[VSCode] Added rate limit warning banner with usage percentage and reset time"
+  - "VSCode: Fixed scroll-to-bottom under-scrolling on initial session load and session switch"
+  - "[VSCode] Fixed duplicate sessions appearing in the session list when starting a new conversation"
+- **Model Updates and Configuration** (65 entries)
+  - "Changed default Opus model on Bedrock, Vertex, and Microsoft Foundry to Opus 4.6 (was Opus 4.1)"
+  - "Bedrock: Updated default Sonnet model to Sonnet 4"
+  - "Introduced `ANTHROPIC_DEFAULT_SONNET_MODEL` and `ANTHROPIC_DEFAULT_OPUS_MODEL` for controlling model aliases opusplan..."
+- **Slash Command Functionality and Autocomplete Improvements** (59 entries)
+  - "Fixed slash command selection not working when multiple commands share the same name"
+  - "Fixed slash commands not found when typing the exact name of a soft-hidden command"
+  - "Added slash command autocomplete support when `/` appears anywhere in input, not just at the beginning"
+- **Plugin Marketplace and Management** (58 entries)
+  - "Changed `--plugin-dir` so local dev copies now override installed marketplace plugins with the same name (unless that..."
+  - "Fixed plugin path resolution for file-based marketplace sources"
+  - "Fixed marketplace update not syncing git submodules — plugin sources in submodules no longer break after update"
+- **Session Management and Remote Control Features** (54 entries)
+  - "Improved Remote Control session titles — now derived from your first prompt instead of showing "Interactive session""
+  - "Fixed `/resume` losing session names after resuming a forked or continued session"
+  - "Fixed `/resume` session picker showing raw XML markup instead of clean titles for sessions started with slash commands"
+- **Memory Usage and Leak Fixes** (42 entries)
+  - "Reduced memory usage when resuming large sessions (including compacted history)"
+  - "Improved memory usage during long sessions by clearing internal caches after compaction"
+  - "Fixed memory growth in long-running sessions from progress messages surviving compaction"
+- **Agent Teams and Subagent Management Features** (40 entries)
+  - "Fixed subagents sometimes not inheriting the parent's model by default"
+  - "Added support for restricting which sub-agents can be spawned via `Task(agent_type)` syntax in agent "tools" frontmatter"
+  - "Fixed team agents to inherit the leader's model"
+- **Hooks System Enhancements and SDK Improvements** (39 entries)
+  - "Added `agent_id` (for subagents) and `agent_type` (for subagents and `--agent`) to hook events"
+  - "Added hooks support to agent frontmatter, allowing agents to define PreToolUse, PostToolUse, and Stop hooks scoped to..."
+  - "Hooks: Added "hook_event_name" to hook input"
+- **Configuration Management and System Integration** (39 entries)
+  - "Fixed global `.claude` folder detection on Windows"
+  - "VS Code: Fixed .claude.json config file being read from incorrect location"
+  - "Windows: Managed settings now prefer `C:\Program Files\ClaudeCode` if it exists. Support for `C:\ProgramData\ClaudeCo..."
+- **File Mention and Path Autocomplete Improvements** (38 entries)
+  - "Added hidden files to file search and @-mention suggestions"
+  - "Improved @ mention file suggestion speed (~3× faster in git repositories)"
+  - "Improved fuzzy matching for `@` file suggestions with faster, more accurate results"
+- **Bash Tool Permission System** (37 entries)
+  - "Fixed security vulnerability in Bash tool permission checks"
+  - "Fixed permission rules incorrectly rejecting valid bash commands containing shell glob patterns (e.g., `ls *.txt`, `f..."
+  - "Fixed "Always Allow" on compound bash commands (e.g. `cd src && npm test`) saving a single rule for the full string i..."
+- **New Features and Product Releases** (37 entries)
+  - "Introducing Claude Code for Desktop: https://claude.com/download"
+  - "Released Python SDK: pip install claude-code-sdk to get started"
+  - "Claude Code can now also be used with a Claude Max subscription (https://claude.ai/upgrade)"
+- **Thinking Mode and UI Display Fixes** (33 entries)
+  - "Fixed a bug where thinking was not working in -p mode"
+  - "Tab to toggle thinking (sticky across sessions)"
+  - "IDE: Add toggle to enable/disable thinking."
+- **Voice Mode Bug Fixes and Improvements** (31 entries)
+  - "Fixed voice mode not activating correctly on startup when `voiceEnabled: true` is set"
+  - "Fixed voice mode not activating correctly on fresh installs without toggling `/voice` twice"
+  - "Fixed several voice mode issues: occasional input lag, false "No speech detected" errors after releasing push-to-talk..."
+- **Bug Fixes and Performance Improvements** (28 entries)
+  - "Various bug fixes and presentation improvements"
+  - "Minor bugfixes"
+  - "Bugfixes, UI polish, and tool reliability improvements"
+- **Terminal Display and Rendering Improvements** (26 entries)
+  - "Improved terminal rendering performance"
+  - "Improved terminal rendering performance with optimized screen data layout"
+  - "Rewrote terminal renderer for buttery smooth UI"
+- **OAuth Authentication and Security Fixes** (23 entries)
+  - "Fixed a race condition where stale OAuth tokens could be read from the keychain cache during concurrent token refresh..."
+  - "Fix unhandled OAuth expiration 401 API errors"
+  - "Fixed issue causing "OAuth authentication is currently not supported""
+- **Tool Permission Management and User Approval** (22 entries)
+  - "New UI for permission prompts"
+  - "Permission suggestions are now populated when safety checks trigger an ask response, enabling SDK consumers to displa..."
+  - "Reduced unnecessary tool permission prompts"
+- **Interactive Mode Commands and Features Enhancement** (22 entries)
+  - "`--append-system-prompt` can now be used in interactive mode, not just --print/-p."
+  - "Fixed `/context` command not respecting custom system prompts in non-interactive mode"
+  - "Document --system-prompt"
+- **Git Worktree Isolation and Management Features** (19 entries)
+  - "Improved `--worktree` startup by eliminating a git subprocess on the startup path"
+  - "Fixed `--worktree` hanging silently when the worktree name contained a forward slash"
+  - "Fixed worktree isolation issues: Task tool resume not restoring cwd, and background task notifications missing `workt..."
+- **Plan Mode Functionality and Bug Fixes** (19 entries)
+  - "Plan mode: Fixed issue where rejected plan from sub-task would get discarded"
+  - "Removed permission prompt when entering plan mode - users can now enter plan mode without approval"
+  - "Changed plan mode to hide the "clear context" option by default (restore with `"showClearContextOnPlanAccept": true`)"
+- **Tool Execution and API Error Fixes** (18 entries)
+  - "Fixed session resume failures caused by orphaned tool results during concurrent tool execution"
+  - "Fixed "unexpected tool_use_id found in tool_result blocks" error when resuming conversations that start with an orpha..."
+  - "Fixed API errors when resuming sessions that were interrupted during tool execution"
+- **Startup Performance and Memory Usage Optimizations** (18 entries)
+  - "Improved startup performance and session storage performance"
+  - "Improved startup performance by deferring SessionStart hook execution, reducing time-to-interactive by ~500ms."
+  - "Multiple optimizations to improve startup performance"
+- **Input History and Text Entry Fixes** (18 entries)
+  - "Fixed prompt not being saved to history when aborting a query with Escape"
+  - "Fixed pasted content being lost when replaying prompts from history using up arrow or Ctrl+R search"
+  - "Fixed Escape not interrupting a running turn when the input box has draft text. Use Up arrow to pull queued messages ..."
+- **Conversation Compaction and Auto-Compact Features** (16 entries)
+  - "Fixed an issue where auto-compact was running twice"
+  - "Added `PostCompact` hook that fires after compaction completes"
+  - "Changed resuming after compaction to no longer produce a preamble recap before continuing"
+- **Skills Discovery and Loading System** (16 entries)
+  - "Added automatic discovery of skills from nested `.claude/skills` directories when working with files in subdirectories"
+  - "Added `${CLAUDE_SKILL_DIR}` variable for skills to reference their own directory in SKILL.md content"
+  - "Fixed a bug where project-level skills were not loading when --setting-sources 'project' was specified"
+- **Image Clipboard and Drag-Drop Integration** (15 entries)
+  - "IDE: Added support for pasting images in VSCode MacOS using ⌘+V"
+  - "Windows: Add alt + v shortcut for pasting images from clipboard"
+  - "Improved clipboard image pasting performance on macOS"
+- **Spinner UI and Progress Indicator Improvements** (14 entries)
+  - "Updated spinner to indicate tokens loaded and tool usage"
+  - "Improved token count display in spinner to include tokens from background agents"
+  - "Improved spinner feedback when waiting for the first response token"
+- **Bug Fixes and Crash Resolution** (14 entries)
+  - "Fixed a crash caused by a stack overflow error"
+  - "Fixed crashes on processors without AVX instruction support"
+  - "[Windows] Fixed issue with improper rendering"
+- **Background Task Management and Notification Improvements** (13 entries)
+  - "Changed task notification display to cap at 3 lines with overflow summary when multiple background tasks complete sim..."
+  - "Fixed noisy output when background tasks complete - now shows clean completion message instead of raw output"
+  - "Fixed background task completion notifications to appear proactively with bullet point"
+- **Session Management and Connection Recovery Fixes** (13 entries)
+  - "Fixed remote sessions requiring re-login on transient auth errors instead of retrying automatically"
+  - "Fixed bridge sessions failing to recover after extended WebSocket disconnects"
+  - "Fixed session persistence getting stuck after transient server errors by recovering from 409 conflicts when the entry..."
+- **Configuration Environment Variables and Authentication** (13 entries)
+  - "Updated "Help improve Claude" setting fetch to refresh OAuth and retry when it fails due to a stale OAuth token"
+  - "Added env var `CLAUDE_CODE_ENABLE_TASKS`, set to `false` to keep the old system temporarily"
+  - "Fixed multiple concurrent Claude Code sessions requiring repeated re-authentication when one session refreshes its OA..."
+- **SDK Feature Additions and CLI Enhancements** (12 entries)
+  - "SDK: Added UUID support for all SDK messages"
+  - "SDK: Added `--replay-user-messages` to replay user messages back to stdout"
+  - "SDK: Added ability to capture error logging"
+- **CJK Character Input and Rendering Fixes** (12 entries)
+  - "Improved CJK character support in cursor navigation and rendering"
+  - "Fixed IME (Input Method Editor) support for languages like Chinese, Japanese, and Korean by correctly positioning the..."
+  - "Fixed Option+Arrow word navigation treating entire CJK (Chinese, Japanese, Korean) text sequences as a single word in..."
+- **Terminal Keyboard Input and Compatibility Fixes** (12 entries)
+  - "Changed Shift+Enter to work out of the box in iTerm2, WezTerm, Ghostty, and Kitty without modifying terminal configs"
+  - "Fixed Option+Return not inserting newlines in Kitty keyboard protocol terminals"
+  - "Fixed Alt+B and Alt+F (word navigation) not working in iTerm2, Ghostty, Kitty, and WezTerm"
+- **Vim Mode and Editor Keybinding Enhancements** (12 entries)
+  - "Added `Ctrl+X Ctrl+E` as an alias for opening the external editor (readline-native binding; `Ctrl+G` still works)"
+  - "Added readline-style ctrl-y for pasting deleted text"
+  - "Added new Vim motions: `;` and `,` to repeat f/F/t/T motions, `y` operator for yank with `yy`/`Y`, `p`/`P` for paste,..."
+- **Prompt Caching and System Optimization Fixes** (11 entries)
+  - "Fixed prompt suggestion cache regression that reduced cache hit rates"
+  - "Improved prompt cache hit rates by moving date out of system prompt"
+  - "Improved p90 prompt cache rate"
+- **Bash Command Execution and Sandbox Fixes** (11 entries)
+  - "Windows: Fixed bash command execution failing for users with `.bashrc` files"
+  - "Fixed bash commands incorrectly reporting failure with "Read-only file system" errors when sandbox mode was enabled"
+  - "Fixed ghost dotfiles (`.bashrc`, `HEAD`, etc.) appearing as untracked files in the working directory after sandboxed ..."
+- **Background Agent Task Management and Fixes** (11 entries)
+  - "Fixed a race condition where background agent task output could hang indefinitely when the task completed between pol..."
+  - "Fixed background agent tasks staying stuck in "running" state when git or API calls hang during cleanup"
+  - "Fixed background agent completion notifications missing the output file path, which made it difficult for parent agen..."
+- **MCP Server Connectivity and Performance Optimization** (10 entries)
+  - "Run one-off MCP servers with `claude --mcp-config <path-to-file>`"
+  - "Added support for using claude.ai MCP connectors in Claude Code"
+  - "MCP servers configured both locally and via claude.ai connectors are now deduplicated — the local config wins"
+- **CLAUDE.md File Loading and Import System** (10 entries)
+  - "CLAUDE.md files can now import other files. Add @path/to/file.md to ./CLAUDE.md to load additional files on launch"
+  - "Fixed nested `CLAUDE.md` files not loading when @-mentioning files"
+  - "Added support for loading `CLAUDE.md` files from additional directories specified via `--add-dir` flag (requires sett..."
+
+### Layer 3 (63 topics, 1049 clustered, 772 noise)
+
+- **Slash Command Functionality and Autocomplete Improvements** (59 entries)
+  - "Fixed slash command selection not working when multiple commands share the same name"
+  - "Fuzzy matching for slash commands"
+  - "Custom slash commands: Added argument-hint to frontmatter"
+- **Session Management and Remote Control Features** (54 entries)
+  - "Improved Remote Control session titles — now derived from your first prompt instead of showing "Interactive session""
+  - "Fixed `/resume` losing session names after resuming a forked or continued session"
+  - "Fixed `/resume` session picker showing raw XML markup instead of clean titles for sessions started with slash commands"
+- **Agent Teams and Subagent Management Features** (40 entries)
+  - "Fixed subagents sometimes not inheriting the parent's model by default"
+  - "Added support for disabling specific agents using `Task(AgentName)` syntax in settings.json permissions or the `--dis..."
+  - "Fixed a crash when agent teams setting changed between renders"
+- **Hooks System Enhancements and SDK Improvements** (39 entries)
+  - "Added `agent_id` (for subagents) and `agent_type` (for subagents and `--agent`) to hook events"
+  - "Added prompt-based stop hooks"
+  - "Hooks: Added systemMessage field to hook JSON output for displaying warnings and context"
+- **Configuration Management and System Integration** (39 entries)
+  - "Fixed global `.claude` folder detection on Windows"
+  - "Breaking change: Removed deprecated Windows managed settings fallback at `C:\ProgramData\ClaudeCode\managed-settings...."
+  - "Fixed IDE integration not auto-connecting when Claude Code is launched inside tmux or screen"
+- **File Mention and Path Autocomplete Improvements** (38 entries)
+  - "Improved @ mention file suggestion speed (~3× faster in git repositories)"
+  - "VSCode: Added respectGitIgnore configuration to include .gitignored files in file searches (defaults to true)"
+  - "/add-dir command now supports typeahead for directory paths"
+- **VSCode Extension UI and Session Management** (38 entries)
+  - "[VSCode] Fixed duplicate sessions appearing in the session list when starting a new conversation"
+  - "[VSCode] Improved scroll wheel responsiveness in the integrated terminal with terminal-aware acceleration"
+  - "[VSCode] Added compaction display as a collapsible "Compacted chat" card with the summary inside"
+- **New Features and Product Releases** (37 entries)
+  - "Introducing Claude Code for Desktop: https://claude.com/download"
+  - "Hit Enter to queue up additional messages while Claude is working"
+  - "Released Python SDK: pip install claude-code-sdk to get started"
+- **Thinking Mode and UI Display Fixes** (33 entries)
+  - "IDE: Add toggle to enable/disable thinking."
+  - "Changed collapsed read/search groups to show present tense ("Reading", "Searching for") while in progress, and past t..."
+  - "Fixed a bug where thinking was not working in -p mode"
+- **Voice Mode Bug Fixes and Improvements** (31 entries)
+  - "Fixed voice mode not activating correctly on startup when `voiceEnabled: true` is set"
+  - "Fixed voice push-to-talk: holding the voice key no longer leaks characters into the text input, and transcripts now i..."
+  - "Fixed voice mode failing on Windows native binary with "native audio module could not be loaded""
+- **Bash Command Permission System Improvements** (30 entries)
+  - "Fixed permission rules incorrectly rejecting valid bash commands containing shell glob patterns (e.g., `ls *.txt`, `f..."
+  - "Fixed security vulnerability in Bash tool permission checks"
+  - "Reduced permission prompts for complex bash commands"
+- **Bug Fixes and Performance Improvements** (28 entries)
+  - "Various bug fixes and presentation improvements"
+  - "Added support for native Windows (requires Git for Windows)"
+  - "Bugfixes, UI polish, and tool reliability improvements"
+- **Terminal Display and Rendering Improvements** (26 entries)
+  - "Improved terminal rendering performance"
+  - "Fixed terminal flicker caused by animated elements at the scrollback boundary"
+  - "Fixed Windows terminal rendering bugs caused by `os.EOL` (`\r\n`) in display code — line counts now show correct valu..."
+- **OAuth Authentication and Security Fixes** (23 entries)
+  - "Fixed a race condition where stale OAuth tokens could be read from the keychain cache during concurrent token refresh..."
+  - "Fixed issue causing "OAuth authentication is currently not supported""
+  - "Fixed AWS auth refresh hanging indefinitely by adding a 3-minute timeout"
+- **Tool Permission Management and User Approval** (22 entries)
+  - "New UI for permission prompts"
+  - "Added `PermissionRequest` hook to automatically approve or deny tool permission requests with custom logic"
+  - "Fixed interactive tools (e.g., `AskUserQuestion`) being silently auto-allowed when listed in a skill's allowed-tools,..."
+- **Interactive Mode Commands and Features Enhancement** (22 entries)
+  - "`--append-system-prompt` can now be used in interactive mode, not just --print/-p."
+  - "Fixed duplicate output in some commands like `/context`"
+  - "Improvements to `/help`"
+- **Memory Leak Fixes in Long Sessions** (21 entries)
+  - "Fixed memory leak where long-running teammates retained all messages in AppState even after conversation compaction"
+  - "Fixed a memory leak where tree-sitter parse trees were not being freed, causing WASM memory to grow unbounded over lo..."
+  - "Fixed a memory leak where completed task output was not freed from memory, reducing memory usage in long sessions wit..."
+- **Git Worktree Isolation and Management Features** (19 entries)
+  - "Improved `--worktree` startup by eliminating a git subprocess on the startup path"
+  - "Added `WorktreeCreate` and `WorktreeRemove` hook events, enabling custom VCS setup and teardown when agent worktree i..."
+  - "Fixed `--worktree` hanging silently when the worktree name contained a forward slash"
+- **Plan Mode Functionality and Bug Fixes** (19 entries)
+  - "Removed permission prompt when entering plan mode - users can now enter plan mode without approval"
+  - "Plan mode: Fixed issue where rejected plan from sub-task would get discarded"
+  - "Fixed plan files persisting across `/clear` commands, now ensuring a fresh plan file is used after clearing a convers..."
+- **Plugin Marketplace Management and Installation Fixes** (19 entries)
+  - "Fixed plugin path resolution for file-based marketplace sources"
+  - "Added support for pinning plugins to specific git commit SHAs, allowing marketplace entries to install exact versions"
+  - "Fixed `git-subdir` plugins at different subdirectories of the same monorepo commit colliding in the plugin cache"
+- **Tool Execution and API Error Fixes** (18 entries)
+  - "Fixed session resume failures caused by orphaned tool results during concurrent tool execution"
+  - "Fixed API 400 errors ("thinking blocks cannot be modified") that occurred in sessions with concurrent agents, caused ..."
+  - "Fix for tool_use without matching tool_result errors"
+- **Startup Performance and Memory Usage Optimizations** (18 entries)
+  - "Improved startup performance and session storage performance"
+  - "Improved performance in non-interactive mode (`-p`) by skipping unnecessary API calls during startup"
+  - "Reduced startup memory by ~426KB for users without custom CA certificates"
+- **Input History and Text Entry Fixes** (18 entries)
+  - "Fixed prompt not being saved to history when aborting a query with Escape"
+  - "Fixed pasted content being lost when replaying prompts from history using up arrow or Ctrl+R search"
+  - "Fixed Esc key with queued prompts to only move them to input without canceling the running task"
+- **Conversation Compaction and Auto-Compact Features** (16 entries)
+  - "Fixed the "Context left until auto-compact" warning not disappearing after running `/compact`"
+  - "Improved compacting UI"
+  - "Reduced scrollback resets in long sessions from once per turn to once per ~50 messages"
+- **Skills Discovery and Loading System** (16 entries)
+  - "Added automatic discovery of skills from nested `.claude/skills` directories when working with files in subdirectories"
+  - "Fixed crash when a skill's `name` or `description` in SKILL.md frontmatter is a bare number (e.g., `name: 3000`) — th..."
+  - "Fixed a bug where project-level skills were not loading when --setting-sources 'project' was specified"
+- **Image Clipboard and Drag-Drop Integration** (15 entries)
+  - "Improved clipboard image pasting performance on macOS"
+  - "Copy+paste images directly into your prompt"
+  - "IDE: Added support for pasting images in VSCode MacOS using ⌘+V"
+- **Spinner UI and Progress Indicator Improvements** (14 entries)
+  - "Updated spinner to indicate tokens loaded and tool usage"
+  - "Added `spinnerTipsOverride` setting to customize spinner tips — configure `tips` with an array of custom tip strings,..."
+  - "Fixed teammate spinners not respecting custom spinnerVerbs from settings (anthropics/claude-code#25748)"
+- **Bug Fixes and Crash Resolution** (14 entries)
+  - "Fixed crashes on processors without AVX instruction support"
+  - "[Windows] Fixed issue with improper rendering"
+  - "Fixed a crash caused by a stack overflow error"
+- **Background Task Management and Notification Improvements** (13 entries)
+  - "Changed task notification display to cap at 3 lines with overflow summary when multiple background tasks complete sim..."
+  - "Deprecated `TaskOutput` tool in favor of using `Read` on the background task's output file path"
+  - "Improved the `/tasks` dialog to go directly to task details when there's only one background task running"
+- **Session Management and Connection Recovery Fixes** (13 entries)
+  - "Fixed remote sessions requiring re-login on transient auth errors instead of retrying automatically"
+  - "Fixed rate limit warning appearing at low usage after weekly reset (now requires 70% usage)"
+  - "Fixed bridge sessions failing to recover after extended WebSocket disconnects"
+- **Configuration Environment Variables and Authentication** (13 entries)
+  - "Updated "Help improve Claude" setting fetch to refresh OAuth and retry when it fails due to a stale OAuth token"
+  - "Added env var `CLAUDE_CODE_ENABLE_TASKS`, set to `false` to keep the old system temporarily"
+  - "Changed OAuth and API Console URLs from console.anthropic.com to platform.claude.com"
+- **SDK Feature Additions and CLI Enhancements** (12 entries)
+  - "SDK: Added UUID support for all SDK messages"
+  - "[SDK] Changed minimum zod peer dependency to ^4.0.0"
+  - "SDK: Added `--replay-user-messages` to replay user messages back to stdout"
+- **CJK Character Input and Rendering Fixes** (12 entries)
+  - "Improved CJK character support in cursor navigation and rendering"
+  - "Added support for full-width (zenkaku) space input from Japanese IME in checkbox selection"
+  - "Fixed CJK characters visually bleeding into adjacent UI elements when clipped at the right edge"
+- **Terminal Keyboard Input and Compatibility Fixes** (12 entries)
+  - "Changed Shift+Enter to work out of the box in iTerm2, WezTerm, Ghostty, and Kitty without modifying terminal configs"
+  - "Fixed Option+Return not inserting newlines in Kitty keyboard protocol terminals"
+  - "Fixed Backspace and Delete keys not working in vim NORMAL mode"
+- **Vim Mode and Editor Keybinding Enhancements** (12 entries)
+  - "Added `Ctrl+X Ctrl+E` as an alias for opening the external editor (readline-native binding; `Ctrl+G` still works)"
+  - "Added word movement keybindings for Vim"
+  - "Added alt-y yank-pop to cycle through kill ring history after ctrl-y yank"
+- **Prompt Caching and System Optimization Fixes** (11 entries)
+  - "Fixed prompt suggestion cache regression that reduced cache hit rates"
+  - "Improved edit reliability for tab-indented files"
+  - "Improved skill suggestions to prioritize recently and frequently used skills"
+- **Bash Command Execution and Sandbox Fixes** (11 entries)
+  - "Windows: Fixed bash command execution failing for users with `.bashrc` files"
+  - "Fixed bash commands incorrectly reporting failure with "Read-only file system" errors when sandbox mode was enabled"
+  - "Fixed prompting for `cd <cwd> && git ...` on Windows when the model uses a mingw-style path"
+- **Background Agent Task Management and Fixes** (11 entries)
+  - "Fixed a race condition where background agent task output could hang indefinitely when the task completed between pol..."
+  - "Improved background agent behavior — killing a background agent now preserves its partial results in the conversation..."
+  - "Fixed agent task progress stuck on "Initializing…""
+- **MCP Server Connectivity and Performance Optimization** (10 entries)
+  - "Run one-off MCP servers with `claude --mcp-config <path-to-file>`"
+  - "Added support for using claude.ai MCP connectors in Claude Code"
+  - "Improved MCP `-p` startup by pipelining claude.ai config fetch with local connections and using a concurrency pool in..."
+- **CLAUDE.md File Loading and Import System** (10 entries)
+  - "CLAUDE.md files can now import other files. Add @path/to/file.md to ./CLAUDE.md to load additional files on launch"
+  - "Fixed nested `CLAUDE.md` files not loading when @-mentioning files"
+  - "Changed CLAUDE.md HTML comments (`<!-- ... -->`) to be hidden from Claude when auto-injected. Comments remain visible..."
+- **Config Command Interface and Settings Management** (8 entries)
+  - "Added search functionality to `/config` command for quickly filtering settings"
+  - "Fixed footer navigation selecting an invisible Remote Control pill in config-driven mode"
+  - "Fixed Esc not closing the `/status` dialog after visiting the Config tab"
+- **Background Agent Control and Keyboard Shortcuts** (8 entries)
+  - "Fixed Ctrl+C and ESC being silently ignored when background agents are running and the main thread is idle. Pressing ..."
+  - "Added Ctrl+F keybinding to kill background agents (two-press confirmation)"
+  - "Agents and bash commands can run asynchronously and send messages to wake up the main agent"
+- **Opus Model Updates and Feature Changes** (8 entries)
+  - "Fast mode is now available for Opus 4.6. Learn more at https://code.claude.com/docs/en/fast-mode"
+  - "Fixed Opus 4.5 tip incorrectly showing when user was already using Opus"
+  - "Opus 4.6 now defaults to medium effort for Max and Team subscribers. Medium effort works well for most tasks — it's t..."
+- **Model Updates and Plan Configuration Changes** (8 entries)
+  - "Introducing Sonnet 4 and Opus 4 models"
+  - "Sonnet 4.5 with 1M context is being removed from the Max plan in favor of our frontier Sonnet 4.6 model, which now ha..."
+  - "Added 1M context window for Opus 4.6 by default for Max, Team, and Enterprise plans (previously required extra usage)"
+- **Status Line Usage Information Display Enhancements** (7 entries)
+  - "Status line input now includes session cost info"
+  - "Status line input now includes `exceeds_200k_tokens`"
+  - "Added context window information to status line input"
+- **Image Processing and Upload Error Fixes** (7 entries)
+  - "Resizes images before upload to prevent API size limit errors"
+  - "Fixed image files being reported with incorrect media type when format cannot be detected from metadata"
+  - "Added image dimension metadata when images are resized, enabling accurate coordinate mappings for large images"
+- **Plugin Management Commands and UI Improvements** (7 entries)
+  - "`/plugin install`, `/plugin enable/disable`, `/plugin marketplace` commands for plugin management"
+  - "`/plugin validate` command for validating plugin structure and configuration"
+  - "Plugins UI polish"
+- **Transcript Mode Interface and Keybinding Improvements** (7 entries)
+  - "Added timestamps in Ctrl-r mode and fixed Ctrl-c handling"
+  - "Transcript mode (Ctrl+R): Changed Esc to exit transcript mode rather than interrupt"
+  - "Transcript mode (Ctrl+R): Added the model used to generate each assistant message"
+- **LSP Server Integration and Compatibility Fixes** (6 entries)
+  - "Fixed LSP tool being incorrectly enabled when no LSP servers were configured"
+  - "Fixed race condition where LSP tool could return "no server available" during startup"
+  - "Fixed LSP shutdown/exit compatibility with strict language servers that reject null params"
+- **OpenTelemetry Logging and Monitoring Enhancements** (6 entries)
+  - "New attributes (terminal.type, language) in OpenTelemetry logging"
+  - "New Active Time metric in OpenTelemetry logging"
+  - "OTEL resource now includes os.type, os.version, host.arch, and wsl.version (if running on Windows Subsystem for Linux)"
+- **VSCode Extension Permission Management Interface Enhancements** (6 entries)
+  - "VSCode Extension: Added setting to configure the initial permission mode for new conversations"
+  - "[VSCode] Added tab icon badges showing pending permissions (blue) and unread completions (orange)"
+  - "[VSCode] Added gift tag pictogram for year-end promotion message"
+- **Project Permissions and Trust Settings Management** (6 entries)
+  - "Shared project permission rules can be saved in .claude/settings.json"
+  - "Windows: improve permissions checks for allow / deny tools and project trust. This may create a new project entry in ..."
+  - "Migrated `ignorePatterns` from project config to deny permissions in the localSettings."
+- **Model Selection and Provider Configuration Updates** (6 entries)
+  - "Improved model references to show provider-specific names (Sonnet 3.7 for Bedrock, Sonnet 4 for Console)"
+  - "Introduced `ANTHROPIC_DEFAULT_SONNET_MODEL` and `ANTHROPIC_DEFAULT_OPUS_MODEL` for controlling model aliases opusplan..."
+  - "Bedrock: Updated default Sonnet model to Sonnet 4"
+- **Memory Usage Optimization for Large Sessions** (6 entries)
+  - "Improved memory usage for `--resume` (68% reduction for users with many sessions) by replacing the session index with..."
+  - "Improved memory usage during long sessions by clearing internal caches after compaction"
+  - "Improved session upload and memory sync to avoid reading large files into memory before size/binary checks"
+- **MCP Server Connection and Reconnection Fixes** (6 entries)
+  - "Added auto-reconnection for MCP SSE connections on disconnect"
+  - "Fixed MCP server reconnection hanging when cached connection promise never resolves"
+  - "Fixed `/mcp reconnect` freezing the CLI when given a server name that doesn't exist"
+- **MCP Configuration Management and Debugging Tools** (6 entries)
+  - "MCP debug mode: Run with --mcp-debug flag to get more information about MCP server errors"
+  - "Previous MCP server scopes have been renamed: previous "project" scope is now "local" and "global" scope is now "user""
+  - "Added detailed MCP server tools display (/mcp)"
+- **Bash Tool Timeout and Process Management** (5 entries)
+  - "Introduced BASH_DEFAULT_TIMEOUT_MS and BASH_MAX_TIMEOUT_MS env vars"
+  - "Added progress messages to Bash tool based on the last 5 lines of command output"
+  - "Fixed reliability issues with background Bash processes"
+- **Search and Filter Tool Enhancements** (5 entries)
+  - "Enhanced jq regex support for complex filters with pipes and select"
+  - "Redesigned Search (Grep) tool with new tool input parameters and features"
+  - "Linux: Added support for Alpine and musl-based distributions (requires separate ripgrep installation)"
+- **Shell Command Execution and Path Handling** (5 entries)
+  - "Fixed an issue with handling user directories with spaces for shell snapshots"
+  - "Set `CLAUDE_BASH_NO_LOGIN` environment variable to 1 or true to to skip login shell for BashTool"
+  - "Added support for additional `git log` and `git show` flags in read-only mode (e.g., `--topo-order`, `--cherry-pick`,..."
+- **Bash Tool Heredoc and Escaping Fixes** (5 entries)
+  - "Bash tool: Fix heredoc and multiline string escaping, improve stderr redirection handling"
+  - "Fixed a crash when running bash commands containing heredocs with JavaScript template literals like `${index + 1}`"
+  - "Fixed: Bash tool no longer throws "Bad substitution" errors when heredocs contain JavaScript template literals like `..."
+- **Settings Configuration and Application Bug Fixes** (5 entries)
+  - "Fixed a bug where settings arrays got overwritten instead of merged"
+  - "Fixed Vertex AI configuration not being applied from `settings.json`"
+  - "Plugins can ship `settings.json` for default configuration"
+- **MCP Tool Integration Bug Fixes** (5 entries)
+  - "Fixed a bug where MCP tool errors weren't being parsed correctly"
+  - "Fixed a bug where MCP tools would display twice in tool list"
+  - "MCP: Improve tool name consistency"
+- **MCP Server Configuration and Management Features** (5 entries)
+  - "New MCP "project" scope now allows you to add MCP servers to .mcp.json files and commit them to your repository"
+  - "Added expanding variables support for MCP server configuration"
+  - "Added support for MCP server instructions"
+
+## Bugfix-Direction Removed
+
+### Layer 0 (4 topics, 1395 clustered, 426 noise)
+
+- **Plugin System** (654 entries)
+  - "Added `ENABLE_CLAUDEAI_MCP_SERVERS=false` env var to opt out from making claude.ai MCP servers available"
+  - "Fixed `${CLAUDE_PLUGIN_ROOT}` not being substituted in plugin `allowed-tools` frontmatter, which caused tools to inco..."
+  - "**Plugin System Released**: Extend Claude Code with custom commands, agents, hooks, and MCP servers from marketplaces"
+- **UI Performance Fixes** (313 entries)
+  - "Fixed native terminal cursor not tracking the text input caret, so IME composition (CJK input) now renders inline and..."
+  - "Improved ultrathink text display"
+  - "Improved typing responsiveness by reducing memory allocation overhead in terminal rendering"
+- **Performance Optimization** (267 entries)
+  - "Reduced memory usage when resuming large sessions (including compacted history)"
+  - "Fixed startup performance issues when resuming sessions that have `saved_hook_context`"
+  - "Fixed SDK session history loss on resume caused by hook progress/attachment messages forking the parentUuid chain"
+- **Agent Model Management** (161 entries)
+  - "Fixed subagents with `model: opus`/`sonnet`/`haiku` being silently downgraded to older model versions on Bedrock, Ver..."
+  - "Agents: Added model customization support - you can now specify which model an agent should use"
+  - "Fixed subagents sometimes not inheriting the parent's model by default"
+
+### Layer 1 (9 topics, 1166 clustered, 655 noise)
+
+- **UI Performance Fixes** (313 entries)
+  - "Fixed native terminal cursor not tracking the text input caret, so IME composition (CJK input) now renders inline and..."
+  - "Improved ultrathink text display"
+  - "Improved typing responsiveness by reducing memory allocation overhead in terminal rendering"
+- **Authentication and Configuration** (164 entries)
+  - "Fixed a bug where ~/.claude.json would get reset when file contained invalid JSON"
+  - "VS Code: Fixed .claude.json config file being read from incorrect location"
+  - "Fixed issue with macOS code-sign warning when using Claude in Chrome integration"
+- **Agent Model Management** (161 entries)
+  - "Fixed subagents with `model: opus`/`sonnet`/`haiku` being silently downgraded to older model versions on Bedrock, Ver..."
+  - "Agents: Added model customization support - you can now specify which model an agent should use"
+  - "Fixed subagents sometimes not inheriting the parent's model by default"
+- **Memory Optimization** (125 entries)
+  - "Reduced memory usage when resuming large sessions (including compacted history)"
+  - "Improved memory usage during long sessions by clearing internal caches after compaction"
+  - "Fixed memory growth in long-running sessions from progress messages surviving compaction"
+- **MCP Server Integration Improvements** (105 entries)
+  - "Added support for MCP server instructions"
+  - "Fixed MCP servers from `.mcp.json` being stuck in pending state when running in non-interactive mode (`-p` flag or pi..."
+  - "Fixed a bug where MCP tool errors weren't being parsed correctly"
+- **VSCode Extension Improvements** (95 entries)
+  - "Fixed file search not working in VS Code extension on Windows"
+  - "VSCode: Added respectGitIgnore configuration to include .gitignored files in file searches (defaults to true)"
+  - "VSCode: Fixed scroll-to-bottom under-scrolling on initial session load and session switch"
+- **Hook System and SDK Enhancements** (76 entries)
+  - "SDK: Support custom timeouts for hooks"
+  - "Hooks: Added "hook_event_name" to hook input"
+  - "Hooks: Reduced PostToolUse 'tool_use' ids were found without 'tool_result' blocks errors"
+- **Plugin Marketplace and Management** (64 entries)
+  - "Changed `--plugin-dir` so local dev copies now override installed marketplace plugins with the same name (unless that..."
+  - "Fixed plugin path resolution for file-based marketplace sources"
+  - "Added `source: 'settings'` plugin marketplace source — declare plugin entries inline in settings.json"
+- **Slash Command Functionality and Autocomplete Improvements** (63 entries)
+  - "Fixed slash command selection not working when multiple commands share the same name"
+  - "Added slash command autocomplete support when `/` appears anywhere in input, not just at the beginning"
+  - "Fixed slash commands not found when typing the exact name of a soft-hidden command"
+
+### Layer 2 (30 topics, 1265 clustered, 556 noise)
+
+- **Input and Interface Improvements** (106 entries)
+  - "Added readline-style ctrl-y for pasting deleted text"
+  - "Added `w` key in `/copy` to write the focused selection directly to a file, bypassing the clipboard (useful over SSH)"
+  - "Added Cmd+V support for image paste in iTerm2 (maps to Ctrl+V)"
+- **MCP Server Integration Improvements** (105 entries)
+  - "Added support for MCP server instructions"
+  - "Fixed MCP servers from `.mcp.json` being stuck in pending state when running in non-interactive mode (`-p` flag or pi..."
+  - "Fixed a bug where MCP tool errors weren't being parsed correctly"
+- **Hook System and SDK Enhancements** (76 entries)
+  - "SDK: Support custom timeouts for hooks"
+  - "Hooks: Added "hook_event_name" to hook input"
+  - "Hooks: Reduced PostToolUse 'tool_use' ids were found without 'tool_result' blocks errors"
+- **VSCode Extension Features and Bug Fixes** (64 entries)
+  - "VSCode: Fixed scroll-to-bottom under-scrolling on initial session load and session switch"
+  - "[VSCode] Fixed duplicate sessions appearing in the session list when starting a new conversation"
+  - "VSCode: Fixed remote sessions not appearing in conversation history"
+- **Plugin Marketplace and Management** (64 entries)
+  - "Changed `--plugin-dir` so local dev copies now override installed marketplace plugins with the same name (unless that..."
+  - "Fixed plugin path resolution for file-based marketplace sources"
+  - "Added `source: 'settings'` plugin marketplace source — declare plugin entries inline in settings.json"
+- **Slash Command Functionality and Autocomplete Improvements** (63 entries)
+  - "Fixed slash command selection not working when multiple commands share the same name"
+  - "Added slash command autocomplete support when `/` appears anywhere in input, not just at the beginning"
+  - "Fixed slash commands not found when typing the exact name of a soft-hidden command"
+- **Model Updates and Provider Configuration** (59 entries)
+  - "Changed default Opus model on Bedrock, Vertex, and Microsoft Foundry to Opus 4.6 (was Opus 4.1)"
+  - "Bedrock: Updated default Sonnet model to Sonnet 4"
+  - "Introducing Sonnet 4 and Opus 4 models"
+- **CLI Commands and Configuration** (56 entries)
+  - "Deprecated `/output-style` command — use `/config` instead. Output style is now fixed at session start for better pro..."
+  - "Added search functionality to `/config` command for quickly filtering settings"
+  - "Fixed /context command not displaying colored output"
+- **Session Management and Remote Control** (53 entries)
+  - "Improved Remote Control session titles — now derived from your first prompt instead of showing "Interactive session""
+  - "Fixed `/resume` losing session names after resuming a forked or continued session"
+  - "Fixed `/resume` session picker showing raw XML markup instead of clean titles for sessions started with slash commands"
+- **Bash Tool Permission Security** (42 entries)
+  - "Added wildcard pattern matching for Bash tool permissions using `*` at any position in rules (e.g., `Bash(npm *)`, `B..."
+  - "Fixed "Always Allow" on compound bash commands (e.g. `cd src && npm test`) saving a single rule for the full string i..."
+  - "Fixed permission rules incorrectly rejecting valid bash commands containing shell glob patterns (e.g., `ls *.txt`, `f..."
+- **Background Agent Task Management** (41 entries)
+  - "Fixed a race condition where background agent task output could hang indefinitely when the task completed between pol..."
+  - "Fixed `/clear` killing background agent/bash tasks — only foreground tasks are now cleared"
+  - "Added unified Ctrl+B backgrounding for both bash commands and agents - pressing Ctrl+B now backgrounds all running fo..."
+- **Configuration and System Integration Fixes** (39 entries)
+  - "Fixed global `.claude` folder detection on Windows"
+  - "Changed terminal title to "Claude Code" on startup for better window identification"
+  - "Fixed a bug where ~/.claude.json would get reset when file contained invalid JSON"
+- **Bash Tool and Sandbox Fixes** (36 entries)
+  - "Fixed bash commands incorrectly reporting failure with "Read-only file system" errors when sandbox mode was enabled"
+  - "Fixed Linux sandbox failing to start with "ripgrep (rg) not found" on native builds"
+  - "Fixed `git log HEAD` failing with "ambiguous argument" inside sandboxed Bash on Linux, and stub files polluting `git ..."
+- **Platform Expansion and Interactive Features** (36 entries)
+  - "Introducing Claude Code for Desktop: https://claude.com/download"
+  - "Hit Enter to queue up additional messages while Claude is working"
+  - "Released Python SDK: pip install claude-code-sdk to get started"
+- **Memory Leak Fixes in Long Sessions** (35 entries)
+  - "Fixed memory leak where long-running teammates retained all messages in AppState even after conversation compaction"
+  - "Improved memory usage during long sessions by clearing internal caches after compaction"
+  - "Reduced memory usage when resuming large sessions (including compacted history)"
+- **OAuth Authentication and Token Management** (35 entries)
+  - "Fixed claude.ai connectors failing to reconnect after OAuth token refresh"
+  - "Fix unhandled OAuth expiration 401 API errors"
+  - "Fixed auth refresh errors"
+- **UI Feedback and Caching Improvements** (32 entries)
+  - "Updated spinner to indicate tokens loaded and tool usage"
+  - "Improved spinner feedback when waiting for the first response token"
+  - "UI: Enhanced spinner animations and status line visual hierarchy"
+- **Voice Mode Bug Fixes and Improvements** (30 entries)
+  - "Fixed voice mode not activating correctly on startup when `voiceEnabled: true` is set"
+  - "Added `voice:pushToTalk` keybinding to make the voice activation key rebindable in `keybindings.json` (default: space..."
+  - "Fixed voice mode not activating correctly on fresh installs without toggling `/voice` twice"
+- **@ File Mention Autocomplete Improvements** (30 entries)
+  - "Improved @ mention file suggestion speed (~3× faster in git repositories)"
+  - "Added hidden files to file search and @-mention suggestions"
+  - "Improved fuzzy matching for `@` file suggestions with faster, more accurate results"
+- **Agent Management and Customization** (29 entries)
+  - "Added support for restricting which sub-agents can be spawned via `Task(agent_type)` syntax in agent "tools" frontmatter"
+  - "Fixed subagents sometimes not inheriting the parent's model by default"
+  - "Agents: Added model customization support - you can now specify which model an agent should use"
+- **Tool Permission System and UI Improvements** (29 entries)
+  - "Permission suggestions are now populated when safety checks trigger an ask response, enabling SDK consumers to displa..."
+  - "New UI for permission prompts"
+  - "Added `PermissionRequest` hook to automatically approve or deny tool permission requests with custom logic"
+- **Startup Performance and Memory Optimizations** (26 entries)
+  - "Improved memory usage and startup time when resuming large sessions"
+  - "Improved startup performance and session storage performance"
+  - "Improved startup performance by deferring SessionStart hook execution, reducing time-to-interactive by ~500ms."
+- **Bug Fixes and UI Performance Improvements** (26 entries)
+  - "Various bug fixes and presentation improvements"
+  - "Several improvements to rendering"
+  - "Bugfixes, UI polish, and tool reliability improvements"
+- **Terminal Display Rendering and Visual Fixes** (26 entries)
+  - "Improved terminal rendering performance"
+  - "Improved terminal rendering performance with optimized screen data layout"
+  - "Rewrote terminal renderer for buttery smooth UI"
+- **Thinking Mode Features and Bug Fixes** (25 entries)
+  - "IDE: Add toggle to enable/disable thinking."
+  - "Tab to toggle thinking (sticky across sessions)"
+  - "Fixed a bug where thinking was not working in -p mode"
+- **Skills Discovery and Loading** (24 entries)
+  - "Added automatic discovery of skills from nested `.claude/skills` directories when working with files in subdirectories"
+  - "Skills defined in `.claude/skills/` within additional directories (`--add-dir`) are now loaded automatically."
+  - "Added `${CLAUDE_SKILL_DIR}` variable for skills to reference their own directory in SKILL.md content"
+- **Plan Mode Features and Bug Fixes** (20 entries)
+  - "Plan mode: Fixed issue where rejected plan from sub-task would get discarded"
+  - "Removed permission prompt when entering plan mode - users can now enter plan mode without approval"
+  - "Changed plan mode to hide the "clear context" option by default (restore with `"showClearContextOnPlanAccept": true`)"
+- **Windows Platform Stability Improvements** (20 entries)
+  - "Added Windows ARM64 (win32-arm64) native binary support"
+  - "Fixed crashes on processors without AVX instruction support"
+  - "Fixed a crash in the WebAssembly interpreter on Linux x64 & Windows x64"
+- **Git Worktree Isolation and Management Features** (19 entries)
+  - "Fixed `--worktree` hanging silently when the worktree name contained a forward slash"
+  - "Improved `--worktree` startup by eliminating a git subprocess on the startup path"
+  - "Fixed worktree isolation issues: Task tool resume not restoring cwd, and background task notifications missing `workt..."
+- **Conversation Compaction and Auto-Compact Features** (19 entries)
+  - "Fixed an issue where auto-compact was running twice"
+  - "Changed resuming after compaction to no longer produce a preamble recap before continuing"
+  - "Added `PostCompact` hook that fires after compaction completes"
+
+### Layer 3 (76 topics, 1108 clustered, 713 noise)
+
+- **VSCode Extension Features and Bug Fixes** (64 entries)
+  - "[VSCode] Fixed duplicate sessions appearing in the session list when starting a new conversation"
+  - "VSCode: Added support for remote sessions, allowing OAuth users to browse and resume sessions from claude.ai"
+  - "[VSCode] Improved scroll wheel responsiveness in the integrated terminal with terminal-aware acceleration"
+- **Slash Command Functionality and Autocomplete Improvements** (63 entries)
+  - "Fixed slash command selection not working when multiple commands share the same name"
+  - "Fixed issue where slash command arguments weren't being sent properly"
+  - "Fuzzy matching for slash commands"
+- **Plugin Marketplace Management and Installation System** (55 entries)
+  - "Changed `--plugin-dir` so local dev copies now override installed marketplace plugins with the same name (unless that..."
+  - "Added search to installed plugins list - type to filter by name or description"
+  - "Fixed plugin path resolution for file-based marketplace sources"
+- **MCP Server Integration and Management Features** (37 entries)
+  - "Added support for MCP server instructions"
+  - "Removed ability to @-mention MCP servers to enable/disable - use `/mcp enable <name>` instead"
+  - "Added support for MCP SSE transport"
+- **Memory Leak Fixes in Long Sessions** (35 entries)
+  - "Improved memory usage during long sessions by clearing internal caches after compaction"
+  - "Fixed memory leak where long-running teammates retained all messages in AppState even after conversation compaction"
+  - "Fixed a memory leak where tree-sitter parse trees were not being freed, causing WASM memory to grow unbounded over lo..."
+- **CLI Commands and Configuration Management** (34 entries)
+  - "Added search functionality to `/config` command for quickly filtering settings"
+  - "Fixed duplicate output in some commands like `/context`"
+  - "Improved `/stats` output"
+- **Voice Mode Bug Fixes and Improvements** (30 entries)
+  - "Fixed voice mode not activating correctly on startup when `voiceEnabled: true` is set"
+  - "Fixed voice push-to-talk: holding the voice key no longer leaks characters into the text input, and transcripts now i..."
+  - "Fixed voice mode failing on Windows native binary with "native audio module could not be loaded""
+- **Tool Permission System and UI Improvements** (29 entries)
+  - "New UI for permission prompts"
+  - "Added `PermissionRequest` hook to automatically approve or deny tool permission requests with custom logic"
+  - "Fixed "Always Allow" saving permission rules that never match again"
+- **Multi-Platform Authentication and External Provider Integration** (28 entries)
+  - "Fix unhandled OAuth expiration 401 API errors"
+  - "Fixed AWS auth refresh hanging indefinitely by adding a 3-minute timeout"
+  - "Added helpful hint to run `security unlock-keychain` when encountering API key errors on macOS with locked keychain"
+- **Bash Tool Permission System Improvements** (27 entries)
+  - "Added wildcard pattern matching for Bash tool permissions using `*` at any position in rules (e.g., `Bash(npm *)`, `B..."
+  - "Reduced permission prompts for complex bash commands"
+  - "Fixes for bash permission checks with environment variables in the command"
+- **Bug Fixes and UI Performance Improvements** (26 entries)
+  - "Various bug fixes and presentation improvements"
+  - "[Windows] Fixed issue with improper rendering"
+  - "Bugfixes, UI polish, and tool reliability improvements"
+- **Terminal Display Rendering and Visual Fixes** (26 entries)
+  - "Improved terminal rendering performance"
+  - "Fixed terminal flicker caused by animated elements at the scrollback boundary"
+  - "Improve message rendering for users with light themes on dark terminals"
+- **Terminal Input and Keyboard Support Improvements** (26 entries)
+  - "Changed Shift+Enter to work out of the box in iTerm2, WezTerm, Ghostty, and Kitty without modifying terminal configs"
+  - "[VSCode] Added multiline input support to the "Other" text input in question dialogs (use Shift+Enter for new lines)"
+  - "Added word movement keybindings for Vim"
+- **Thinking Mode Features and Bug Fixes** (25 entries)
+  - "IDE: Add toggle to enable/disable thinking."
+  - "Fixed a bug where thinking was not working in -p mode"
+  - "Fix thinking mode toggle in /config not persisting correctly"
+- **Bash Tool Sandbox Mode Fixes** (22 entries)
+  - "Fixed bash commands incorrectly reporting failure with "Read-only file system" errors when sandbox mode was enabled"
+  - "Set `CLAUDE_BASH_NO_LOGIN` environment variable to 1 or true to to skip login shell for BashTool"
+  - "Improved `/sandbox` command UI to show dependency status with installation instructions when dependencies are missing"
+- **Plan Mode Features and Bug Fixes** (20 entries)
+  - "Plan mode: Fixed issue where rejected plan from sub-task would get discarded"
+  - "Removed permission prompt when entering plan mode - users can now enter plan mode without approval"
+  - "Windows: mode switching now uses alt + m, and plan mode renders properly"
+- **Git Worktree Isolation and Management Features** (19 entries)
+  - "Fixed `--worktree` hanging silently when the worktree name contained a forward slash"
+  - "Added support for `isolation: worktree` in agent definitions, allowing agents to declaratively run in isolated git wo..."
+  - "Added `WorktreeCreate` and `WorktreeRemove` hook events, enabling custom VCS setup and teardown when agent worktree i..."
+- **Conversation Compaction and Auto-Compact Features** (19 entries)
+  - "Fixed an issue where auto-compact was running twice"
+  - "Changed resuming after compaction to no longer produce a preamble recap before continuing"
+  - "Fixed the "Context left until auto-compact" warning not disappearing after running `/compact`"
+- **MCP Tool Runtime and Configuration Bug Fixes** (17 entries)
+  - "Fixed a bug where MCP tool errors weren't being parsed correctly"
+  - "MCP: Improve tool name consistency"
+  - "Fixed input deadlock when opening `/mcp` or similar dialogs while the agent is running"
+- **Configuration Management and Settings Validation Fixes** (17 entries)
+  - "Fixed a bug where ~/.claude.json would get reset when file contained invalid JSON"
+  - "Deprecated Windows managed settings path `C:\ProgramData\ClaudeCode\managed-settings.json` - administrators should mi..."
+  - "Fixed `claude doctor` misclassifying mise and asdf-managed installations as native installs (anthropics/claude-code#2..."
+- **Agent Management and Subagent Configuration Features** (16 entries)
+  - "Added support for disabling specific agents using `Task(AgentName)` syntax in settings.json permissions or the `--dis..."
+  - "You can now create custom subagents for specialized tasks! Run /agents to get started"
+  - "Fixed handling of subagent permissions"
+- **Session Naming and Title Management** (16 entries)
+  - "Improved Remote Control session titles — now derived from your first prompt instead of showing "Interactive session""
+  - "Fixed custom session titles set via `/rename` being lost after resuming a conversation (anthropics/claude-code#23610)"
+  - "Added session name display on the prompt bar when using `/rename`"
+- **Spinner UI and Visual Feedback Improvements** (15 entries)
+  - "Updated spinner to indicate tokens loaded and tool usage"
+  - "Added `spinnerTipsOverride` setting to customize spinner tips — configure `tips` with an array of custom tip strings,..."
+  - "Added customizable spinner verbs setting (`spinnerVerbs`)"
+- **Skills Discovery and Loading System Fixes** (15 entries)
+  - "Added automatic discovery of skills from nested `.claude/skills` directories when working with files in subdirectories"
+  - "Fixed a bug where project-level skills were not loading when --setting-sources 'project' was specified"
+  - "Fixed files and skills not being properly discovered when resuming sessions with `-c` or `--resume`"
+- **Clipboard Image Pasting and Text Handling** (15 entries)
+  - "Improved clipboard image pasting performance on macOS"
+  - "Copy+paste images directly into your prompt"
+  - "Fixed image pasting not working on WSL2 systems where Windows copies images as BMP format (anthropics/claude-code#25935)"
+- **Background Agent Task Execution Fixes** (14 entries)
+  - "Fixed a race condition where background agent task output could hang indefinitely when the task completed between pol..."
+  - "Added inline display of agent's final response in task notifications, making it easier to see results without reading..."
+  - "Fixed agent task progress stuck on "Initializing…""
+- **Startup Performance and Session Storage Optimizations** (14 entries)
+  - "Improved startup performance and session storage performance"
+  - "Improved startup performance for headless mode (`-p` flag) by deferring Yoga WASM and UI component imports"
+  - "Fixed a bug where resumed sessions could be invisible when the working directory involved symlinks, because the sessi..."
+- **MCP OAuth Authentication and Discovery Improvements** (14 entries)
+  - "Improved MCP OAuth authentication with step-up auth support and discovery caching, reducing redundant network request..."
+  - "Fixed MCP OAuth refresh never prompting for re-auth after the refresh token expires, for OAuth servers that return er..."
+  - "Added support for MCP OAuth Authorization Server discovery"
+- **International Text Input and Rendering Fixes** (13 entries)
+  - "Improved CJK character support in cursor navigation and rendering"
+  - "Added support for full-width (zenkaku) number input from Japanese IME in option selection prompts"
+  - "Fixed Thai/Lao spacing vowels (สระ า, ำ) not rendering correctly in the input field"
+- **Interactive Session Control and User Experience** (13 entries)
+  - "Hit Enter to queue up additional messages while Claude is working"
+  - "Fixed `/model` not displaying results when run while Claude is working"
+  - "/resume slash command to switch conversations within Claude Code"
+- **CLAUDE.md File Import and Processing** (12 entries)
+  - "CLAUDE.md files can now import other files. Add @path/to/file.md to ./CLAUDE.md to load additional files on launch"
+  - "Fixed conditional `.claude/rules/*.md` files (with `paths:` frontmatter) and nested CLAUDE.md files not loading in pr..."
+  - "Changed CLAUDE.md HTML comments (`<!-- ... -->`) to be hidden from Claude when auto-injected. Comments remain visible..."
+- **Web Integration and Desktop Platform Expansion** (12 entries)
+  - "Introducing Claude Code for Desktop: https://claude.com/download"
+  - "Claude can now search the web"
+  - "SDK: The Claude Code SDK is now the Claude Agent SDK"
+- **SDK Feature Additions and Configuration Changes** (11 entries)
+  - "[SDK] Changed minimum zod peer dependency to ^4.0.0"
+  - "SDK: Added `--replay-user-messages` to replay user messages back to stdout"
+  - "SDK: Added UUID support for all SDK messages"
+- **Terminal Integration and Environment Compatibility Fixes** (11 entries)
+  - "Changed terminal title to "Claude Code" on startup for better window identification"
+  - "IDE: Add "Open in Terminal" link in login screen"
+  - "Fixed Claude in Chrome support for WSL environments"
+- **Opus Model Updates and Pro Subscription Features** (10 entries)
+  - "Pro users now have access to Opus 4.5 as part of their subscription!"
+  - "Opus 4.6 (fast mode) now includes the full 1M context window"
+  - "Clarified knowledge cutoff for Opus 4 and Sonnet 4 models"
+- **Prompt Caching Performance and Bug Fixes** (10 entries)
+  - "Fixed prompt suggestion cache regression that reduced cache hit rates"
+  - "Improved skill suggestions to prioritize recently and frequently used skills"
+  - "Reduced system prompt size by 1.4k tokens"
+- **MCP Server Connectivity and Startup Performance** (10 entries)
+  - "Fixed claude.ai MCP connector startup notifications appearing for every org-configured connector instead of only prev..."
+  - "Improved MCP `-p` startup by pipelining claude.ai config fetch with local connections and using a concurrency pool in..."
+  - "Added `ENABLE_CLAUDEAI_MCP_SERVERS=false` env var to opt out from making claude.ai MCP servers available"
+- **LSP Language Server Protocol Integration Fixes** (9 entries)
+  - "Fixed race condition where LSP tool could return "no server available" during startup"
+  - "Fixed LSP `findReferences` and other location-based operations returning results from gitignored files (e.g., `node_m..."
+  - "Added LSP (Language Server Protocol) tool for code intelligence features like go-to-definition, find references, and ..."
+- **@ File Autocomplete and Suggestion Performance** (9 entries)
+  - "Improved fuzzy matching for `@` file suggestions with faster, more accurate results"
+  - "Fixed `@` symbol incorrectly triggering file autocomplete suggestions in bash mode"
+  - "Improved @ autocomplete with icons for different suggestion types and single-line formatting"
+- **Background Task Management and Notifications** (9 entries)
+  - "Changed task notification display to cap at 3 lines with overflow summary when multiple background tasks complete sim..."
+  - "Improved the `/tasks` dialog to go directly to task details when there's only one background task running"
+  - "Added filepath to full output in background bash task details dialog"
+- **Status Line Information and Effort Level Display** (9 entries)
+  - "Added `context_window.used_percentage` and `context_window.remaining_percentage` fields to status line input for easi..."
+  - "Simplified effort levels to low/medium/high (removed max) with new symbols (○ ◐ ●) and a brief notification instead o..."
+  - "Status line input now includes `exceeds_200k_tokens`"
+- **Resume Session Picker Display and Functionality** (9 entries)
+  - "Fixed `/resume` session picker showing raw XML markup instead of clean titles for sessions started with slash commands"
+  - "Fixed `/resume` losing session names after resuming a forked or continued session"
+  - "Fixed session titles on the resume screen not respecting the user's language setting"
+- **System Crashes and Stability Fixes** (9 entries)
+  - "Fixed crashes on processors without AVX instruction support"
+  - "Fixed a crash caused by a stack overflow error"
+  - "Fixed memory crash when reading or writing large files (especially base64-encoded images)"
+- **Rate Limit and Usage Warning Improvements** (8 entries)
+  - "Improved clarity of usage limit warning message"
+  - "Fixed rate limit options menu incorrectly auto-opening when resuming a previous session"
+  - "Fixed enterprise users being unable to retry on rate limit (429) errors"
+- **Third-party Provider Model Configuration and Picker** (8 entries)
+  - "3P (Bedrock and Vertex) are not automatically upgraded yet. Manual upgrading can be done through setting `ANTHROPIC_D..."
+  - "Fixed model picker showing incorrect selection for Bedrock/Vertex users using `--model haiku`"
+  - "Skip Sonnet 4.5 default model setting change for Bedrock and Vertex"
+- **Tool Execution and Session Resume Fixes** (8 entries)
+  - "Fixed session resume failures caused by orphaned tool results during concurrent tool execution"
+  - "Fixed NotebookEdit tool inserting cells at incorrect positions when cell IDs matched the pattern `cell-N`"
+  - "Fixed backgrounded hook commands not returning early, potentially causing the session to wait on a process that was i..."
+- **OpenTelemetry Integration and Connectivity Enhancements** (8 entries)
+  - "Add mTLS support for HTTP-based OpenTelemetry exporters"
+  - "New attributes (terminal.type, language) in OpenTelemetry logging"
+  - "Increased default otel interval from 1s -> 5s"
+- **Keyboard Input and Prompt Interruption Fixes** (8 entries)
+  - "Fixed Esc key with queued prompts to only move them to input without canceling the running task"
+  - "Fixed Escape key becoming unresponsive after cancelling a query"
+  - "Interrupting a prompt before any response now automatically restores your input so you can edit and resubmit"
+- **Copy Command and Clipboard Integration Features** (8 entries)
+  - "Added `/copy` command to show an interactive picker when code blocks are present, allowing selection of individual co..."
+  - "Fixed clipboard copying in tmux over SSH — now attempts both direct terminal write and tmux clipboard integration"
+  - "Fixed copy-on-select not firing when you release the mouse outside the terminal window"
+- **Fixed API 400 Error Handling Issues** (7 entries)
+  - "Fixed 400 errors that could occur after running `/login` when the conversation contained thinking blocks"
+  - "Fixed an API error that could occur when aborting mid-stream, where whitespace text combined with a thinking block wo..."
+  - "Fixed API 400 errors ("thinking blocks cannot be modified") that occurred in sessions with concurrent agents, caused ..."
+- **ToolSearch Performance and Display Interface Fixes** (7 entries)
+  - "Changed `ToolSearch` results to appear as a brief notification instead of inline in the conversation"
+  - "Search patterns in collapsed tool results are now displayed in quotes for clarity"
+  - "Improved startup performance by batching MCP tool token counting into a single API call"
+- **Non-Interactive Mode and Input/Output Handling** (7 entries)
+  - "Bugfixes for non-interactive mode (-p)"
+  - "Print mode (-p) now supports streaming output via --output-format=stream-json"
+  - "Breaking change: --print JSON output now returns nested message objects, for forwards-compatibility as we introduce n..."
+- **System Prompt Configuration and Documentation Fixes** (7 entries)
+  - "`--append-system-prompt` can now be used in interactive mode, not just --print/-p."
+  - "Add --system-prompt-file option to override system prompt in print mode"
+  - "Document --system-prompt"
+- **Hook System Events and Stop Behavior** (7 entries)
+  - "Stop Hooks: Fixed transcript path after /clear and fixed triggering when loop ends with tool call"
+  - "Hooks: Added matcher values for Notification hook events"
+  - "Added `model` parameter to prompt-based stop hooks, allowing users to specify a custom model for hook evaluation"
+- **Skills and Frontmatter YAML Processing** (7 entries)
+  - "Added skills frontmatter field to declare skills to auto-load for subagents"
+  - "Added hooks support for skill and slash command frontmatter"
+  - "Added support for YAML-style lists in frontmatter `allowed-tools` field for cleaner skill declarations"
+- **Transcript Mode Interface and Keybinding Improvements** (7 entries)
+  - "Added timestamps in Ctrl-r mode and fixed Ctrl-c handling"
+  - "Transcript mode (Ctrl+R): Changed Esc to exit transcript mode rather than interrupt"
+  - "Transcript mode (Ctrl+R): Added the model used to generate each assistant message"
+- **Ripgrep File Search Tool Improvements** (7 entries)
+  - "Redesigned Search (Grep) tool with new tool input parameters and features"
+  - "Windows: Fixed native file search, ripgrep, and subagent functionality"
+  - "Linux: Added support for Alpine and musl-based distributions (requires separate ripgrep installation)"
+- **Bash Tool Security and Parsing Fixes** (7 entries)
+  - "Bash: Improved command validation and reduced false security warnings"
+  - "Bash tool: Fix heredoc and multiline string escaping, improve stderr redirection handling"
+  - "Fixed Bash tool crashes caused by malformed shell syntax parsing"
+- **Environment Variables and Configuration Controls** (7 entries)
+  - "`CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` now disables release notes fetching"
+  - "Added `CLAUDE_CODE_EXIT_AFTER_STOP_DELAY` environment variable to automatically exit SDK mode after a specified idle ..."
+  - "Added `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS` environment variable to disable all background task functionality includ..."
+- **File @-mention functionality and reliability improvements** (6 entries)
+  - "Improved @mention reliability for images and folders"
+  - "Added hidden files to file search and @-mention suggestions"
+  - "@-mention: Support files with spaces in path"
+- **Agent Model Inheritance and Customization** (6 entries)
+  - "Agents: Added model customization support - you can now specify which model an agent should use"
+  - "Subagents: claude can dynamically choose the model used by its subagents"
+  - "Fixed subagents sometimes not inheriting the parent's model by default"
+- **Model Updates and Version Management** (6 entries)
+  - "Introducing Sonnet 4 and Opus 4 models"
+  - "Introduced `ANTHROPIC_DEFAULT_SONNET_MODEL` and `ANTHROPIC_DEFAULT_OPUS_MODEL` for controlling model aliases opusplan..."
+  - "Bedrock: Updated default Sonnet model to Sonnet 4"
+- **Background Agent Control and Keybinding Management** (6 entries)
+  - "Added unified Ctrl+B backgrounding for both bash commands and agents - pressing Ctrl+B now backgrounds all running fo..."
+  - "Use `ctrl+f` to kill all background agents instead of double-pressing ESC. Background agents now continue running whe..."
+  - "Added Ctrl+F keybinding to kill background agents (two-press confirmation)"
+- **Collapsed Read/Search Groups Display Improvements** (6 entries)
+  - "Fixed Bash read commands (like `ls` and `cat`) not being counted in collapsed read/search groups, causing groups to i..."
+  - "Changed collapsed read/search groups to show present tense ("Reading", "Searching for") while in progress, and past t..."
+  - "Improved read/search progress indicators to show "Reading…" while in progress and "Read" when complete"
+- **Remote Control Feature Improvements and Bug Fixes** (6 entries)
+  - "Expand Remote Control to more users"
+  - "Fixed inconsistent color for "Remote Control active" status indicator"
+  - "Improved the Remote Control spawn mode selection prompt with better context"
+- **Windows Native Binary Installation and Support** (6 entries)
+  - "Added support for native Windows (requires Git for Windows)"
+  - "Native binary installs now launch quicker."
+  - "Fixed auto-loading .env when using native installer"
+- **Memory Usage and Performance Optimization Improvements** (6 entries)
+  - "Improved memory usage for `--resume` (68% reduction for users with many sessions) by replacing the session index with..."
+  - "Improved session upload and memory sync to avoid reading large files into memory before size/binary checks"
+  - "Faster `--resume` on fork-heavy and very large sessions — up to 45% faster loading and ~100-150MB less peak memory"
+- **Plugin Management System Improvements and Fixes** (6 entries)
+  - "Improved `/plugin uninstall` to disable project-scoped plugins in `.claude/settings.local.json` instead of modifying ..."
+  - "Fixed several plugin issues: installation failing on Windows with `EEXIST` error in OneDrive folders, marketplace blo..."
+  - "Improved headless mode plugin installation to compose correctly with `CLAUDE_CODE_PLUGIN_SEED_DIR`"
+- **Tab Navigation and Arrow Key Controls** (6 entries)
+  - "Enhanced jq regex support for complex filters with pipes and select"
+  - "Added left/right arrow key navigation for cycling through tabs in dialogs"
+  - "Fixed `←`/`→` accidentally switching tabs in settings, permissions, and sandbox dialogs while navigating lists"
+- **Pasted Content Loss and Handling Fixes** (6 entries)
+  - "Fixed issue where pasting could trigger memory or bash mode unexpectedly"
+  - "Fixed issue where pasted content was lost when dialogs appeared"
+  - "Fixed pasted content being lost when replaying prompts from history using up arrow or Ctrl+R search"
+- **IDE Integration and Extension Detection Fixes** (5 entries)
+  - "Fixes for WSL IDE detection"
+  - "Fixed trust dialog acceptance when running from the home directory not enabling trust-requiring features like hooks d..."
+  - "Fixed IDE host IP detection cache incorrectly sharing results across ports"
+- **Markdown Links and Attribution Display Fixes** (5 entries)
+  - "Added `attribution` setting to customize commit and PR bylines (deprecates `includeCoAuthoredBy`)"
+  - "Fixed markdown link display text being dropped for raw URL"
+  - "Fixed a bug where bold and colored text in markdown output could shift to the wrong characters on Windows due to `\r\..."
+- **Plugin and Startup Performance Improvements** (5 entries)
+  - "Settings file changes take effect immediately - no restart required"
+  - "Added `companyAnnouncements` setting for displaying announcements on startup"
+  - "Fixed slow startup when many skills/plugins are installed"
+- **Hook System Events and Plugin Integration** (5 entries)
+  - "Hooks: Added "hook_event_name" to hook input"
+  - "Added support for prompt and agent hook types from plugins (previously only command hooks were supported)"
+  - "Added new `Setup` hook event that can be triggered via `--init`, `--init-only`, or `--maintenance` CLI flags for repo..."
+- **Temporary Files and Directory Permission Fixes** (5 entries)
+  - "Fixed per-user temp directory isolation to prevent permission conflicts on shared systems"
+  - "Fixed sandbox "operation not permitted" errors when writing temporary files on macOS by using the correct per-user te..."
+  - "Windows: Fixed CWD tracking temp files never being cleaned up, causing them to accumulate indefinitely (anthropics/cl..."
+- **OAuth Token Refresh and Session Management** (5 entries)
+  - "Introduced CLAUDE_CODE_API_KEY_HELPER_TTL_MS env var"
+  - "Fixed "Help improve Claude" setting fetch to refresh OAuth and retry when it fails due to a stale OAuth token"
+  - "Changed OAuth and API Console URLs from console.anthropic.com to platform.claude.com"
+

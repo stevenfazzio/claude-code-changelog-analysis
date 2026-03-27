@@ -8,6 +8,7 @@ Outputs a readable markdown file for human review.
 """
 
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -48,10 +49,42 @@ def _boruvka_patched(tree, n_threads=1, **kwargs):
 
 _tc.parallel_boruvka = _boruvka_patched
 
+import evoc
 from toponymy import Toponymy
-from toponymy.clustering import EVoCClusterer
+from toponymy.clustering import Clusterer, ClusterTree, build_cluster_tree, centroids_from_labels
+from toponymy.cluster_layer import ClusterLayerText
 from toponymy.embedding_wrappers import CohereEmbedder
 from toponymy.llm_wrappers import AsyncAnthropicNamer
+
+
+class EVoCClusterer(Clusterer):
+    """Wrapper around evoc.EVoC compatible with the installed version."""
+
+    def __init__(self, base_min_cluster_size=5, noise_level=0.3, max_layers=10):
+        super().__init__()
+        self.evoc_model = evoc.EVoC(
+            base_min_cluster_size=base_min_cluster_size,
+            noise_level=noise_level,
+            max_layers=max_layers,
+        )
+
+    def fit(self, clusterable_vectors, embedding_vectors, layer_class=ClusterLayerText, **kwargs):
+        self.evoc_model.fit(embedding_vectors)
+        cluster_labels = self.evoc_model.cluster_layers_
+        self.cluster_tree_ = build_cluster_tree(cluster_labels)
+        self.cluster_layers_ = [
+            layer_class(
+                labels,
+                centroids_from_labels(labels, embedding_vectors),
+                layer_id=i,
+            )
+            for i, labels in enumerate(cluster_labels)
+        ]
+        return self
+
+    def fit_predict(self, clusterable_vectors, embedding_vectors, layer_class=ClusterLayerText, **kwargs):
+        self.fit(clusterable_vectors, embedding_vectors, layer_class=layer_class, **kwargs)
+        return self.cluster_layers_, self.cluster_tree_
 
 nest_asyncio.apply()
 
@@ -89,9 +122,9 @@ def run_toponymy(
     print(f"Running Toponymy: {label}")
     print(f"{'='*60}")
 
-    llm = AsyncAnthropicNamer(api_key=anthropic_key, model="claude-opus-4-6-20250414")
+    llm = AsyncAnthropicNamer(api_key=anthropic_key, model="claude-sonnet-4-20250514")
     embedder = CohereEmbedder(api_key=co_key, model="embed-v4.0")
-    clusterer = EVoCClusterer(min_clusters=4)
+    clusterer = EVoCClusterer()
 
     np.random.seed(42)
 
@@ -105,11 +138,21 @@ def run_toponymy(
         lowest_detail_level=0.3,
         highest_detail_level=1.0,
     )
-    topic_model.fit(
-        objects=documents,
-        embedding_vectors=embeddings,
-        clusterable_vectors=embeddings,  # ignored by EVoCClusterer, but required by API
-    )
+    for attempt in range(5):
+        try:
+            topic_model.fit(
+                objects=documents,
+                embedding_vectors=embeddings,
+                clusterable_vectors=embeddings,  # ignored by EVoCClusterer, but required by API
+            )
+            break
+        except Exception as e:
+            if "overloaded" in str(e).lower() and attempt < 4:
+                wait = 2 ** attempt * 5
+                print(f"API overloaded, retrying in {wait}s (attempt {attempt + 1}/5)...")
+                time.sleep(wait)
+            else:
+                raise
 
     n_layers = len(topic_model.cluster_layers_)
     print(f"Produced {n_layers} cluster layer(s)")
@@ -123,7 +166,9 @@ def format_layers(layers: list, section_title: str) -> str:
     for i, layer in enumerate(reversed(layers)):
         n_topics = len(layer.topic_names)
         n_entries = len(layer.cluster_labels)
-        lines.append(f"### Layer {i} ({n_topics} topics, {n_entries} entries)\n")
+        n_noise = int(np.sum(layer.cluster_labels == -1))
+        n_clustered = n_entries - n_noise
+        lines.append(f"### Layer {i} ({n_topics} topics, {n_clustered} clustered, {n_noise} noise)\n")
 
         # Count entries per topic
         topic_counts = {}
