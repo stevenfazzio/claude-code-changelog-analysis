@@ -55,7 +55,7 @@ git config merge.ours.driver true
 
 - Python 3.12+, managed with `uv`
 - Data files (`data/*.parquet`) are stored with Git LFS
-- API keys loaded via `python-dotenv`: first from `~/.config/data-apis/.env`, then project-local `.env`
+- API keys loaded via `python-dotenv` from project-local `.env`
 - `gh` CLI must be authenticated for the fetch stage
 
 ## Categories and Enums

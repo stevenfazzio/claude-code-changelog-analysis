@@ -88,8 +88,7 @@ class EVoCClusterer(Clusterer):
 
 nest_asyncio.apply()
 
-load_dotenv(Path.home() / ".config" / "data-apis" / ".env")
-load_dotenv(override=True)
+load_dotenv()
 
 ROOT = Path(__file__).resolve().parent.parent
 INPUT_PATH = ROOT / "data" / "embeddings.parquet"

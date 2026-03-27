@@ -3,6 +3,7 @@ __pycache__/
 *.egg-info/
 .python-version
 .DS_Store
+.env
 
 # Generated site outputs (built by CI via scripts/run_pipeline.py)
 docs/index.html

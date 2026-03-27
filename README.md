@@ -36,7 +36,7 @@ Requires Python 3.12+, [uv](https://github.com/astral-sh/uv), and [Git LFS](http
 uv sync
 ```
 
-Create a `.env` file (or place one at `~/.config/data-apis/.env`):
+Create a `.env` file (see `.env.example`):
 
 ```
 ANTHROPIC_API_KEY=...   # for enrich stage
