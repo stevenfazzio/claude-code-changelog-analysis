@@ -1,5 +1,7 @@
 # Claude Code Changelog Analysis
 
+> **Note:** This is an independent community project, not affiliated with or endorsed by Anthropic.
+
 A site for staying up-to-date on the latest changes to [Claude Code](https://github.com/anthropics/claude-code). Fetches `CHANGELOG.md` from the upstream repo, parses entries, enriches them with LLM-derived classifications, generates embeddings, and produces a browsable site.
 
 **[View the dashboard](https://stevenfazzio.github.io/claude-code-changelog-analysis/)**
