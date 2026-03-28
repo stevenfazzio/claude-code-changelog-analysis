@@ -48,10 +48,10 @@ COMPLEXITY_COLORS = {
 }
 
 AUDIENCE_COLORS = {
-    "interactive_user": "#7c3aed",     # violet
-    "extension_developer": "#e85d04",  # orange
-    "admin": "#0e7490",                # teal
-    "sdk_developer": "#be185d",        # pink
+    "interactive_user": "#18756e",     # teal
+    "sdk_developer": "#592c85",        # violet
+    "admin": "#72721c",                # olive
+    "extension_developer": "#852c59",  # rose
 }
 
 # Marker sizes by complexity
