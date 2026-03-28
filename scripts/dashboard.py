@@ -210,10 +210,10 @@ TABULATOR_CSS = """
 /* Table pills & indicators */
 .pill {
     display: inline-block; padding: 2px 8px; border-radius: 3px;
-    font-size: 0.72rem; color: #fff; font-weight: 600;
+    font-size: 0.72rem; font-weight: 600;
     line-height: 1.4; white-space: nowrap;
 }
-.complexity-indicator { font-weight: 600; white-space: nowrap; }
+.field-indicator, .complexity-indicator { font-weight: 600; white-space: nowrap; }
 /* Tabulator responsive collapse */
 .tabulator-responsive-collapse { padding: 8px 12px; }
 .tabulator-responsive-collapse table { font-size: 0.75rem; width: 100%; }
@@ -318,6 +318,7 @@ var TYPE_ICONS = {{feature:"\u2726", bugfix:"\u2715", improvement:"\u2191", brea
 var COMPLEXITY_COLORS = {complexity_colors_js};
 var COMPLEXITY_DOTS = {{minor:"\u25cf\u25cb\u25cb", moderate:"\u25cf\u25cf\u25cb", major:"\u25cf\u25cf\u25cf"}};
 var AUDIENCE_COLORS = {audience_colors_js};
+var AUDIENCE_ICONS = {{interactive_user:"\u25c9", extension_developer:"\u2b21", admin:"\u26ed", sdk_developer:"\u2692"}};
 </script>
 
 <script>
@@ -436,8 +437,8 @@ fetch("data/entries.json")
           headerFilterFunc: "in",
           formatter: function(cell) {{
             var v = cell.getValue();
-            var bg = CAT_COLORS[v] || "#888";
-            return '<span class="pill" style="background:' + bg + ';">' + v + '</span>';
+            var c = CAT_COLORS[v] || "#888";
+            return '<span class="pill" style="background:' + c + '18;color:' + c + ';border:1px solid ' + c + '30;">' + v.replace(/_/g, ' ') + '</span>';
           }}
         }},
         {{title: "Type", field: "change_type", width: 140, responsive: 2,
@@ -446,9 +447,9 @@ fetch("data/entries.json")
           headerFilterFunc: "in",
           formatter: function(cell) {{
             var v = cell.getValue();
-            var bg = TYPE_COLORS[v] || "#888";
+            var color = TYPE_COLORS[v] || "#888";
             var icon = TYPE_ICONS[v] || "";
-            return '<span class="pill" style="background:' + bg + ';">' + icon + ' ' + v + '</span>';
+            return '<span class="field-indicator" style="color:' + color + ';">' + icon + ' ' + v + '</span>';
           }}
         }},
         {{title: "Audience", field: "audience", width: 160, responsive: 3,
@@ -458,8 +459,9 @@ fetch("data/entries.json")
           headerFilterFunc: "in",
           formatter: function(cell) {{
             var v = cell.getValue();
-            var bg = AUDIENCE_COLORS[v] || "#888";
-            return '<span class="pill" style="background:' + bg + ';">' + v.replace(/_/g, ' ') + '</span>';
+            var color = AUDIENCE_COLORS[v] || "#888";
+            var icon = AUDIENCE_ICONS[v] || "";
+            return '<span class="field-indicator" style="color:' + color + ';">' + icon + ' ' + v.replace(/_/g, ' ') + '</span>';
           }}
         }},
         {{title: "Complexity", field: "complexity", width: 130, responsive: 3,
