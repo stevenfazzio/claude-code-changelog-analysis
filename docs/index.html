@@ -132,10 +132,10 @@ tailwind.config = {
 /* Table pills & indicators */
 .pill {
     display: inline-block; padding: 2px 8px; border-radius: 3px;
-    font-size: 0.72rem; color: #fff; font-weight: 600;
+    font-size: 0.72rem; font-weight: 600;
     line-height: 1.4; white-space: nowrap;
 }
-.complexity-indicator { font-weight: 600; white-space: nowrap; }
+.field-indicator, .complexity-indicator { font-weight: 600; white-space: nowrap; }
 /* Tabulator responsive collapse */
 .tabulator-responsive-collapse { padding: 8px 12px; }
 .tabulator-responsive-collapse table { font-size: 0.75rem; width: 100%; }
@@ -174,7 +174,8 @@ var TYPE_COLORS = {"feature": "#2d7d46", "bugfix": "#c4382a", "improvement": "#2
 var TYPE_ICONS = {feature:"✦", bugfix:"✕", improvement:"↑", breaking:"⚠", internal:"⚙"};
 var COMPLEXITY_COLORS = {"minor": "#888888", "moderate": "#d4910e", "major": "#c4382a"};
 var COMPLEXITY_DOTS = {minor:"●○○", moderate:"●●○", major:"●●●"};
-var AUDIENCE_COLORS = {"interactive_user": "#7c3aed", "extension_developer": "#e85d04", "admin": "#0e7490", "sdk_developer": "#be185d"};
+var AUDIENCE_COLORS = {"interactive_user": "#18756e", "sdk_developer": "#592c85", "admin": "#72721c", "extension_developer": "#852c59"};
+var AUDIENCE_ICONS = {interactive_user:"◉", extension_developer:"⬡", admin:"⛭", sdk_developer:"⚒"};
 </script>
 
 <script>
@@ -293,8 +294,8 @@ fetch("data/entries.json")
           headerFilterFunc: "in",
           formatter: function(cell) {
             var v = cell.getValue();
-            var bg = CAT_COLORS[v] || "#888";
-            return '<span class="pill" style="background:' + bg + ';">' + v + '</span>';
+            var c = CAT_COLORS[v] || "#888";
+            return '<span class="pill" style="background:' + c + '18;color:' + c + ';border:1px solid ' + c + '30;">' + v.replace(/_/g, ' ') + '</span>';
           }
         },
         {title: "Type", field: "change_type", width: 140, responsive: 2,
@@ -303,9 +304,9 @@ fetch("data/entries.json")
           headerFilterFunc: "in",
           formatter: function(cell) {
             var v = cell.getValue();
-            var bg = TYPE_COLORS[v] || "#888";
+            var color = TYPE_COLORS[v] || "#888";
             var icon = TYPE_ICONS[v] || "";
-            return '<span class="pill" style="background:' + bg + ';">' + icon + ' ' + v + '</span>';
+            return '<span class="field-indicator" style="color:' + color + ';">' + icon + ' ' + v + '</span>';
           }
         },
         {title: "Audience", field: "audience", width: 160, responsive: 3,
@@ -315,8 +316,9 @@ fetch("data/entries.json")
           headerFilterFunc: "in",
           formatter: function(cell) {
             var v = cell.getValue();
-            var bg = AUDIENCE_COLORS[v] || "#888";
-            return '<span class="pill" style="background:' + bg + ';">' + v.replace(/_/g, ' ') + '</span>';
+            var color = AUDIENCE_COLORS[v] || "#888";
+            var icon = AUDIENCE_ICONS[v] || "";
+            return '<span class="field-indicator" style="color:' + color + ';">' + icon + ' ' + v.replace(/_/g, ' ') + '</span>';
           }
         },
         {title: "Complexity", field: "complexity", width: 130, responsive: 3,
