@@ -962,7 +962,8 @@ def render_about_page() -> str:
 <hr>
 
 <p>
-  Built by Steven Fazzio. Source code is on
+  This is an independent community project, not affiliated with or endorsed by
+  Anthropic. Built by Steven Fazzio. Source code is on
   <a href="https://github.com/stevenfazzio/claude-code-changelog-analysis">GitHub</a>
   &mdash; feel free to
   <a href="https://github.com/stevenfazzio/claude-code-changelog-analysis/issues">open an issue</a>
