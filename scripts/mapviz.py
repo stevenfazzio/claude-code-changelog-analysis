@@ -71,7 +71,7 @@ def main():
 
     # ── Hover text ───────────────────────────────────────────────────────────
     # Truncate entry text for tooltip display
-    MAX_HOVER_CHARS = 200
+    MAX_HOVER_CHARS = 400
     hover_text = []
     for t in df["text"]:
         t = str(t).strip()
@@ -81,15 +81,20 @@ def main():
 
     hover_text_html_template = (
         '<div class="hc">'
-        '  <div class="hc-text">{hover_text}</div>'
-        '  <div class="hc-meta">'
-        '    <span class="hc-chip">{version}</span>'
-        '    <span class="hc-chip">{date}</span>'
+        '  <div class="hc-header">'
+        '    <span class="hc-date">{date}</span>'
+        '    <span class="hc-version">{version}</span>'
         '  </div>'
-        '  <div class="hc-classify">'
-        '    <span class="hc-cat" style="background:{category_color}30">{category}</span>'
-        '    <span class="hc-type" style="background:{type_color}30">{change_type}</span>'
-        '    <span class="hc-complexity">{complexity}</span>'
+        '  <div class="hc-body">{hover_text}</div>'
+        '  <div class="hc-footer">'
+        '    <span class="hc-label">category</span>'
+        '    <span class="hc-cat" style="background:{category_color}18;color:{category_color};border-color:{category_color}30">{category}</span>'
+        '    <span class="hc-label">change type</span>'
+        '    <span class="hc-type" style="color:{type_color}">{type_icon} {change_type}</span>'
+        '    <span class="hc-label">audience</span>'
+        '    <span class="hc-audience" style="color:{audience_color}">{audience_icon} {audience}</span>'
+        '    <span class="hc-label">complexity</span>'
+        '    <span class="hc-complexity" style="color:{complexity_color}">{complexity_dots} {complexity}</span>'
         '  </div>'
         '</div>'
     )
@@ -106,6 +111,18 @@ def main():
     category_colors = [CATEGORY_COLORS.get(c, "#888888") for c in categories]
     type_colors = [TYPE_COLORS.get(t, "#777777") for t in change_types]
 
+    type_icons = {
+        "feature": "✦", "bugfix": "✕", "improvement": "↑",
+        "breaking": "⚠", "internal": "⚙",
+    }
+    complexity_dots = {
+        "minor": "●○○", "moderate": "●●○", "major": "●●●",
+    }
+    audience_icons = {
+        "interactive_user": "◉", "extension_developer": "⬡",
+        "admin": "⛭", "sdk_developer": "⚒",
+    }
+
     extra_data = pd.DataFrame({
         "version": _esc(df["version"].values),
         "date": dates,
@@ -113,8 +130,21 @@ def main():
         "category_color": category_colors,
         "change_type": _esc(change_types),
         "type_color": type_colors,
+        "type_icon": [type_icons.get(t, "") for t in change_types],
         "complexity": _esc(complexities),
-        "audience": _esc(df["audience"].fillna("interactive_user").values),
+        "complexity_color": [COMPLEXITY_COLORS.get(c, "#888888") for c in complexities],
+        "complexity_dots": [complexity_dots.get(c, "●○○") for c in complexities],
+        "audience": _esc(
+            [v.replace("_", " ") for v in df["audience"].fillna("interactive_user").values]
+        ),
+        "audience_color": [
+            AUDIENCE_COLORS.get(a, "#7c3aed")
+            for a in df["audience"].fillna("interactive_user").values
+        ],
+        "audience_icon": [
+            audience_icons.get(a, "◉")
+            for a in df["audience"].fillna("interactive_user").values
+        ],
     })
 
     # ── Marker sizes (by complexity) ─────────────────────────────────────────
@@ -174,16 +204,19 @@ def main():
     # ── Tooltip CSS ──────────────────────────────────────────────────────────
     tooltip_css = """
         font-family: 'IBM Plex Mono', monospace;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 400;
         color: #2c2c2c !important;
-        background: linear-gradient(135deg, #faf9f6e8, #f4f2ece8) !important;
-        border: 1px solid rgba(0, 0, 0, 0.06);
-        border-radius: 10px;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
-        max-width: 360px;
+        background: #faf9f6f0 !important;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        backdrop-filter: blur(16px) saturate(1.2);
+        -webkit-backdrop-filter: blur(16px) saturate(1.2);
+        box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.10),
+            0 2px 8px rgba(0, 0, 0, 0.04),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+        max-width: 420px;
         padding: 0 !important;
         overflow: hidden;
     """
@@ -196,56 +229,103 @@ def main():
     #main-title { font-weight: 400 !important; letter-spacing: -0.01em; }
 
     .hc {
-        padding: 12px 14px 10px;
-    }
-    .hc-text {
-        font-size: 12px;
-        line-height: 1.5;
-        color: #2c2c2c;
-        margin-bottom: 8px;
-    }
-    .hc-meta {
         display: flex;
-        gap: 6px;
-        margin-bottom: 8px;
+        flex-direction: column;
     }
-    .hc-chip {
-        display: inline-flex;
-        align-items: center;
-        padding: 2px 7px;
-        border-radius: 4px;
-        font-size: 10px;
-        font-weight: 600;
+    .hc-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 10px 16px 8px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .hc-date {
         font-family: 'IBM Plex Mono', monospace;
-        background: rgba(0, 0, 0, 0.04);
-        color: #555;
+        font-size: 12px;
+        font-weight: 600;
+        color: #2c2c2c;
+        letter-spacing: -0.01em;
+    }
+    .hc-version {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 10px;
+        color: #999;
+        letter-spacing: 0.02em;
+    }
+    .hc-body {
+        font-family: 'Newsreader', Georgia, serif;
+        font-size: 13.5px;
+        line-height: 1.55;
+        color: #3a3a3a;
+        padding: 12px 16px;
+    }
+    .hc-footer {
+        display: grid;
+        grid-template-columns: auto 1fr auto 1fr;
+        align-items: center;
+        gap: 4px 8px;
+        padding: 10px 16px 12px;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        background: rgba(0, 0, 0, 0.015);
+    }
+    .hc-label {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 8.5px;
+        color: #aaa;
+        text-transform: lowercase;
+        letter-spacing: 0.03em;
         white-space: nowrap;
     }
-    .hc-chip:empty { display: none; }
-    .hc-classify {
-        display: flex;
+    /* Category: filled badge */
+    .hc-cat {
+        display: inline-flex;
         align-items: center;
-        gap: 6px;
-        flex-wrap: wrap;
-    }
-    .hc-cat, .hc-type {
-        display: inline-block;
-        font-size: 10px;
+        justify-self: start;
+        padding: 2px 8px;
+        border-radius: 5px;
+        border: 1px solid;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 9.5px;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: #2c2c2c;
-        padding: 2px 7px;
-        border-radius: 4px;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+        line-height: 1.6;
     }
-    .hc-cat:empty, .hc-type:empty { display: none; }
-    .hc-complexity {
-        font-size: 10px;
-        color: #888;
+    .hc-cat:empty { display: none; }
+    /* Type: icon + colored text, no badge */
+    .hc-type {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 9.5px;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+        justify-self: start;
+    }
+    .hc-type:empty { display: none; }
+    /* Complexity: dots + text, no badge */
+    .hc-complexity {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 9.5px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+        justify-self: start;
     }
     .hc-complexity:empty { display: none; }
+    /* Audience: colored text, no badge */
+    .hc-audience {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 9.5px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+        justify-self: start;
+    }
+    .hc-audience:empty { display: none; }
 
     /* Align colormap dropdown labels by giving swatch blocks a consistent width */
     .color-map-option .color-swatch {
