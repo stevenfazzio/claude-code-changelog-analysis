@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 ROOT = Path(__file__).resolve().parent.parent
 
 MODEL_NAMES = ["haiku", "sonnet", "opus"]
-FIELDS = ["category", "change_type", "complexity", "user_facing"]
+FIELDS = ["category", "change_type", "complexity", "audience"]
 PAIRS = [("haiku", "sonnet"), ("haiku", "opus"), ("sonnet", "opus")]
 
 COMPLEXITY_MAP = {"minor": 1, "moderate": 2, "major": 3}
@@ -323,7 +323,7 @@ def before_after_analysis(v1_dir: Path, v2_dir: Path) -> tuple[str, str]:
 
     # --- Per-model churn ---
     terminal_lines.append(f"\nPer-model churn (% entries that changed classification):")
-    terminal_lines.append(f"  {'model':10s} {'category':>10s} {'change_type':>12s} {'complexity':>12s} {'user_facing':>12s} {'any_field':>10s}")
+    terminal_lines.append(f"  {'model':10s} {'category':>10s} {'change_type':>12s} {'complexity':>12s} {'audience':>12s} {'any_field':>10s}")
 
     churn_data = {}  # model -> field -> rate
     for name in common_models:
@@ -336,7 +336,7 @@ def before_after_analysis(v1_dir: Path, v2_dir: Path) -> tuple[str, str]:
         churn_data[name] = churn
         terminal_lines.append(
             f"  {name:10s} {churn['category']:>9.1%} {churn['change_type']:>11.1%} "
-            f"{churn['complexity']:>11.1%} {churn['user_facing']:>11.1%} {churn['any']:>9.1%}"
+            f"{churn['complexity']:>11.1%} {churn['audience']:>11.1%} {churn['any']:>9.1%}"
         )
 
     # HTML churn table
