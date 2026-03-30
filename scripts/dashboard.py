@@ -19,7 +19,7 @@ DATA_DIR = OUTPUT_DIR / "data"
 
 # ── Unified color palette ────────────────────────────────────────────────────
 CATEGORIES = [
-    "terminal", "input", "slash_commands", "sessions",
+    "terminal", "input", "skills", "sessions",
     "mcp", "voice", "auth", "ide", "hooks", "permissions",
     "performance", "agents", "plugins", "config", "api", "sdk", "other",
 ]
@@ -37,7 +37,6 @@ TYPE_COLORS = {
     "bugfix": "#c4382a",
     "improvement": "#2e6eb8",
     "breaking": "#d4710e",
-    "internal": "#777777",
 }
 
 COMPLEXITY_COLORS = {
@@ -322,7 +321,7 @@ def render_explorer_page(df: pd.DataFrame) -> str:
 <script>
 var CAT_COLORS = {cat_colors_js};
 var TYPE_COLORS = {type_colors_js};
-var TYPE_ICONS = {{feature:"\u2726", bugfix:"\u2715", improvement:"\u2191", breaking:"\u26a0", internal:"\u2699"}};
+var TYPE_ICONS = {{feature:"\u2726", bugfix:"\u2715", improvement:"\u2191", breaking:"\u26a0"}};
 var COMPLEXITY_COLORS = {complexity_colors_js};
 var COMPLEXITY_DOTS = {{minor:"\u25cf\u25cb\u25cb", moderate:"\u25cf\u25cf\u25cb", major:"\u25cf\u25cf\u25cf"}};
 var AUDIENCE_COLORS = {audience_colors_js};
@@ -973,11 +972,11 @@ def render_about_page() -> str:
 </p>
 <ul>
   <li><strong>Category</strong> &mdash; the area of Claude Code affected:
-    <span class="dim">terminal, input, slash_commands, sessions, mcp, voice, auth,
+    <span class="dim">terminal, input, skills, sessions, mcp, voice, auth,
     ide, hooks, permissions, performance, agents, plugins, config, api, sdk,
     other</span></li>
   <li><strong>Change type</strong> &mdash;
-    <span class="dim">feature, bugfix, improvement, breaking, internal</span></li>
+    <span class="dim">feature, bugfix, improvement, breaking</span></li>
   <li><strong>Complexity</strong> &mdash;
     <span class="dim">minor, moderate, major</span></li>
   <li><strong>Audience</strong> &mdash; who the change matters most to:

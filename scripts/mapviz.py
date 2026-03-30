@@ -20,7 +20,7 @@ FILTER_PANEL_HTML = ROOT / "docs" / "filter_panel.html"
 # ── Color palettes (must match dashboard.py) ─────────────────────────────────
 
 CATEGORIES = [
-    "terminal", "input", "slash_commands", "sessions",
+    "terminal", "input", "skills", "sessions",
     "mcp", "voice", "auth", "ide", "hooks", "permissions",
     "performance", "agents", "plugins", "config", "api", "sdk", "other",
 ]
@@ -38,7 +38,6 @@ TYPE_COLORS = {
     "bugfix": "#c4382a",
     "improvement": "#2e6eb8",
     "breaking": "#d4710e",
-    "internal": "#777777",
 }
 
 COMPLEXITY_COLORS = {
@@ -113,7 +112,7 @@ def main():
 
     type_icons = {
         "feature": "✦", "bugfix": "✕", "improvement": "↑",
-        "breaking": "⚠", "internal": "⚙",
+        "breaking": "⚠",
     }
     complexity_dots = {
         "minor": "●○○", "moderate": "●●○", "major": "●●●",
