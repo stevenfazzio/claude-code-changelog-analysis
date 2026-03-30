@@ -15,7 +15,7 @@ INPUT_PATH = ROOT / "data" / "raw_entries.parquet"
 OUTPUT_PATH = ROOT / "data" / "enriched.parquet"
 
 CATEGORIES = [
-    "terminal", "input", "slash_commands", "sessions",
+    "terminal", "input", "skills", "sessions",
     "mcp", "voice", "auth", "ide", "hooks", "permissions",
     "performance", "agents", "plugins", "config", "api", "sdk", "other",
 ]
@@ -40,7 +40,7 @@ For each entry, output a JSON array of objects with these fields:
 Pick the MOST SPECIFIC category that applies:
 - "terminal" = terminal rendering, display, cursor, flickering, UI layout, spinner, progress indicators
 - "input" = keyboard handling, text entry, vim mode, readline keybindings, CJK/IME, clipboard/paste
-- "slash_commands" = slash command system, autocomplete, custom commands (/help, /config, /resume etc.)
+- "skills" = skills framework, slash commands (built-in and custom), .claude/commands/, skill discovery/install, skill frontmatter and behavior
 - "sessions" = session resume, session management, remote control, conversation compaction, history
 - "mcp" = MCP server management, MCP tool behavior, MCP OAuth, MCP resources
 - "voice" = voice mode, audio, microphone, push-to-talk
@@ -50,7 +50,7 @@ Pick the MOST SPECIFIC category that applies:
 - "permissions" = permission prompts, allow/deny, sandbox, tool approval
 - "performance" = speed, memory, startup time, caching, token usage optimization
 - "agents" = subagents (Explore, Plan, etc.), background tasks/agents, worktrees, task tools, agent teams
-- "plugins" = plugin system, marketplace, plugin install/discover, skills
+- "plugins" = plugin system, marketplace, plugin install/uninstall/discover/validate, plugin configuration, plugin trust/permissions
 - "config" = settings, env vars, configuration files, managed settings, .claude/ files, CLAUDE.md
 - "api" = API integration, model providers, Bedrock, Vertex, model selection, rate limits
 - "sdk" = SDK features, SDK messages, SDK configuration, non-interactive/print mode (-p)
@@ -58,12 +58,12 @@ Pick the MOST SPECIFIC category that applies:
 
 Boundary rules (use these to resolve ambiguity):
 - Env vars and settings → "config"; terminal display and rendering → "terminal"
-- Keyboard/text input behavior → "input"; slash command system → "slash_commands"
+- Keyboard/text input behavior → "input"; skill/slash command behavior → "skills"
 - Session resume/management → "sessions"; general conversation flow → "sessions"
 - Specific subagent behavior or worktrees → "agents"; general tool behavior → "other"
-- Plugin/skill system features → "plugins"; general features → "other"
 - MCP server/tool management → "mcp"; general tool usage → "other"
 - SDK and -p/print mode → "sdk"; interactive CLI features → use specific category
+- Plugins are composed of skills, agents, hooks, and MCP servers. If a change is about exactly one of those plugin types, use that specific category ("skills", "agents", "hooks", or "mcp"). If a change is about the plugin system in general or about multiple plugin types, use "plugins".
 
 ## Change type guidelines
 
