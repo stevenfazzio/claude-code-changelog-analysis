@@ -169,11 +169,11 @@ tailwind.config = {
 </p>
 <ul>
   <li><strong>Category</strong> &mdash; the area of Claude Code affected:
-    <span class="dim">terminal, input, slash_commands, sessions, mcp, voice, auth,
+    <span class="dim">terminal, input, skills, sessions, mcp, voice, auth,
     ide, hooks, permissions, performance, agents, plugins, config, api, sdk,
     other</span></li>
   <li><strong>Change type</strong> &mdash;
-    <span class="dim">feature, bugfix, improvement, breaking, internal</span></li>
+    <span class="dim">feature, bugfix, improvement, breaking</span></li>
   <li><strong>Complexity</strong> &mdash;
     <span class="dim">minor, moderate, major</span></li>
   <li><strong>Audience</strong> &mdash; who the change matters most to:
@@ -186,21 +186,17 @@ tailwind.config = {
 </p>
 <details>
   <summary>View the full classification prompt</summary>
-  <pre class="prompt">You classify changelog entries for Claude Code (an AI coding assistant CLI tool).
+  <pre class="prompt">&lt;task&gt;
+You classify changelog entries for Claude Code (an AI coding assistant CLI tool).
+For each entry in the input list, determine its category, change type, complexity, and audience.
+Call the classify_entries tool with your classifications.
+&lt;/task&gt;
 
-For each entry, output a JSON array of objects with these fields:
-- &quot;index&quot;: the entry&#x27;s position in the input list (0-based)
-- &quot;category&quot;: one of [&quot;terminal&quot;, &quot;input&quot;, &quot;slash_commands&quot;, &quot;sessions&quot;, &quot;mcp&quot;, &quot;voice&quot;, &quot;auth&quot;, &quot;ide&quot;, &quot;hooks&quot;, &quot;permissions&quot;, &quot;performance&quot;, &quot;agents&quot;, &quot;plugins&quot;, &quot;config&quot;, &quot;api&quot;, &quot;sdk&quot;, &quot;other&quot;]
-- &quot;change_type&quot;: one of [&quot;feature&quot;, &quot;bugfix&quot;, &quot;improvement&quot;, &quot;breaking&quot;, &quot;internal&quot;]
-- &quot;complexity&quot;: one of [&quot;minor&quot;, &quot;moderate&quot;, &quot;major&quot;]
-- &quot;audience&quot;: one of [&quot;interactive_user&quot;, &quot;sdk_developer&quot;, &quot;admin&quot;, &quot;extension_developer&quot;]
-
-## Category guidelines
-
+&lt;category-guidelines&gt;
 Pick the MOST SPECIFIC category that applies:
 - &quot;terminal&quot; = terminal rendering, display, cursor, flickering, UI layout, spinner, progress indicators
 - &quot;input&quot; = keyboard handling, text entry, vim mode, readline keybindings, CJK/IME, clipboard/paste
-- &quot;slash_commands&quot; = slash command system, autocomplete, custom commands (/help, /config, /resume etc.)
+- &quot;skills&quot; = skills framework, slash commands (built-in and custom), .claude/commands/, skill discovery/install, skill frontmatter and behavior
 - &quot;sessions&quot; = session resume, session management, remote control, conversation compaction, history
 - &quot;mcp&quot; = MCP server management, MCP tool behavior, MCP OAuth, MCP resources
 - &quot;voice&quot; = voice mode, audio, microphone, push-to-talk
@@ -210,44 +206,65 @@ Pick the MOST SPECIFIC category that applies:
 - &quot;permissions&quot; = permission prompts, allow/deny, sandbox, tool approval
 - &quot;performance&quot; = speed, memory, startup time, caching, token usage optimization
 - &quot;agents&quot; = subagents (Explore, Plan, etc.), background tasks/agents, worktrees, task tools, agent teams
-- &quot;plugins&quot; = plugin system, marketplace, plugin install/discover, skills
+- &quot;plugins&quot; = plugin system, marketplace, plugin install/uninstall/discover/validate, plugin configuration, plugin trust/permissions
 - &quot;config&quot; = settings, env vars, configuration files, managed settings, .claude/ files, CLAUDE.md
 - &quot;api&quot; = API integration, model providers, Bedrock, Vertex, model selection, rate limits
 - &quot;sdk&quot; = SDK features, SDK messages, SDK configuration, non-interactive/print mode (-p)
 - &quot;other&quot; = doesn&#x27;t fit any category above
+&lt;/category-guidelines&gt;
 
-Boundary rules (use these to resolve ambiguity):
+&lt;boundary-rules&gt;
 - Env vars and settings → &quot;config&quot;; terminal display and rendering → &quot;terminal&quot;
-- Keyboard/text input behavior → &quot;input&quot;; slash command system → &quot;slash_commands&quot;
+- Keyboard/text input behavior → &quot;input&quot;; skill/slash command behavior → &quot;skills&quot;
 - Session resume/management → &quot;sessions&quot;; general conversation flow → &quot;sessions&quot;
 - Specific subagent behavior or worktrees → &quot;agents&quot;; general tool behavior → &quot;other&quot;
-- Plugin/skill system features → &quot;plugins&quot;; general features → &quot;other&quot;
 - MCP server/tool management → &quot;mcp&quot;; general tool usage → &quot;other&quot;
 - SDK and -p/print mode → &quot;sdk&quot;; interactive CLI features → use specific category
+- Plugins are composed of skills, agents, hooks, and MCP servers. If a change is about exactly one of those plugin types, use that specific category (&quot;skills&quot;, &quot;agents&quot;, &quot;hooks&quot;, or &quot;mcp&quot;). If a change is about the plugin system in general or about multiple plugin types, use &quot;plugins&quot;.
+&lt;/boundary-rules&gt;
 
-## Change type guidelines
-
+&lt;change-type-guidelines&gt;
 - &quot;feature&quot; = entirely new capability that didn&#x27;t exist before
 - &quot;improvement&quot; = existing capability made noticeably better (faster, cleaner, more robust, better UX)
 - &quot;bugfix&quot; = something was broken/incorrect and is now fixed (look for &quot;Fixed&quot;, &quot;Fix&quot; prefixes)
-- &quot;breaking&quot; = backwards-incompatible change (look for &quot;Breaking&quot; prefix or explicit breaking notes)
-- &quot;internal&quot; = refactoring, test changes, or infra with no user-visible effect
+- &quot;breaking&quot; = backwards-incompatible change (look for &quot;Breaking&quot; prefix, &quot;Deprecated&quot;, &quot;Removed&quot;, or explicit breaking notes)
+&lt;/change-type-guidelines&gt;
 
-## Complexity guidelines
-
+&lt;complexity-guidelines&gt;
 - &quot;minor&quot; = small tweak: single flag, typo fix, one-line behavior change, simple bugfix
 - &quot;moderate&quot; = meaningful change: new command, new integration, workflow change, multi-component fix
 - &quot;major&quot; = large scope: new subsystem, architectural change, major new feature, breaking change
+&lt;/complexity-guidelines&gt;
 
-## Audience guidelines
-
+&lt;audience-guidelines&gt;
 Who is the primary target of this change?
 - &quot;interactive_user&quot; = someone using Claude Code interactively in a terminal (most changes)
 - &quot;sdk_developer&quot; = someone building on the SDK, using -p/print mode, or programmatic APIs
 - &quot;admin&quot; = system administrators configuring managed settings, permissions, or deployment
 - &quot;extension_developer&quot; = someone building plugins, hooks, skills, or MCP integrations
+&lt;/audience-guidelines&gt;
 
-Return ONLY the JSON array, no other text.</pre>
+&lt;examples&gt;
+Entry: &quot;Fixed ghost text flickering when typing slash commands mid-input&quot;
+-&gt; category=&quot;terminal&quot;, change_type=&quot;bugfix&quot;, complexity=&quot;minor&quot;, audience=&quot;interactive_user&quot;
+Reasoning: Display flickering is terminal rendering; &quot;Fixed&quot; indicates bugfix; single UI glitch is minor.
+
+Entry: &quot;Added support for running skills and slash commands in a forked sub-agent context using `context: fork` in skill frontmatter&quot;
+-&gt; category=&quot;skills&quot;, change_type=&quot;feature&quot;, complexity=&quot;moderate&quot;, audience=&quot;extension_developer&quot;
+Reasoning: Skill frontmatter feature; new capability; targets skill authors.
+
+Entry: &quot;Fixed plugin path resolution for file-based marketplace sources&quot;
+-&gt; category=&quot;plugins&quot;, change_type=&quot;bugfix&quot;, complexity=&quot;minor&quot;, audience=&quot;extension_developer&quot;
+Reasoning: Plugin marketplace infrastructure, not a specific plugin type; &quot;Fixed&quot; indicates bugfix.
+
+Entry: &quot;Improved memory usage by 3x for large conversations&quot;
+-&gt; category=&quot;performance&quot;, change_type=&quot;improvement&quot;, complexity=&quot;major&quot;, audience=&quot;interactive_user&quot;
+Reasoning: Memory optimization; 3x improvement on existing capability; large impact.
+
+Entry: &quot;SDK: Renamed `total_cost` to `total_cost_usd`&quot;
+-&gt; category=&quot;sdk&quot;, change_type=&quot;breaking&quot;, complexity=&quot;minor&quot;, audience=&quot;sdk_developer&quot;
+Reasoning: SDK API rename is breaking; small scope but incompatible; targets SDK consumers.
+&lt;/examples&gt;</pre>
 </details>
 
 <h2>Embeddings &amp; the Map</h2>
