@@ -62,6 +62,6 @@ git config merge.ours.driver true
 
 The enrich stage classifies entries along these dimensions:
 - **category**: terminal, input, skills, sessions, mcp, voice, auth, ide, hooks, permissions, performance, agents, plugins, config, api, sdk, other
-- **change_type**: feature, bugfix, improvement, breaking, internal
+- **change_type**: feature, bugfix, improvement, breaking
 - **complexity**: minor, moderate, major
 - **audience**: interactive_user, sdk_developer, admin, extension_developer
