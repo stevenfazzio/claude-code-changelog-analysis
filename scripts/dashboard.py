@@ -100,10 +100,11 @@ def generate_analysis_json(df: pd.DataFrame) -> dict:
         for dim in ("category", "change_type", "complexity", "audience")
     }
 
-    # Release cadence (weekly)
-    weekly = df.groupby("week")["version"].nunique().reset_index()
-    weekly.columns = ["week", "versions"]
-    weekly = weekly.sort_values("week")
+    # Release cadence (weekly) + total entries per week
+    weekly = df.groupby("week").agg(
+        versions=("version", "nunique"),
+        entries=("text", "size"),
+    ).reset_index().sort_values("week")
 
     # Category distribution
     cat_counts = df["category"].value_counts().sort_values()
@@ -162,6 +163,7 @@ def generate_analysis_json(df: pd.DataFrame) -> dict:
         "release_cadence": {
             "weeks": [w.strftime("%Y-%m-%d") for w in weekly["week"]],
             "versions": weekly["versions"].tolist(),
+            "entries": weekly["entries"].tolist(),
         },
         "category_dist": {
             "categories": cat_counts.index.tolist(),
@@ -575,7 +577,7 @@ fetch('data/analysis.json')
     var dimColors = {category: cc, change_type: tc, complexity: xc, audience: ac};
     var dimLabels = {category: 'Category', change_type: 'Change Type', complexity: 'Complexity', audience: 'Audience'};
     var activeDim = 'category';
-    var trendMode = 'count';
+    var trendMode = 'pct';
 
     function getTrendData() { return data.dimension_trends[activeDim]; }
 
@@ -631,8 +633,8 @@ fetch('data/analysis.json')
       legend: {type: 'scroll', bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
       grid: {left: 40, right: 20, top: 30, bottom: 50},
       xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, axisLabel: {fontSize: 10}, splitLine: {lineStyle: {color: '#e8e5de'}}},
-      yAxis: {type: 'value', name: 'Entries', nameGap: 10, axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
-      series: makeTrendSeries('count'),
+      yAxis: {type: 'value', name: '% of Entries', nameGap: 10, max: 100, axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      series: makeTrendSeries('pct'),
     });
     charts.push(trendChart);
 
@@ -668,19 +670,34 @@ fetch('data/analysis.json')
       });
     }
 
-    // 2. Release Cadence
+    // 2. Release Cadence + Entry Volume
     charts.push(initChart('chart-release-cadence', {
-      title: {text: 'Release Cadence (versions per week)', textStyle: TITLE_TEXT},
+      title: {text: 'Release Cadence & Entry Volume (weekly)', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
       tooltip: {trigger: 'axis', confine: true},
-      grid: {left: 40, right: 20, top: 45, bottom: 35},
+      legend: {bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
+      grid: {left: 40, right: 50, top: 45, bottom: 40},
       xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, axisLabel: {fontSize: 10}, splitLine: {lineStyle: {color: '#e8e5de'}}},
-      yAxis: {type: 'value', name: 'Versions', axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      yAxis: [
+        {type: 'value', name: 'Versions', axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+        {type: 'value', name: 'Entries', axisLine: {show: false}, splitLine: {show: false}},
+      ],
       series: [{
+        name: 'Versions',
         type: 'bar',
-        itemStyle: {color: '#6b7280'},
+        itemStyle: {color: '#c4c1ba'},
         data: data.release_cadence.weeks.map(function(w, i) {
           return [w, data.release_cadence.versions[i]];
+        }),
+      }, {
+        name: 'Entries',
+        type: 'line',
+        yAxisIndex: 1,
+        symbol: 'none',
+        lineStyle: {width: 2, color: '#2c2c2c'},
+        itemStyle: {color: '#2c2c2c'},
+        data: data.release_cadence.weeks.map(function(w, i) {
+          return [w, data.release_cadence.entries[i]];
         }),
       }],
     }));
@@ -867,7 +884,7 @@ def render_analysis_page() -> str:
       <div class="flex flex-wrap items-center gap-1 mb-1 px-1">
         <div id="dim-pills" class="flex gap-1"></div>
         <div class="flex-1"></div>
-        <button id="trend-toggle" class="text-[0.7rem] font-mono px-2 py-0.5 border border-border rounded text-text-secondary hover:text-text-primary hover:border-divider cursor-pointer bg-cream">Show %</button>
+        <button id="trend-toggle" class="text-[0.7rem] font-mono px-2 py-0.5 border border-border rounded text-text-secondary hover:text-text-primary hover:border-divider cursor-pointer bg-cream">Show #</button>
       </div>
       <div id="chart-dimension-trends" class="h-[400px]"></div>
     </div>
