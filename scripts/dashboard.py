@@ -80,21 +80,31 @@ def generate_entries_json(df: pd.DataFrame) -> list[dict]:
     return records
 
 
-def generate_analysis_json(df: pd.DataFrame) -> dict:
-    # Category trends (monthly)
-    order = df["category"].value_counts().index.tolist()
-    monthly = df.groupby(["month", "category"]).size().reset_index(name="count")
+def _monthly_trends(df: pd.DataFrame, col: str) -> dict:
+    """Build {months, series} for a given column, grouped monthly."""
+    order = df[col].value_counts().index.tolist()
+    monthly = df.groupby(["month", col]).size().reset_index(name="count")
     months_sorted = sorted(m for m in df["month"].unique() if pd.notna(m))
     months_str = [m.strftime("%Y-%m-%d") for m in months_sorted]
     series = {}
-    for cat in order:
-        cat_data = monthly[monthly["category"] == cat].set_index("month")["count"]
-        series[cat] = [int(cat_data.get(m, 0)) for m in months_sorted]
+    for val in order:
+        val_data = monthly[monthly[col] == val].set_index("month")["count"]
+        series[val] = [int(val_data.get(m, 0)) for m in months_sorted]
+    return {"months": months_str, "series": series}
 
-    # Release cadence (weekly)
-    weekly = df.groupby("week")["version"].nunique().reset_index()
-    weekly.columns = ["week", "versions"]
-    weekly = weekly.sort_values("week")
+
+def generate_analysis_json(df: pd.DataFrame) -> dict:
+    # Dimension trends (monthly) — category, change_type, complexity, audience
+    dimension_trends = {
+        dim: _monthly_trends(df, dim)
+        for dim in ("category", "change_type", "complexity", "audience")
+    }
+
+    # Release cadence (weekly) + total entries per week
+    weekly = df.groupby("week").agg(
+        versions=("version", "nunique"),
+        entries=("text", "size"),
+    ).reset_index().sort_values("week")
 
     # Category distribution
     cat_counts = df["category"].value_counts().sort_values()
@@ -149,13 +159,11 @@ def generate_analysis_json(df: pd.DataFrame) -> dict:
     }
 
     return {
-        "category_trends": {
-            "months": months_str,
-            "series": series,
-        },
+        "dimension_trends": dimension_trends,
         "release_cadence": {
             "weeks": [w.strftime("%Y-%m-%d") for w in weekly["week"]],
             "versions": weekly["versions"].tolist(),
+            "entries": weekly["entries"].tolist(),
         },
         "category_dist": {
             "categories": cat_counts.index.tolist(),
@@ -565,50 +573,90 @@ fetch('data/analysis.json')
       return '<span class="whitespace-nowrap"><span class="text-text-secondary">' + s[0] + '</span> <span class="font-semibold text-text-primary">' + s[1] + '</span></span>';
     }).join(' ' + sep + ' ');
 
-    // 1. Category Trends (stacked area) with count/% toggle
-    var trendCats = Object.keys(data.category_trends.series);
-    var trendMonths = data.category_trends.months;
+    // 1. Dimension Trends (stacked area) with dimension pills + count/% toggle
+    var dimColors = {category: cc, change_type: tc, complexity: xc, audience: ac};
+    var dimLabels = {category: 'Category', change_type: 'Change Type', complexity: 'Complexity', audience: 'Audience'};
+    var activeDim = 'category';
+    var trendMode = 'pct';
 
-    // Pre-compute monthly totals for percentage mode
-    var monthlyTotals = trendMonths.map(function(m, i) {
-      var total = 0;
-      trendCats.forEach(function(cat) { total += data.category_trends.series[cat][i]; });
-      return total;
-    });
+    function getTrendData() { return data.dimension_trends[activeDim]; }
+
+    function getMonthlyTotals() {
+      var td = getTrendData();
+      var keys = Object.keys(td.series);
+      return td.months.map(function(m, i) {
+        var total = 0;
+        keys.forEach(function(k) { total += td.series[k][i]; });
+        return total;
+      });
+    }
 
     function makeTrendSeries(mode) {
-      return trendCats.map(function(cat) {
+      var td = getTrendData();
+      var colors = dimColors[activeDim];
+      var totals = getMonthlyTotals();
+      return Object.keys(td.series).map(function(key) {
         return {
-          name: cat,
+          name: key.replace(/_/g, ' '),
           type: 'line',
           stack: 'total',
           areaStyle: {opacity: 0.7},
           symbol: 'none',
           lineStyle: {width: 1},
-          itemStyle: {color: cc[cat]},
-          data: trendMonths.map(function(m, i) {
-            var val = data.category_trends.series[cat][i];
-            if (mode === 'pct') val = monthlyTotals[i] > 0 ? Math.round(val / monthlyTotals[i] * 1000) / 10 : 0;
+          itemStyle: {color: colors[key]},
+          data: td.months.map(function(m, i) {
+            var val = td.series[key][i];
+            if (mode === 'pct') val = totals[i] > 0 ? Math.round(val / totals[i] * 1000) / 10 : 0;
             return [m, val];
           }),
         };
       });
     }
 
-    var trendChart = initChart('chart-category-trends', {
-      title: {text: 'Category Trends (monthly)', textStyle: TITLE_TEXT},
+    // Build pill buttons
+    var pillContainer = document.getElementById('dim-pills');
+    Object.keys(dimLabels).forEach(function(dim) {
+      var btn = document.createElement('button');
+      btn.textContent = dimLabels[dim];
+      btn.dataset.dim = dim;
+      btn.className = 'text-[0.7rem] font-mono px-2 py-0.5 rounded cursor-pointer transition-colors '
+        + (dim === activeDim
+          ? 'bg-text-primary text-cream border border-text-primary'
+          : 'bg-cream text-text-secondary border border-border hover:text-text-primary hover:border-divider');
+      btn.addEventListener('click', function() { switchDimension(dim); });
+      pillContainer.appendChild(btn);
+    });
+
+    var trendChart = initChart('chart-dimension-trends', {
       textStyle: BASE_TEXT,
       tooltip: {trigger: 'axis', confine: true, order: 'seriesDesc'},
       legend: {type: 'scroll', bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
-      grid: {left: 40, right: 20, top: 45, bottom: 50},
+      grid: {left: 40, right: 20, top: 30, bottom: 50},
       xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, axisLabel: {fontSize: 10}, splitLine: {lineStyle: {color: '#e8e5de'}}},
-      yAxis: {type: 'value', name: 'Entries', axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
-      series: makeTrendSeries('count'),
+      yAxis: {type: 'value', name: '% of Entries', nameGap: 10, max: 100, axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      series: makeTrendSeries('pct'),
     });
     charts.push(trendChart);
 
-    // Wire up toggle
-    var trendMode = 'count';
+    function switchDimension(dim) {
+      if (dim === activeDim) return;
+      activeDim = dim;
+      // Update pill styles
+      pillContainer.querySelectorAll('button').forEach(function(btn) {
+        if (btn.dataset.dim === dim) {
+          btn.className = 'text-[0.7rem] font-mono px-2 py-0.5 rounded cursor-pointer transition-colors bg-text-primary text-cream border border-text-primary';
+        } else {
+          btn.className = 'text-[0.7rem] font-mono px-2 py-0.5 rounded cursor-pointer transition-colors bg-cream text-text-secondary border border-border hover:text-text-primary hover:border-divider';
+        }
+      });
+      trendChart.setOption({
+        yAxis: {name: trendMode === 'count' ? 'Entries' : '% of Entries', max: trendMode === 'pct' ? 100 : null},
+        series: makeTrendSeries(trendMode),
+      }, {replaceMerge: ['series']});
+      track('Dimension Switch', {dimension: dim});
+    }
+
+    // Wire up count/% toggle
     var toggleBtn = document.getElementById('trend-toggle');
     if (toggleBtn) {
       toggleBtn.addEventListener('click', function() {
@@ -622,19 +670,34 @@ fetch('data/analysis.json')
       });
     }
 
-    // 2. Release Cadence
+    // 2. Release Cadence + Entry Volume
     charts.push(initChart('chart-release-cadence', {
-      title: {text: 'Release Cadence (versions per week)', textStyle: TITLE_TEXT},
+      title: {text: 'Release Cadence & Entry Volume (weekly)', textStyle: TITLE_TEXT},
       textStyle: BASE_TEXT,
       tooltip: {trigger: 'axis', confine: true},
-      grid: {left: 40, right: 20, top: 45, bottom: 35},
+      legend: {bottom: 0, textStyle: {fontSize: 10, fontFamily: '"IBM Plex Mono", monospace'}},
+      grid: {left: 40, right: 50, top: 45, bottom: 40},
       xAxis: {type: 'time', axisLine: {lineStyle: {color: '#e8e5de'}}, axisLabel: {fontSize: 10}, splitLine: {lineStyle: {color: '#e8e5de'}}},
-      yAxis: {type: 'value', name: 'Versions', axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+      yAxis: [
+        {type: 'value', name: 'Versions', axisLine: {show: false}, splitLine: {lineStyle: {color: '#e8e5de'}}},
+        {type: 'value', name: 'Entries', axisLine: {show: false}, splitLine: {show: false}},
+      ],
       series: [{
+        name: 'Versions',
         type: 'bar',
-        itemStyle: {color: '#6b7280'},
+        itemStyle: {color: '#c4c1ba'},
         data: data.release_cadence.weeks.map(function(w, i) {
           return [w, data.release_cadence.versions[i]];
+        }),
+      }, {
+        name: 'Entries',
+        type: 'line',
+        yAxisIndex: 1,
+        symbol: 'none',
+        lineStyle: {width: 2, color: '#2c2c2c'},
+        itemStyle: {color: '#2c2c2c'},
+        data: data.release_cadence.weeks.map(function(w, i) {
+          return [w, data.release_cadence.entries[i]];
         }),
       }],
     }));
@@ -817,9 +880,13 @@ def render_analysis_page() -> str:
 <div class="pt-6 pb-2">
   <h2 class="font-serif text-[1.1rem] font-normal text-text-secondary tracking-wide mb-3">Timeline Trends</h2>
   <div class="grid grid-cols-1 gap-4">
-    <div class="border border-border p-2 bg-cream relative">
-      <button id="trend-toggle" class="absolute top-2 right-3 text-[0.7rem] font-mono px-2 py-0.5 border border-border rounded text-text-secondary hover:text-text-primary hover:border-divider cursor-pointer bg-cream z-10">Show %</button>
-      <div id="chart-category-trends" class="h-[400px]"></div>
+    <div class="border border-border p-2 bg-cream">
+      <div class="flex flex-wrap items-center gap-1 mb-1 px-1">
+        <div id="dim-pills" class="flex gap-1"></div>
+        <div class="flex-1"></div>
+        <button id="trend-toggle" class="text-[0.7rem] font-mono px-2 py-0.5 border border-border rounded text-text-secondary hover:text-text-primary hover:border-divider cursor-pointer bg-cream">Show #</button>
+      </div>
+      <div id="chart-dimension-trends" class="h-[400px]"></div>
     </div>
     <div class="border border-border p-2 bg-cream"><div id="chart-release-cadence" class="h-[350px]"></div></div>
   </div>
