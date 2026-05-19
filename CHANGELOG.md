@@ -30,8 +30,6 @@
 - Fixed background side-queries on custom `ANTHROPIC_BASE_URL` setups and Bedrock Mantle not using Haiku — now falls back correctly when a first-party API key is configured or no Haiku model is set
 - Fixed scrolling in attached background sessions on Windows — PgUp/PgDn, mouse wheel, and Ctrl+O transcript navigation now work
 - Fixed a crash when closing the terminal while attached to a background session
-- Fixed `! <cmd>` exec sessions not responding to Ctrl+C while attached — now interrupts the running command
-- Fixed agent view shell-command rows lingering under Working after completion, and pressing Enter on a completed row re-running the command after its output expired
 - Fixed on Windows, pressing ← in `claude agents` leaving the list unresponsive to keyboard input
 - Fixed ghost characters at the left edge when switching panes in Agent View on Windows Terminal with CJK content
 - `/bg` and `←`-detach now preserve directories added via `/add-dir`
