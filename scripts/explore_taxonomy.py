@@ -121,7 +121,7 @@ def run_toponymy(
     print(f"Running Toponymy: {label}")
     print(f"{'='*60}")
 
-    llm = AsyncAnthropicNamer(api_key=anthropic_key, model="claude-sonnet-4-20250514")
+    llm = AsyncAnthropicNamer(api_key=anthropic_key, model="claude-sonnet-4-6")
     embedder = CohereEmbedder(api_key=co_key, model="embed-v4.0")
     clusterer = EVoCClusterer()
 
