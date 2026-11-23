@@ -72,7 +72,7 @@ NAV_CSS = """<style>
 </style>"""
 
 PLAUSIBLE_SCRIPT = (
-    '<script async src="https://plausible.io/js/pa-9xq45uThwNCmhvlOMB0yM.js"></script>\n'
+    '<script async src="https://plausible.io/js/pa-dvmKWiL1gpqH63wOvMp-g.js"></script>\n'
     "<script>\n"
     "  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};\n"
     "  plausible.init()\n"
