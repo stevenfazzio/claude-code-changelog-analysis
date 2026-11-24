@@ -2,7 +2,7 @@ name: Update changelog
 
 on:
   schedule:
-    - cron: "25 * * * *" # every hour at :25
+    - cron: "25 6 * * 1" # weekly, Mondays at 06:25 UTC
   workflow_dispatch: # allow manual runs
 
 permissions:

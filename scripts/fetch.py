@@ -26,10 +26,17 @@ def gh_api(endpoint: str) -> dict:
 
 
 def fetch_changelog() -> str:
-    """Fetch CHANGELOG.md content via GitHub API."""
+    """Fetch CHANGELOG.md content via GitHub API.
+
+    The contents API omits `content` for files over 1 MB, so it is used only
+    for the blob SHA; the git blobs API returns base64 for files up to 100 MB.
+    """
     print("Fetching CHANGELOG.md...")
-    data = gh_api(f"repos/{OWNER}/{REPO}/contents/{FILE_PATH}")
-    content = base64.b64decode(data["content"]).decode("utf-8")
+    meta = gh_api(f"repos/{OWNER}/{REPO}/contents/{FILE_PATH}")
+    blob = gh_api(f"repos/{OWNER}/{REPO}/git/blobs/{meta['sha']}")
+    content = base64.b64decode(blob["content"]).decode("utf-8")
+    if not content.strip():
+        raise RuntimeError(f"Fetched empty CHANGELOG.md (blob {meta['sha']})")
     CHANGELOG_PATH.write_text(content)
     print(f"  Saved {len(content):,} bytes to {CHANGELOG_PATH}")
     return content
