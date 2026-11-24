@@ -3,7 +3,6 @@
 import os
 from pathlib import Path
 
-import nest_asyncio
 import numpy as np
 import pandas as pd
 import umap
@@ -40,7 +39,9 @@ from toponymy import Toponymy, ToponymyClusterer
 from toponymy.embedding_wrappers import CohereEmbedder
 from toponymy.llm_wrappers import AsyncAnthropicNamer
 
-nest_asyncio.apply()
+# No nest_asyncio here: Toponymy's run_async uses asyncio.run when no loop is
+# running, and nest_asyncio's patched asyncio.run breaks the async Anthropic
+# client on Python 3.14 (sniffio AsyncLibraryNotFoundError).
 
 # Load centralized credentials, then project-local overrides
 load_dotenv()

@@ -16,6 +16,10 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
+    env:
+      # Match the local dev interpreter. ubuntu-latest moved to 26.04, whose
+      # system Python is 3.14; the pipeline is only tested on 3.12.
+      UV_PYTHON: "3.12"
 
     steps:
       - uses: actions/checkout@v4
