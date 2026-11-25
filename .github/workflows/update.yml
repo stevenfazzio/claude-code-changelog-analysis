@@ -17,8 +17,9 @@ jobs:
   update:
     runs-on: ubuntu-latest
     env:
-      # Match the local dev interpreter. ubuntu-latest moved to 26.04, whose
-      # system Python is 3.14; the pipeline is only tested on 3.12.
+      # ubuntu-latest moved to 26.04, whose system Python is 3.14. reduce.py
+      # needs nest_asyncio, which breaks the Anthropic client on 3.14, and
+      # the rest of the pipeline is only tested on 3.12.
       UV_PYTHON: "3.12"
 
     steps:

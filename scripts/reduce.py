@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 
+import nest_asyncio
 import numpy as np
 import pandas as pd
 import umap
@@ -39,9 +40,13 @@ from toponymy import Toponymy, ToponymyClusterer
 from toponymy.embedding_wrappers import CohereEmbedder
 from toponymy.llm_wrappers import AsyncAnthropicNamer
 
-# No nest_asyncio here: Toponymy's run_async uses asyncio.run when no loop is
-# running, and nest_asyncio's patched asyncio.run breaks the async Anthropic
-# client on Python 3.14 (sniffio AsyncLibraryNotFoundError).
+# Required: Toponymy calls asyncio.run() once per naming stage, but
+# AsyncAnthropicNamer's client and Semaphore are created once in __init__, so
+# without a single reused loop every stage after the first fails with "bound
+# to a different event loop". nest_asyncio makes asyncio.run reuse one loop.
+# It breaks the Anthropic client on Python 3.14 (sniffio
+# AsyncLibraryNotFoundError), which is why CI pins UV_PYTHON to 3.12.
+nest_asyncio.apply()
 
 # Load centralized credentials, then project-local overrides
 load_dotenv()
